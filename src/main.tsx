@@ -1,0 +1,232 @@
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { BrowserRouter, Route, Routes } from "react-router";
+import { HomeScreen } from "@/pages/home-screen";
+import { NotFound } from "@/pages/not-found";
+import { RouteProvider } from "@/providers/router-provider";
+import { ThemeProvider } from "@/providers/theme-provider";
+import "@/styles/globals.css";
+import LoginPage from "@/pages/login";
+import DashboardPage from "@/pages/dashboard/index";
+import ItineraryListPage from "@/pages/itinerary/list/index";
+import ItineraryViewPage from "@/pages/itinerary/list/view/[id]";
+import ItineraryEditPage from "@/pages/itinerary/list/edit/[id]";
+import ItineraryAreaListPage from "@/pages/itinerary/area";
+import ItineraryAreaAddPage from "@/pages/itinerary/area/add";
+import ItineraryAreaEditPage from "@/pages/itinerary/area/edit/[id]";
+import ItineraryAreaViewPage from "@/pages/itinerary/area/view/[id]";
+import ItinerarySiteListPage from "@/pages/itinerary/site";
+import ItinerarySiteAddPage from "@/pages/itinerary/site/add";
+import ItinerarySiteEditPage from "@/pages/itinerary/site/edit/[id]";
+import ItinerarySiteViewPage from "@/pages/itinerary/site/view/[id]";
+import ItineraryHotelListPage from "@/pages/itinerary/hotel";
+import ItineraryHotelAddPage from "@/pages/itinerary/hotel/add";
+import ItineraryHotelEditPage from "@/pages/itinerary/hotel/edit/[id]";
+import ItineraryHotelViewPage from "@/pages/itinerary/hotel/view/[id]";
+import ItineraryHotelCategoryListPage from "./pages/itinerary/hotel/category";
+import ItineraryHotelCategoryAddPage from "./pages/itinerary/hotel/category/add";
+import ItineraryHotelCategoryEditPage from "./pages/itinerary/hotel/category/edit/[id]";
+import ItineraryHotelCategoryViewPage from "./pages/itinerary/hotel/category/view/[id]";
+import BookingPage from "@/pages/bookings/booking/index";
+import AssignmentPage from "@/pages/bookings/assignment/index";
+import BookingTypePage from "@/pages/bookings/bookingtype/index";
+import BookingTypeAddPage from "@/pages/bookings/bookingtype/add";
+import BookingTypeEditPage from "@/pages/bookings/bookingtype/edit/[id]";
+import BookingTypeViewPage from "@/pages/bookings/bookingtype/view/[id]";
+import PaymentPage from "@/pages/bookings/payment/index";
+import PaymentViewPage from "@/pages/bookings/payment/view/[id]";
+import PaymentStorePage from "@/pages/bookings/paymentStore/index";
+import PaymentStoreAddPage from "@/pages/bookings/paymentStore/add";
+import PaymentStoreEditPage from "@/pages/bookings/paymentStore/edit/[id]";
+import PaymentStoreViewPage from "@/pages/bookings/paymentStore/view/[id]";
+import VendorListPage from "@/pages/bookings/vendorlist/index";
+import VendorListAddPage from "@/pages/bookings/vendorlist/add";
+import VendorListEditPage from "@/pages/bookings/vendorlist/edit/[id]";
+import VendorListViewPage from "@/pages/bookings/vendorlist/view/[id]";
+import PackageDetailPage from "@/pages/bookings/packagedetail/index";
+import CabBookingPage from "@/pages/bookings/cabbooking/index";
+import ReportsPaymentPage from "@/pages/bookings/reports/payment/index";
+import ReportsMailsPage from "@/pages/bookings/reports/mails/index";
+import ReportsProfitPage from "@/pages/bookings/reports/profitReports/index";
+import ClientItineraryListPage from "@/pages/itinerary/clientitinerary/index";
+import ClientItineraryAddPage from "@/pages/itinerary/clientitinerary/add/index";
+import ClientItineraryViewPage from "@/pages/itinerary/clientitinerary/view/index";
+import ClientItineraryEditPage from "@/pages/itinerary/clientitinerary/edit/index";
+import SavedItineraryListPage from "@/pages/itinerary/saved-itinerary/index";
+import EditSavedItineraryPage from "@/pages/itinerary/saved-itinerary/edit/[id]";
+import ItineraryReportMailsPage from "@/pages/itinerary/reports/mails";
+import ItineraryReportQuotationsPage from "@/pages/itinerary/reports/quotations";
+import PackageItineraryMailPage from "@/pages/package-mail/[id]";
+import HotelImagesPage from "@/pages/hotel-images/[id]";
+import PlaceholderPage from "@/pages/placeholder";
+import RoutesPage from "@/pages/routes";
+import AssignmentViewPage from "./pages/bookings/assignment/view/[id]";
+import AssignmentEditPage from "./pages/bookings/assignment/edit/[id]";
+import AssignmentAddPage from "./pages/bookings/assignment/add";
+import BookingViewPage from "./pages/bookings/booking/view/[id]";
+import PaymentLinkPage from "@/pages/bookings/payment/payment-link/[id]";
+import GeneratePaymentPage from "@/pages/bookings/generatePayment/[id]";
+import PaymentLinkViewPage from "@/pages/bookings/payment/payment-link/view/[id]";
+import PaymentLinkEditPage from "@/pages/bookings/payment/payment-link/edit/[id]";
+import PackageVoucherPage from "@/pages/package-voucher/[id]";
+import PaymentReceiptPage from "@/pages/payments-receipt/[id]";
+import SettingsMailerListPage from "@/pages/settings/mailer";
+import SettingsMailerAddPage from "@/pages/settings/mailer/add";
+import SettingsMailerViewPage from "@/pages/settings/mailer/view/[id]";
+import SettingsMailerEditPage from "@/pages/settings/mailer/edit/[id]";
+import SettingsUserListPage from "@/pages/settings/user";
+import SettingsUserAddPage from "@/pages/settings/user/add";
+import SettingsUserEditPage from "@/pages/settings/user/edit/[id]";
+import SettingsUserViewPage from "@/pages/settings/user/view/[id]";
+import SettingsRoleListPage from "@/pages/settings/role";
+import SettingsRoleAddPage from "@/pages/settings/role/add";
+import SettingsRoleViewPage from "@/pages/settings/role/view/[id]";
+import SettingsRoleEditPage from "@/pages/settings/role/edit/[id]";
+import PackageListPage from "@/pages/packages/list";
+import PackageAddPage from "@/pages/packages/list/add";
+import PackageEditPage from "@/pages/packages/list/edit/[id]";
+import PackageViewPage from "@/pages/packages/list/view/[id]";
+import PackageLocationListPage from "@/pages/packages/location";
+import PackageLocationAddPage from "@/pages/packages/location/add";
+import PackageLocationEditPage from "@/pages/packages/location/edit/[id]";
+import PackageLocationViewPage from "@/pages/packages/location/view/[id]";
+import PackageTypeListPage from "@/pages/packages/packageType";
+import PackageTypeAddPage from "@/pages/packages/packageType/add";
+import PackageTypeEditPage from "@/pages/packages/packageType/edit/[id]";
+import PackageTypeViewPage from "@/pages/packages/packageType/view/[id]";
+import PackageTagsListPage from "@/pages/packages/packageTags";
+import PackageTagsAddPage from "@/pages/packages/packageTags/add";
+import PackageTagsEditPage from "@/pages/packages/packageTags/edit/[id]";
+import PackageTagsViewPage from "@/pages/packages/packageTags/view/[id]";
+
+createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+        <ThemeProvider>
+            <BrowserRouter>
+                <RouteProvider>
+                    <Routes>
+                        <Route path="/" element={<HomeScreen />} />
+                        <Route path="/login" element={<LoginPage />} />
+                        <Route path="/dashboard" element={<DashboardPage />} />
+                        <Route path="/itinerary/list" element={<ItineraryListPage />} />
+                        <Route path="/itinerary/list/add" element={<ItineraryEditPage />} />
+                        <Route path="/itinerary/list/view/:id" element={<ItineraryViewPage />} />
+                        <Route path="/itinerary/list/edit/:id" element={<ItineraryEditPage />} />
+                        <Route path="/routes" element={<RoutesPage />} />
+                        <Route path="/docs" element={<PlaceholderPage />} />
+                        <Route path="/dial/home" element={<PlaceholderPage />} />
+                        <Route path="/dial/leads" element={<PlaceholderPage />} />
+                        <Route path="/dial/tasks" element={<PlaceholderPage />} />
+                        <Route path="/dial/reports" element={<PlaceholderPage />} />
+                        <Route path="/dial/call-logs" element={<PlaceholderPage />} />
+                        <Route path="/dial/campaigns" element={<PlaceholderPage />} />
+                        <Route path="/dial/walk-in-leads" element={<PlaceholderPage />} />
+                        <Route path="/bookings/assignment" element={<AssignmentPage />} />
+                        <Route path="/bookings/assignment/add" element={<AssignmentAddPage />} />
+                        <Route path="/bookings/assignment/view/:id" element={<AssignmentViewPage />} />
+                        <Route path="/bookings/assignment/edit/:id" element={<AssignmentEditPage />} />
+                        <Route path="/bookings/booking" element={<BookingPage />} />
+                        <Route path="/bookings/booking/view/:id" element={<BookingViewPage />} />
+                        <Route path="/bookings/bookingtype" element={<BookingTypePage />} />
+                        <Route path="/bookings/bookingtype/add" element={<BookingTypeAddPage />} />
+                        <Route path="/bookings/bookingtype/view/:id" element={<BookingTypeViewPage />} />
+                        <Route path="/bookings/bookingtype/edit/:id" element={<BookingTypeEditPage />} />
+                        <Route path="/bookings/cabbooking" element={<CabBookingPage />} />
+                        <Route path="/bookings/cabbooking/view/:id" element={<PlaceholderPage />} />
+                        <Route path="/bookings/packagedetail" element={<PackageDetailPage />} />
+                        <Route path="/bookings/generatePayment/:id" element={<GeneratePaymentPage />} />
+                        <Route path="/bookings/payment" element={<PaymentPage />} />
+                        <Route path="/bookings/payment/view/:id" element={<PaymentViewPage />} />
+                        <Route path="/bookings/payment/payment-link/:id" element={<PaymentLinkPage />} />
+                        <Route path="/bookings/payment/payment-link/view/:id" element={<PaymentLinkViewPage />} />
+                        <Route path="/bookings/payment/payment-link/edit/:id" element={<PaymentLinkEditPage />} />
+                        <Route path="/bookings/paymentStore" element={<PaymentStorePage />} />
+                        <Route path="/bookings/paymentStore/add" element={<PaymentStoreAddPage />} />
+                        <Route path="/bookings/paymentStore/add/:id" element={<PaymentStoreEditPage />} />
+                        <Route path="/bookings/paymentStore/view/:id" element={<PaymentStoreViewPage />} />
+                        <Route path="/bookings/paymentStore/edit/:id" element={<PaymentStoreEditPage />} />
+                        <Route path="/bookings/vendorlist" element={<VendorListPage />} />
+                        <Route path="/bookings/vendorlist/add" element={<VendorListAddPage />} />
+                        <Route path="/bookings/vendorlist/view/:id" element={<VendorListViewPage />} />
+                        <Route path="/bookings/vendorlist/edit/:id" element={<VendorListEditPage />} />
+                        <Route path="/bookings/reports/payment" element={<ReportsPaymentPage />} />
+                        <Route path="/bookings/reports/mails" element={<ReportsMailsPage />} />
+                        <Route path="/bookings/reports/profitReports" element={<ReportsProfitPage />} />
+                        <Route path="/itinerary" element={<PlaceholderPage />} />
+                        <Route path="/itinerary/site" element={<ItinerarySiteListPage />} />
+                        <Route path="/itinerary/site/add" element={<ItinerarySiteAddPage />} />
+                        <Route path="/itinerary/site/edit/:id" element={<ItinerarySiteEditPage />} />
+                        <Route path="/itinerary/site/view/:id" element={<ItinerarySiteViewPage />} />
+                        <Route path="/itinerary/area" element={<ItineraryAreaListPage />} />
+                        <Route path="/itinerary/area/add" element={<ItineraryAreaAddPage />} />
+                        <Route path="/itinerary/area/edit/:id" element={<ItineraryAreaEditPage />} />
+                        <Route path="/itinerary/area/view/:id" element={<ItineraryAreaViewPage />} />
+                        <Route path="/itinerary/hotel" element={<ItineraryHotelListPage />} />
+                        <Route path="/itinerary/hotel/add" element={<ItineraryHotelAddPage />} />
+                        <Route path="/itinerary/hotel/edit/:id" element={<ItineraryHotelEditPage />} />
+                        <Route path="/itinerary/hotel/view/:id" element={<ItineraryHotelViewPage />} />
+                        <Route path="/itinerary/hotel/category" element={<ItineraryHotelCategoryListPage />} />
+                        <Route path="/itinerary/hotel/category/add" element={<ItineraryHotelCategoryAddPage />} />
+                        <Route path="/itinerary/hotel/category/edit/:id" element={<ItineraryHotelCategoryEditPage />} />
+                        <Route path="/itinerary/hotel/category/view/:id" element={<ItineraryHotelCategoryViewPage />} />
+                        <Route path="/itinerary/clientitinerary" element={<ClientItineraryListPage />} />
+                        <Route path="/itinerary/clientitinerary/add" element={<ClientItineraryAddPage />} />
+                        <Route path="/itinerary/clientitinerary/view/:id" element={<ClientItineraryViewPage />} />
+                        <Route path="/itinerary/clientitinerary/edit/:id" element={<ClientItineraryEditPage />} />
+                        <Route path="/itinerary/reports/mails" element={<ItineraryReportMailsPage />} />
+                        <Route path="/itinerary/reports/quotations" element={<ItineraryReportQuotationsPage />} />
+                        <Route path="/itinerary/saved-itinerary" element={<SavedItineraryListPage />} />
+                        <Route path="/itinerary/saved-itinerary/edit/:id" element={<EditSavedItineraryPage />} />
+                        <Route path="/package-mail/:id" element={<PackageItineraryMailPage />} />
+                        <Route path="/lead-management/leads" element={<PlaceholderPage />} />
+                        <Route path="/lead-management/leads/view/:id" element={<PlaceholderPage />} />
+                        <Route path="/lead-management/pipeline" element={<PlaceholderPage />} />
+                        <Route path="/lead-management/pipeline/view/:id" element={<PlaceholderPage />} />
+                        <Route path="/lead-management/campaign" element={<PlaceholderPage />} />
+                        <Route path="/lead-management/campaign/view/:id" element={<PlaceholderPage />} />
+                        <Route path="/lead-management/settings" element={<PlaceholderPage />} />
+                        <Route path="/packages/list" element={<PackageListPage />} />
+                        <Route path="/packages/list/add" element={<PackageAddPage />} />
+                        <Route path="/packages/list/edit/:id" element={<PackageEditPage />} />
+                        <Route path="/packages/list/view/:id" element={<PackageViewPage />} />
+                        <Route path="/packages/location" element={<PackageLocationListPage />} />
+                        <Route path="/packages/location/add" element={<PackageLocationAddPage />} />
+                        <Route path="/packages/location/edit/:id" element={<PackageLocationEditPage />} />
+                        <Route path="/packages/location/view/:id" element={<PackageLocationViewPage />} />
+                        <Route path="/packages/packageType" element={<PackageTypeListPage />} />
+                        <Route path="/packages/packageType/add" element={<PackageTypeAddPage />} />
+                        <Route path="/packages/packageType/edit/:id" element={<PackageTypeEditPage />} />
+                        <Route path="/packages/packageType/view/:id" element={<PackageTypeViewPage />} />
+                        <Route path="/packages/packageTags" element={<PackageTagsListPage />} />
+                        <Route path="/packages/packageTags/add" element={<PackageTagsAddPage />} />
+                        <Route path="/packages/packageTags/edit/:id" element={<PackageTagsEditPage />} />
+                        <Route path="/packages/packageTags/view/:id" element={<PackageTagsViewPage />} />
+                        <Route path="/package-inclusions" element={<PlaceholderPage />} />
+                        <Route path="/package-exclusions" element={<PlaceholderPage />} />
+                        <Route path="/settings/user" element={<SettingsUserListPage />} />
+                        <Route path="/settings/user/add" element={<SettingsUserAddPage />} />
+                        <Route path="/settings/user/:id" element={<SettingsUserViewPage />} />
+                        <Route path="/settings/user/view/:id" element={<SettingsUserViewPage />} />
+                        <Route path="/settings/user/edit/:id" element={<SettingsUserEditPage />} />
+                        <Route path="/settings/mailer" element={<SettingsMailerListPage />} />
+                        <Route path="/settings/mailer/add" element={<SettingsMailerAddPage />} />
+                        <Route path="/settings/mailer/view/:id" element={<SettingsMailerViewPage />} />
+                        <Route path="/settings/mailer/edit/:id" element={<SettingsMailerEditPage />} />
+                        <Route path="/settings/role" element={<SettingsRoleListPage />} />
+                        <Route path="/settings/role/add" element={<SettingsRoleAddPage />} />
+                        <Route path="/settings/role/view/:id" element={<SettingsRoleViewPage />} />
+                        <Route path="/settings/role/edit/:id" element={<SettingsRoleEditPage />} />
+                        <Route path="/settings/configuration_manager" element={<PlaceholderPage />} />
+                        <Route path="/template" element={<PlaceholderPage />} />
+                        <Route path="/template/template-one" element={<PlaceholderPage />} />
+                        <Route path="/package-mail/:id" element={<PackageItineraryMailPage />} />
+                        <Route path="/package-voucher/:id" element={<PackageVoucherPage />} />
+                        <Route path="/payments-receipt/:id" element={<PaymentReceiptPage />} />
+                        <Route path="/hotel-images/:id" element={<HotelImagesPage />} />
+                        <Route path="*" element={<NotFound />} />
+                    </Routes>
+                </RouteProvider>
+            </BrowserRouter>
+        </ThemeProvider>
+    </StrictMode>,
+);

@@ -1,0 +1,187 @@
+@import "tailwindcss";
+@import "./theme.css";
+@import "./typography.css";
+
+@plugin "@tailwindcss/typography";
+@plugin "tailwindcss-react-aria-components";
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:where(.dark-mode, .dark-mode *));
+@custom-variant label (& [data-label]);
+@custom-variant focus-input-within (&:has(input:focus));
+
+@utility scrollbar-hide {
+    /* For Webkit-based browsers (Chrome, Safari and Opera) */
+    &::-webkit-scrollbar {
+        display: none;
+        -webkit-appearance: none;
+    }
+
+    /* For IE, Edge and Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+}
+
+@utility transition-inherit-all {
+    transition-property: inherit;
+    transition-duration: inherit;
+    transition-timing-function: inherit;
+}
+
+html,
+body {
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-variant-ligatures: contextual;
+    font-variant-ligatures: contextual;
+    -webkit-font-kerning: normal;
+    font-kerning: normal;
+}
+
+/* Hide the default expand arrow on Safari.  */
+details summary::-webkit-details-marker {
+    display: none;
+}
+
+/* Hide default arrows from number inputs. */
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+/* Firefox */
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* Hide the default clear button (X) from search inputs. */
+input[type="search"]::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+}
+
+.dark-mode .tz-rich-text-editor .jodit-container:not(.jodit_inline) {
+    background: var(--color-bg-primary);
+    border-color: var(--color-border-secondary);
+}
+
+.dark-mode .tz-rich-text-editor .jodit-workplace {
+    background: var(--color-bg-primary);
+}
+
+.dark-mode .tz-rich-text-editor .jodit-wysiwyg,
+.dark-mode .tz-rich-text-editor .jodit-wysiwyg_iframe {
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+}
+
+.dark-mode .tz-rich-text-editor .jodit-wysiwyg ::selection {
+    background: color-mix(in oklab, var(--color-bg-brand-solid) 35%, transparent);
+}
+
+.dark-mode .tz-rich-text-editor .jodit-toolbar__box,
+.dark-mode .tz-rich-text-editor .jodit-toolbar__items,
+.dark-mode .tz-rich-text-editor .jodit-toolbar-editor-collection,
+.dark-mode .tz-rich-text-editor .jodit-toolbar-editor-collection__group,
+.dark-mode .tz-rich-text-editor .jodit-status-bar {
+    background: var(--color-bg-secondary) !important;
+    border-color: var(--color-border-secondary) !important;
+    color: var(--color-text-tertiary);
+}
+
+.dark-mode .tz-rich-text-editor .jodit-toolbar-button__button,
+.dark-mode .tz-rich-text-editor .jodit-toolbar-button {
+    color: var(--color-text-secondary);
+}
+
+.dark-mode .tz-rich-text-editor .jodit-toolbar-button svg,
+.dark-mode .tz-rich-text-editor .jodit-toolbar-button svg * {
+    fill: currentColor !important;
+}
+
+.dark-mode .tz-rich-text-editor .jodit-toolbar-button:hover:not([disabled]) .jodit-toolbar-button__button,
+.dark-mode .tz-rich-text-editor .jodit-toolbar-button[aria-pressed="true"] .jodit-toolbar-button__button,
+.dark-mode .tz-rich-text-editor .jodit-toolbar-button_active .jodit-toolbar-button__button {
+    background-color: var(--color-bg-secondary_hover) !important;
+    color: var(--color-text-primary) !important;
+}
+
+/* Jodit Fullscreen Fixes */
+.jodit_fullsize,
+.jodit-container.jodit_fullsize {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 100000 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    max-width: none !important;
+    max-height: none !important;
+}
+
+/* Ensure background is correct in fullscreen dark mode */
+.dark-mode .jodit_fullsize,
+.dark-mode .jodit-container.jodit_fullsize {
+    background: var(--color-bg-primary) !important;
+}
+
+.dark-mode .jodit_fullsize .jodit-workplace,
+.dark-mode .jodit_fullsize .jodit-wysiwyg,
+.dark-mode .jodit-container.jodit_fullsize .jodit-workplace,
+.dark-mode .jodit-container.jodit_fullsize .jodit-wysiwyg {
+    background: var(--color-bg-primary) !important;
+    color: var(--color-text-primary) !important;
+}
+
+/* Ensure toolbar is visible and styled in fullscreen dark mode */
+.dark-mode .jodit_fullsize .jodit-toolbar__box,
+.dark-mode .jodit-container.jodit_fullsize .jodit-toolbar__box {
+    background: var(--color-bg-secondary) !important;
+    border-color: var(--color-border-secondary) !important;
+}
+
+/* 
+  Fix for Jodit fullscreen mode when inside a Modal.
+  The Modal's backdrop-filter, transform, and z-index create a stacking context 
+  that traps the fixed-positioned editor. We need to reset these on all parent 
+  elements marked by Jodit with 'jodit_fullsize-box_true'.
+*/
+.jodit_fullsize-box_true {
+    transform: none !important;
+    filter: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    perspective: none !important;
+    contain: none !important;
+    will-change: auto !important;
+    z-index: 100000 !important;
+}
+
+/* Jodit Popup Dark Mode Fixes */
+.dark-mode .jodit-popup-container .jodit-popup,
+.dark-mode .jodit-popup-container .jodit-toolbar-editor-collection,
+.dark-mode .jodit-popup-container .jodit-ui-group,
+.dark-mode .jodit-popup-container .jodit-popup__content {
+    background: var(--color-bg-secondary) !important;
+    color: var(--color-text-primary) !important;
+    border-color: var(--color-border-secondary) !important;
+}
+
+.dark-mode .jodit-popup-container .jodit-toolbar-button__button {
+    color: var(--color-text-secondary);
+}
+
+.dark-mode .jodit-popup-container .jodit-toolbar-button:hover:not([disabled]) .jodit-toolbar-button__button,
+.dark-mode .jodit-popup-container .jodit-toolbar-button[aria-pressed="true"] .jodit-toolbar-button__button,
+.dark-mode .jodit-popup-container .jodit-toolbar-button_active .jodit-toolbar-button__button {
+    background-color: var(--color-bg-secondary_hover) !important;
+    color: var(--color-text-primary) !important;
+}
+
+.dark-mode .jodit-popup-container svg {
+    fill: currentColor !important;
+}
