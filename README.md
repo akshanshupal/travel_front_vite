@@ -12,7 +12,10 @@ Built with React 19.1, Tailwind CSS v4.1, TypeScript 5.8, and React Aria, Untitl
 
 ## Getting started
 
-First, run the development server:
+, run the development server:
+
+
+
 
 ```bash
 npm run dev
