@@ -1,7 +1,7 @@
 import { PublicLayout } from "@/layouts/PublicLayout";
 import Timagelist from "@/components/utils/Timagelist";
 import { useStoreSnackbar } from "@/store/snackbar";
-import { getHotelById } from "@/utils/services/hotelService";
+import { getHotelByIdPublic } from "@/utils/services/hotelService";
 import { getHotelimageById } from "@/utils/services/hotelimageService";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
@@ -21,7 +21,7 @@ export default function HotelImagesPage() {
             setIsLoading(true);
             try {
                 const [hotelRes, imagesRes] = await Promise.all([
-                    getHotelById(id, { select: "name,location" }),
+                    getHotelByIdPublic(id, { select: "name,location" }),
                     getHotelimageById({ hotel: id, limit: 20 }),
                 ]);
 

@@ -1,4 +1,4 @@
-import { fetchWithToken } from "@/utils/fetchApi";
+import { fetchWithToken, fetchWithOutToken } from "@/utils/fetchApi";
 
 export const getHotels = async (params = {}) => {
   const response = await fetchWithToken('/api/hotel', params);
@@ -22,6 +22,15 @@ export const getHotelById = async (id: string, params = {}) => {
   const response = await fetchWithToken(`/api/hotel/${id}`, params);
   if (response.error) {
     console.error('Error fetching hotel by ID:', response.error);
+    return { error: response.error, details: response?.details };
+  }
+  return response;
+};
+
+export const getHotelByIdPublic = async (id: string, params = {}) => {
+  const response = await fetchWithOutToken(`/api/hotel/${id}`, params);
+  if (response.error) {
+    console.error('Error fetching hotel by ID public:', response.error);
     return { error: response.error, details: response?.details };
   }
   return response;
