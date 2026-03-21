@@ -1,10 +1,21 @@
-import { fetchWithToken } from "@/utils/fetchApi";
+import { fetchWithToken, fetchWithOutToken } from "@/utils/fetchApi";
 
 export const getPackageVoucher = async (params: Record<string, any> = {}) => {
   const response = await fetchWithToken('/api/packagevoucher', params);
   
   if (response.error) {
     console.error('Error fetching Packagevoucher:', response.error);
+    return { error: response.error, details: response?.details };
+  }
+
+  return response;
+};
+
+export const getPackageVoucherPublic = async (params: Record<string, any> = {}) => {
+  const response = await fetchWithOutToken('/api/packagevoucher', params);
+  
+  if (response.error) {
+    console.error('Error fetching Packagevoucher public:', response.error);
     return { error: response.error, details: response?.details };
   }
 

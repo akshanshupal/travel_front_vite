@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
-import { getPackageVoucher } from '@/utils/services/packageVoucherService';
+import { getPackageVoucherPublic } from "@/utils/services/packageVoucherService";
 import { useStoreSnackbar } from '@/store/snackbar';
 import { LoadingIndicator } from '@/components/application/loading-indicator/loading-indicator';
 
@@ -22,7 +22,7 @@ export default function ClientUrl() {
         select_assignmentId: "packageId"
       };
       try {
-        const response: any = await getPackageVoucher(params);
+        const response: any = await getPackageVoucherPublic(params);
         // Next.js code used destructuring: const [response] = await ...
         // which implies the API returns an array for this query.
         const result = response.data || response;
