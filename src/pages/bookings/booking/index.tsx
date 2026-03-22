@@ -548,6 +548,7 @@ export default function BookingPage() {
                     verify: "true",
                     sortField: debouncedFilters.sortField || "tourDate",
                     sortOrder: debouncedFilters.sortOrder || "ASC",
+                    tzOffsetMinutes: new Date().getTimezoneOffset(),
                 };
                 addParam("status", debouncedFilters.status);
                 addParam("packageId", debouncedFilters.packageId);
