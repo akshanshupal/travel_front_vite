@@ -68,6 +68,7 @@ export default function PackageItineraryMailPage() {
                 {!isLoading && data.mailData && (
                     <>
                     <div
+                        className="[&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul_ul]:list-[circle] [&_ul_ul]:pl-5 [&_ol_ol]:list-[lower-alpha] [&_ol_ol]:pl-5 [&_li]:mb-1"
                         dangerouslySetInnerHTML={{
                             __html: replaceClientName(data.mailData),
                         }}

@@ -63,7 +63,7 @@ export default function ClientUrl() {
           ) : data && data.innerHtml ? (
             <div style={{ maxWidth: '1000px', margin: 'auto' }} className="py-4">
               <div className="mt-4 bg-white shadow rounded-lg overflow-hidden">
-                <div className="p-4" dangerouslySetInnerHTML={{ __html: replaceClientName(data.innerHtml) }}></div>
+                <div className="p-4 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul_ul]:list-[circle] [&_ul_ul]:pl-5 [&_ol_ol]:list-[lower-alpha] [&_ol_ol]:pl-5 [&_li]:mb-1" dangerouslySetInnerHTML={{ __html: replaceClientName(data.innerHtml) }}></div>
               </div>
             </div>
           ) : (
