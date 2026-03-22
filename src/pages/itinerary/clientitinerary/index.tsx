@@ -11,7 +11,8 @@ import { clientItineraryService } from "@/utils/services/clientItineraryService"
 import { itineraryService } from "@/utils/services/itineraryService";
 import { addSavedItinerary } from "@/utils/services/savedItineraryService";
 import { getSalesEx } from "@/utils/services/salesService";
-import { Send03, Edit01, Trash01, Plus, FilterLines, RefreshCw01, X } from "@untitledui/icons";
+import { formatTime } from "@/utils/formatters";
+import { Send03, Edit01, Trash01, Plus, FilterLines, RefreshCw01, X, SearchLg } from "@untitledui/icons";
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { Select } from "@/components/base/select/select";
@@ -64,6 +65,9 @@ export default function ClientItineraryListPage() {
     const [itinerarySearch, setItinerarySearch] = useState("");
     const [debouncedItinerarySearch, setDebouncedItinerarySearch] = useState("");
     const [sendingQuotationIds, setSendingQuotationIds] = useState<Record<string, boolean>>({});
+    const isFilterActive = Boolean(
+        filters.title || filters.clientDetails || filters.status || filters.salesExecutive || filters.tourDate,
+    );
 
     // Fetch Sales Executives
     useEffect(() => {
@@ -366,29 +370,34 @@ export default function ClientItineraryListPage() {
                     
                     <div className="border-b border-secondary bg-primary px-4 py-4 md:px-6">
                         <div className="flex flex-col gap-4">
-                            <div className="flex items-center justify-between">
-                                <SlideoutMenu.Trigger>
-                                    <Button color="secondary" iconLeading={FilterLines} onClick={handleOpenFilters}>
-                                        More filters
-                                    </Button>
-                                    <SlideoutMenu isDismissable>
-                                        {({ close }) => (
-                                            <SlideoutMenu.Content>
-                                                <SlideoutMenu.Header onClose={close}>Filters</SlideoutMenu.Header>
-                                                <div className="flex-1 overflow-y-auto p-6">
-                                                    <div className="flex flex-col gap-4">
-                                                        <Input
-                                                            label="Title"
-                                                            placeholder="Search by Title"
-                                                            value={tempFilters.title}
-                                                            onChange={(value) => setTempFilters(prev => ({ ...prev, title: String(value) }))}
-                                                        />
-                                                        <Input
-                                                            label="Client Details"
-                                                            placeholder="Search by Client Details"
-                                                            value={tempFilters.clientDetails}
-                                                            onChange={(value) => setTempFilters(prev => ({ ...prev, clientDetails: String(value) }))}
-                                                        />
+                            <div className="flex flex-col gap-3 justify-between md:flex-row md:items-center">
+                                <Input
+                                    placeholder="Search by client"
+                                    value={tempFilters.clientDetails}
+                                    onChange={(value) => {
+                                        setFilters((prev) => ({ ...prev, clientDetails: String(value) }));
+                                        setTempFilters((prev) => ({ ...prev, clientDetails: String(value) }));
+                                    }}
+                                    icon={SearchLg}
+                                    className="w-full md:w-80"
+                                />
+                                <div className="flex items-center justify-end gap-2">
+                                    <SlideoutMenu.Trigger>
+                                        <Button color="primary" iconLeading={FilterLines} onClick={handleOpenFilters}>
+                                            More filters
+                                        </Button>
+                                        <SlideoutMenu isDismissable>
+                                            {({ close }) => (
+                                                <SlideoutMenu.Content>
+                                                    <SlideoutMenu.Header onClose={close}>Filters</SlideoutMenu.Header>
+                                                    <div className="flex-1 overflow-y-auto p-6">
+                                                        <div className="flex flex-col gap-4">
+                                                            <Input
+                                                                label="Title"
+                                                                placeholder="Search by Title"
+                                                                value={tempFilters.title}
+                                                                onChange={(value) => setTempFilters((prev) => ({ ...prev, title: String(value) }))}
+                                                            />
                                                         <div className="flex flex-col gap-1.5">
                                                             <Label>Sales Executive</Label>
                                                             <ComboBox
@@ -428,28 +437,30 @@ export default function ClientItineraryListPage() {
                                                             </Select>
                                                         </div>
                                                     </div>
-                                                </div>
-                                                <SlideoutMenu.Footer>
-                                                    <div className="flex gap-3 w-full">
-                                                        <Button color="secondary" className="flex-1 justify-center" onClick={() => handleResetTempFilters(close)}>
-                                                            Reset
-                                                        </Button>
-                                                        <Button color="primary" className="flex-1 justify-center" onClick={() => handleApplyFilters(close)}>
-                                                            Apply Filters
-                                                        </Button>
                                                     </div>
-                                                </SlideoutMenu.Footer>
-                                            </SlideoutMenu.Content>
-                                        )}
-                                    </SlideoutMenu>
-                                </SlideoutMenu.Trigger>
-                                <ButtonUtility 
-                                    icon={RefreshCw01} 
-                                    onClick={() => handleResetTempFilters()}
-                                    color="secondary"
-                                    className="px-3"
-                                    tooltip="Reset Filters"
-                                />
+                                                    <SlideoutMenu.Footer>
+                                                        <div className="flex gap-3 w-full">
+                                                            <Button color="secondary" className="flex-1 justify-center" onClick={() => handleResetTempFilters(close)}>
+                                                                Reset
+                                                            </Button>
+                                                            <Button color="primary" className="flex-1 justify-center" onClick={() => handleApplyFilters(close)}>
+                                                                Apply Filters
+                                                            </Button>
+                                                        </div>
+                                                    </SlideoutMenu.Footer>
+                                                </SlideoutMenu.Content>
+                                            )}
+                                        </SlideoutMenu>
+                                    </SlideoutMenu.Trigger>
+                                    <ButtonUtility
+                                        icon={RefreshCw01}
+                                        onClick={() => handleResetTempFilters()}
+                                        color="secondary"
+                                        className="px-3"
+                                        tooltip="Reset Filters"
+                                        isDisabled={!isFilterActive}
+                                    />
+                                </div>
                             </div>
                             <div className="flex flex-wrap gap-2">
                                 {Object.entries(filters).map(([key, value]) => {
@@ -566,7 +577,11 @@ export default function ClientItineraryListPage() {
                                             ) : column.id === "tourDate" ? (
                                                 <span className="text-sm text-tertiary">{formatDate(item.tourDate)}</span>
                                             ) : column.id === "createdDate" ? (
-                                                <span className="text-sm text-tertiary">{formatDate(item.createdAt || item.updatedAt)}</span>
+                                                <span className="text-sm text-tertiary">
+                                                    {formatDate(item.createdAt)}
+                                                    <br />
+                                                    {formatTime(item.createdAt)}
+                                                </span>
                                             ) : column.id === "packageCost" ? (
                                                 <span className="text-sm text-tertiary">{item.packageCost ? `₹${item.packageCost}` : "—"}</span>
                                             ) : column.id === "status" ? (

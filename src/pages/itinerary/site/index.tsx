@@ -11,7 +11,7 @@ import { fetchWithToken } from "@/utils/fetchApi";
 import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import { Plus, Trash01, Edit01, RefreshCw01, FilterLines } from "@untitledui/icons";
+import { Plus, Trash01, Edit01, RefreshCw01, FilterLines, SearchLg } from "@untitledui/icons";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Label } from "@/components/base/input/label";
 import { BadgeWithButton } from "@/components/base/badges/badges";
@@ -263,23 +263,28 @@ export default function ItinerarySiteListPage() {
 
                     <div className="border-b border-secondary bg-primary px-4 py-4 md:px-6">
                         <div className="flex flex-col gap-4">
-                            <div className="flex items-center justify-between">
-                                <SlideoutMenu.Trigger>
-                                    <Button color="secondary" iconLeading={FilterLines} onClick={handleOpenFilters}>
-                                        More filters
-                                    </Button>
-                                    <SlideoutMenu isDismissable>
-                                        {({ close }) => (
-                                            <SlideoutMenu.Content>
-                                                <SlideoutMenu.Header onClose={close}>Filters</SlideoutMenu.Header>
-                                                <div className="flex-1 overflow-y-auto p-6">
-                                                    <div className="flex flex-col gap-4">
-                                                        <Input
-                                                            label="Title"
-                                                            placeholder="Search by title"
-                                                            value={tempFilters.title}
-                                                            onChange={(value) => setTempFilters((prev) => ({ ...prev, title: value }))}
-                                                        />
+                            <div className="flex flex-col gap-3 justify-between md:flex-row md:items-center">
+                                <Input
+                                    placeholder="Search by title"
+                                    value={tempFilters.title}
+                                    onChange={(value) => {
+                                        setFilters((prev) => ({ ...prev, title: String(value) }));
+                                        setTempFilters((prev) => ({ ...prev, title: String(value) }));
+                                    }}
+                                    icon={SearchLg}
+                                    className="w-full md:w-80"
+                                />
+                                <div className="flex items-center justify-end gap-2">
+                                    <SlideoutMenu.Trigger>
+                                        <Button color="primary" iconLeading={FilterLines} onClick={handleOpenFilters}>
+                                            More filters
+                                        </Button>
+                                        <SlideoutMenu isDismissable>
+                                            {({ close }) => (
+                                                <SlideoutMenu.Content>
+                                                    <SlideoutMenu.Header onClose={close}>Filters</SlideoutMenu.Header>
+                                                    <div className="flex-1 overflow-y-auto p-6">
+                                                        <div className="flex flex-col gap-4">
                                                         <div className="flex flex-col gap-1.5">
                                                             <Label>Area</Label>
                                                             <Select
@@ -320,18 +325,19 @@ export default function ItinerarySiteListPage() {
                                                         </Button>
                                                     </div>
                                                 </SlideoutMenu.Footer>
-                                            </SlideoutMenu.Content>
-                                        )}
-                                    </SlideoutMenu>
-                                </SlideoutMenu.Trigger>
-                                <ButtonUtility
-                                    icon={RefreshCw01}
-                                    onClick={() => handleResetTempFilters()}
-                                    color="secondary"
-                                    className="px-3"
-                                    tooltip="Reset Filters"
-                                    isDisabled={!isFilterActive}
-                                />
+                                                </SlideoutMenu.Content>
+                                            )}
+                                        </SlideoutMenu>
+                                    </SlideoutMenu.Trigger>
+                                    <ButtonUtility
+                                        icon={RefreshCw01}
+                                        onClick={() => handleResetTempFilters()}
+                                        color="secondary"
+                                        className="px-3"
+                                        tooltip="Reset Filters"
+                                        isDisabled={!isFilterActive}
+                                    />
+                                </div>
                             </div>
                             <div className="flex flex-wrap gap-2">
                                 {Object.entries(filters).map(([key, value]) => {
