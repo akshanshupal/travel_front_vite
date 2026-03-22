@@ -6,10 +6,12 @@ import { Select } from "@/components/base/select/select";
 import { StickyTable, Table, TableCard } from "@/components/application/table/table";
 import { PaginationButtonGroup } from "@/components/application/pagination/pagination";
 import { DatePicker } from "@/components/application/date-picker/date-picker";
+import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { getSavedItinerary, deleteSavedItinerary } from "@/utils/services/savedItineraryService";
 import { getSalesEx } from "@/utils/services/salesService";
 import { useStoreSnackbar } from "@/store/snackbar";
-import { Eye, SearchLg, Edit01, Trash01, Mail01, File02, FilterLines, RefreshCw01 } from "@untitledui/icons";
+import { Eye, SearchLg, Edit01, Trash01, Mail01, File02, FilterLines, RefreshCw01, Send03 } from "@untitledui/icons";
+import { FaWhatsapp } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { useLocation, Link, useNavigate } from "react-router";
 import { DefaultLayout } from "@/layouts/DefaultLayout";
@@ -224,6 +226,36 @@ export default function SavedItineraryListPage() {
         setTempFilters(newFilters);
         setDebouncedFilters(newFilters);
         setPage(1);
+    };
+
+    const handleSendWhatsapp = (item: any) => {
+        const itineraryId = String(item?.id || item?._id || "");
+        const mobile = String(item?.mobile || "").trim();
+        const clientName = String(item?.clientName || "").trim();
+
+        if (!itineraryId) {
+            showSnackbar({
+                title: "Error",
+                description: "Unable to send WhatsApp message (missing itinerary).",
+                color: "danger",
+            });
+            return;
+        }
+
+        if (!mobile) {
+            showSnackbar({
+                title: "Error",
+                description: "Client mobile number not found.",
+                color: "danger",
+            });
+            return;
+        }
+
+        const quotationUrl = `${window.location.origin}/package-mail/${itineraryId}`;
+        const message = `Hello${clientName ? ` ${clientName}` : ""},\n\nThis is your quotation for your trip:\n${quotationUrl}`;
+
+        const whatsappUrl = `https://wa.me/${mobile}?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, "_blank");
     };
 
     const formatDate = (dateStr: string) => {
@@ -517,16 +549,34 @@ export default function SavedItineraryListPage() {
                                                             color="error"
                                                             onClick={() => handleDelete(item.id || item._id)}
                                                         />
-                                                        <ButtonUtility
-                                                            icon={Mail01}
-                                                            tooltip="Send Mail"
-                                                            color="brand"
-                                                            onClick={() => {
-                                                                setSelectedId(item.id || item._id);
-                                                                setSelectedEmail(item.email);
-                                                                setIsOpen(true);
-                                                            }}
-                                                        />
+                                                        <Dropdown.Root>
+                                                            <Button
+                                                                color="secondary"
+                                                                iconLeading={Send03}
+                                                                aria-label="Send"
+                                                                className="rounded-md p-1.5 data-icon-only:p-1.5"
+                                                            />
+                                                            <Dropdown.Popover>
+                                                                <Dropdown.Menu>
+                                                                    <Dropdown.Item
+                                                                        icon={Mail01}
+                                                                        onAction={() => {
+                                                                            setSelectedId(item.id || item._id);
+                                                                            setSelectedEmail(item.email);
+                                                                            setIsOpen(true);
+                                                                        }}
+                                                                    >
+                                                                        Mail
+                                                                    </Dropdown.Item>
+                                                                    <Dropdown.Item
+                                                                        icon={FaWhatsapp}
+                                                                        onAction={() => handleSendWhatsapp(item)}
+                                                                    >
+                                                                        WhatsApp
+                                                                    </Dropdown.Item>
+                                                                </Dropdown.Menu>
+                                                            </Dropdown.Popover>
+                                                        </Dropdown.Root>
                                                         <ButtonUtility
                                                             icon={File02}
                                                             tooltip="Create Assignment"
