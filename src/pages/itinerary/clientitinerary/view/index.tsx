@@ -101,10 +101,13 @@ export default function ClientItineraryViewPage() {
             day: "2-digit",
             month: "short",
             year: "numeric",
+            timeZone: "Asia/Kolkata",
         });
         const timePart = date.toLocaleTimeString("en-US", {
             hour: "2-digit",
             minute: "2-digit",
+            hour12: true,
+            timeZone: "Asia/Kolkata",
         });
         return `${datePart} ${timePart}`;
     };

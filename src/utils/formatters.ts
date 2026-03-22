@@ -7,6 +7,7 @@ export const formatShortDate = (value?: string | number | Date) => {
             day: "2-digit",
             month: "short",
             year: "2-digit",
+            timeZone: "Asia/Kolkata",
         })
         .split(" ");
     if (parts.length < 3) return date.toLocaleDateString("en-GB");
@@ -21,6 +22,7 @@ export const formatTime = (value?: string | number | Date) => {
         hour: "2-digit",
         minute: "2-digit",
         hour12: true,
+        timeZone: "Asia/Kolkata",
     });
 };
 

@@ -99,6 +99,26 @@ import PackageTagsAddPage from "@/pages/packages/packageTags/add";
 import PackageTagsEditPage from "@/pages/packages/packageTags/edit/[id]";
 import PackageTagsViewPage from "@/pages/packages/packageTags/view/[id]";
 
+const shouldIgnoreConsoleMessage = (args: unknown[]) => {
+    const first = args[0];
+    if (typeof first !== "string") return false;
+    if (first.includes("Unchecked runtime.lastError: Could not establish connection. Receiving end does not exist.")) return true;
+    if (first.includes("Could not establish connection. Receiving end does not exist.")) return true;
+    return false;
+};
+
+const originalConsoleError = console.error.bind(console);
+console.error = (...args: unknown[]) => {
+    if (shouldIgnoreConsoleMessage(args)) return;
+    originalConsoleError(...args);
+};
+
+const originalConsoleWarn = console.warn.bind(console);
+console.warn = (...args: unknown[]) => {
+    if (shouldIgnoreConsoleMessage(args)) return;
+    originalConsoleWarn(...args);
+};
+
 createRoot(document.getElementById("root")!).render(
     <StrictMode>
         <ThemeProvider>

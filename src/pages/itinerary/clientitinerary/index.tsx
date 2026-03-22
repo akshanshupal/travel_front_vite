@@ -3,6 +3,7 @@ import { StickyTable, Table, TableCard } from "@/components/application/table/ta
 import { Badge, BadgeWithButton } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
+import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { PaginationButtonGroup } from "@/components/application/pagination/pagination";
 import { Input } from "@/components/base/input/input";
 import { useStoreLogin } from "@/store/login";
@@ -12,7 +13,7 @@ import { itineraryService } from "@/utils/services/itineraryService";
 import { addSavedItinerary } from "@/utils/services/savedItineraryService";
 import { getSalesEx } from "@/utils/services/salesService";
 import { formatTime } from "@/utils/formatters";
-import { Send03, Edit01, Trash01, Plus, FilterLines, RefreshCw01, X, SearchLg } from "@untitledui/icons";
+import { Send03, Edit01, Trash01, Plus, FilterLines, RefreshCw01, X, SearchLg, ChevronSelectorVertical } from "@untitledui/icons";
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { Select } from "@/components/base/select/select";
@@ -65,9 +66,16 @@ export default function ClientItineraryListPage() {
     const [itinerarySearch, setItinerarySearch] = useState("");
     const [debouncedItinerarySearch, setDebouncedItinerarySearch] = useState("");
     const [sendingQuotationIds, setSendingQuotationIds] = useState<Record<string, boolean>>({});
+    const [sortField, setSortField] = useState<"createdAt" | "updatedAt" | "tourDate">("updatedAt");
     const isFilterActive = Boolean(
         filters.title || filters.clientDetails || filters.status || filters.salesExecutive || filters.tourDate,
     );
+
+    const sortLabel = useMemo(() => {
+        if (sortField === "createdAt") return "Created Date";
+        if (sortField === "tourDate") return "Travel Date";
+        return "Updated Date";
+    }, [sortField]);
 
     // Fetch Sales Executives
     useEffect(() => {
@@ -149,9 +157,11 @@ export default function ClientItineraryListPage() {
                     page,
                     limit,
                     populate: "salesExecutive",
-                    sortField: "updatedAt",
-                    sortOrder: "DESC",
                 };
+                if (sortField !== "updatedAt") {
+                    query.sortField = sortField;
+                    query.sortOrder = "DESC";
+                }
 
                 // Only add filters that have values
                 Object.entries(debouncedFilters).forEach(([key, value]) => {
@@ -165,9 +175,7 @@ export default function ClientItineraryListPage() {
                     query.salesExecutive = user?.id;
                 }
 
-                console.log("Fetching client itinerary with query:", query);
                 const res = await clientItineraryService.list(query);
-                console.log("Client itinerary response:", res);
                 
                 if (res?.error) {
                     throw new Error(res.error);
@@ -190,7 +198,7 @@ export default function ClientItineraryListPage() {
         };
 
         fetchData();
-    }, [page, limit, debouncedFilters, user, showSnackbar]);
+    }, [page, limit, debouncedFilters, sortField, user, showSnackbar]);
 
     const handleDelete = async (id: string) => {
         if (!window.confirm("Are you sure you want to delete this client itinerary?")) return;
@@ -275,7 +283,8 @@ export default function ClientItineraryListPage() {
         return new Date(dateString).toLocaleDateString("en-GB", {
             day: "2-digit",
             month: "short",
-            year: "2-digit"
+            year: "2-digit",
+            timeZone: "Asia/Kolkata",
         });
     };
 
@@ -320,13 +329,14 @@ export default function ClientItineraryListPage() {
 
     const columns = [
         { id: "index", name: "#",  isRowHeader: true, widthRatio: 4, minWidth: 56 },
-        { id: "title", name: "Title", widthRatio: 28, minWidth: 320 },
-        { id: "client", name: "Customer Details", widthRatio: 18, minWidth: 240 },
-        { id: "salesExecutive", name: "Sales Executive", widthRatio: 10, minWidth: 200 },
-        { id: "tourDate", name: "Travel Date", widthRatio: 9, minWidth: 140 },
-        { id: "createdDate", name: "Created Date", widthRatio: 9, minWidth: 140 },
-        { id: "packageCost", name: "Package Amount", widthRatio: 10, minWidth: 160 },
-        { id: "status", name: "Status", widthRatio: 8, minWidth: 120 },
+        { id: "title", name: "Title", widthRatio: 26, minWidth: 280 },
+        { id: "client", name: "Customer Details", widthRatio: 16, minWidth: 220 },
+        { id: "salesExecutive", name: "Sales Executive", widthRatio: 8, minWidth: 180 },
+        { id: "tourDate", name: "Travel Date", widthRatio: 8, minWidth: 140 },
+        { id: "createdDate", name: "Created Date", widthRatio: 8, minWidth: 140 },
+        { id: "updatedDate", name: "Updated Date", widthRatio: 8, minWidth: 140 },
+        { id: "packageCost", name: "Package Amount", widthRatio: 8, minWidth: 160 },
+        { id: "status", name: "Status", widthRatio: 8, minWidth: 100 },
         { id: "actions", name: "Actions", widthRatio: 6, minWidth: 160, className: "pr-4 pl-4 text-right" },
     ] as { id: string; name: string; className?: string; widthRatio?: number; minWidth?: number }[];
 
@@ -384,6 +394,39 @@ export default function ClientItineraryListPage() {
                                     className="w-full md:w-80"
                                 />
                                 <div className="flex items-center justify-end gap-2">
+                                    <Dropdown.Root>
+                                        <Button color="secondary" iconLeading={ChevronSelectorVertical}>
+                                            Sort: {sortLabel}
+                                        </Button>
+                                        <Dropdown.Popover className="w-min">
+                                            <Dropdown.Menu>
+                                                <Dropdown.Item
+                                                    onAction={() => {
+                                                        setSortField("createdAt");
+                                                        setPage(1);
+                                                    }}
+                                                >
+                                                    Created Date
+                                                </Dropdown.Item>
+                                                <Dropdown.Item
+                                                    onAction={() => {
+                                                        setSortField("updatedAt");
+                                                        setPage(1);
+                                                    }}
+                                                >
+                                                    Updated Date
+                                                </Dropdown.Item>
+                                                <Dropdown.Item
+                                                    onAction={() => {
+                                                        setSortField("tourDate");
+                                                        setPage(1);
+                                                    }}
+                                                >
+                                                    Travel Date
+                                                </Dropdown.Item>
+                                            </Dropdown.Menu>
+                                        </Dropdown.Popover>
+                                    </Dropdown.Root>
                                     <SlideoutMenu.Trigger>
                                         <Button color="primary" iconLeading={FilterLines} onClick={handleOpenFilters}>
                                             More filters
@@ -552,6 +595,7 @@ export default function ClientItineraryListPage() {
                                                 column.id === "index" ||
                                                 column.id === "tourDate" ||
                                                 column.id === "createdDate" ||
+                                                column.id === "updatedDate" ||
                                                 column.id === "packageCost" ||
                                                 column.id === "status"
                                                     ? "whitespace-nowrap"
@@ -583,6 +627,12 @@ export default function ClientItineraryListPage() {
                                                     {formatDate(item.createdAt)}
                                                     <br />
                                                     {formatTime(item.createdAt)}
+                                                </span>
+                                            ) : column.id === "updatedDate" ? (
+                                                <span className="text-sm text-tertiary">
+                                                    {formatDate(item.updatedAt)}
+                                                    <br />
+                                                    {formatTime(item.updatedAt)}
                                                 </span>
                                             ) : column.id === "packageCost" ? (
                                                 <span className="text-sm text-tertiary">{item.packageCost ? `₹${item.packageCost}` : "—"}</span>
