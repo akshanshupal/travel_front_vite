@@ -1,5 +1,6 @@
 import { useStoreLogin } from "@/store/login";
 import { useStoreSnackbar } from "@/store/snackbar";
+import { getPermissionForPath } from "@/hooks/use-access";
 
 const baseUrlCollection = (() => {
     const raw = import.meta.env.VITE_API_HOST as string | undefined;
@@ -85,6 +86,25 @@ const buildQueryString = (data: Record<string, unknown>) => {
     return params.toString();
 };
 
+const withAccessLookupContext = (data: Record<string, unknown>, method: string) => {
+    if (method !== "GET") return data;
+    if (typeof window === "undefined") return data;
+
+    const pathname = String(window.location.pathname || "");
+    const permission = pathname ? getPermissionForPath(pathname) : null;
+    if (!permission) return data;
+    if (permission.action !== "add" && permission.action !== "edit" && permission.action !== "view") return data;
+
+    const context: Record<string, unknown> = {
+        accessMode: "lookup",
+        accessPath: pathname,
+        accessResource: permission.resource,
+        accessAction: permission.action,
+    };
+
+    return { ...context, ...data };
+};
+
 export const fetchWithToken = async (
     url: string,
     data: Record<string, unknown> = {},
@@ -107,6 +127,7 @@ export const fetchWithToken = async (
 
         const method = (options.method || "GET").toUpperCase();
         const fetchOptions: RequestInit = { ...options, headers, method };
+        const requestData = withAccessLookupContext(data, method);
 
         const useProxy =
             Boolean(import.meta.env.DEV) &&
@@ -117,14 +138,14 @@ export const fetchWithToken = async (
         let newUrl: string;
         if (method === "POST" || method === "PUT" || method === "DELETE") {
             if (!url.includes("/file/upload")) {
-                fetchOptions.body = JSON.stringify(data);
+                fetchOptions.body = JSON.stringify(requestData);
             } else {
-                fetchOptions.body = data as any;
+                fetchOptions.body = requestData as any;
             }
             newUrl = url.startsWith("http") ? url : `${baseForRelative}${url}`;
         } else {
             newUrl = url.startsWith("http") ? url : `${baseForRelative}${url}`;
-            const queryString = buildQueryString(data);
+            const queryString = buildQueryString(requestData);
             newUrl = queryString ? `${newUrl}?${queryString}` : newUrl;
         }
 
