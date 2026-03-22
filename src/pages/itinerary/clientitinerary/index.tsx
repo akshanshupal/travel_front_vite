@@ -149,6 +149,8 @@ export default function ClientItineraryListPage() {
                     page,
                     limit,
                     populate: "salesExecutive",
+                    sortField: "updatedAt",
+                    sortOrder: "DESC",
                 };
 
                 // Only add filters that have values

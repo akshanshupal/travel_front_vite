@@ -93,6 +93,22 @@ export default function ClientItineraryViewPage() {
         }
     };
 
+    const formatDateTime = (value: any) => {
+        if (!value) return "-";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return "-";
+        const datePart = date.toLocaleDateString("en-US", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+        });
+        const timePart = date.toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+        });
+        return `${datePart} ${timePart}`;
+    };
+
 
 
     useEffect(() => {
@@ -166,6 +182,16 @@ export default function ClientItineraryViewPage() {
                 </div>
 
                 <div className="rounded-lg border border-secondary bg-primary p-6">
+                    <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div className="rounded-lg border border-secondary bg-primary p-4">
+                            <div className="text-sm font-medium text-fg-secondary">Created At</div>
+                            <div className="mt-1 text-sm text-fg-primary">{formatDateTime((data as any)?.createdAt)}</div>
+                        </div>
+                        <div className="rounded-lg border border-secondary bg-primary p-4">
+                            <div className="text-sm font-medium text-fg-secondary">Updated At</div>
+                            <div className="mt-1 text-sm text-fg-primary">{formatDateTime((data as any)?.updatedAt)}</div>
+                        </div>
+                    </div>
                     <div ref={previewRef}>
                         <PreviewMail previewData={data} />
                     </div>
