@@ -34,15 +34,15 @@ const columns = [
     { id: "clientDetails", name: "Customer Details", widthRatio: 28, minWidth: 170 },
     { id: "tourDate", name: "Travel/Booking Date", widthRatio: 14, minWidth: 120 },
     { id: "travelLocation", name: "Travel/Home Location", widthRatio: 29, minWidth: 180 },
-    { id: "packageCost", name: "Package / Final Cost / Received %", widthRatio: 10, minWidth: 140 },
+    { id: "packageCost", name: "Package/ Final/ Received %", widthRatio: 10, minWidth: 120 },
     { id: "paymentReceived", name: "Received/ Pending", widthRatio: 16, minWidth: 100 },
-    { id: "serviceAmount", name: "Spend Amount", widthRatio: 10, minWidth: 100 },
+    { id: "serviceAmount", name: "Booking/ Spend/ Balance", widthRatio: 12, minWidth: 120 },
     { id: "noOfRooms", name: "Rooms / Duration", widthRatio: 12, minWidth: 70 },
     { id: "adultsKids", name: "Adults/ Kids", widthRatio: 6, minWidth: 70 },
-    { id: "verifyTime", name: "Verify Date", widthRatio: 7, minWidth: 110 },
+    { id: "verifyTime", name: "Verify Date", widthRatio: 7, minWidth: 100 },
     { id: "status", name: "Status", widthRatio: 4, minWidth: 80 },
     { id: "bookingStatus", name: "Booking Payment Finished", widthRatio: 4, minWidth: 110 },
-    { id: "actions", name: "Actions", widthRatio: 7, minWidth: 140, className: "px-2" },
+    { id: "actions", name: "Actions", widthRatio: 7, minWidth: 130, className: "px-2" },
 ] as { id: string; name: string; isRowHeader?: boolean; className?: string; widthRatio?: number; minWidth?: number }[];
 
 export default function BookingPage() {
@@ -227,7 +227,23 @@ export default function BookingPage() {
                     </>
                 );
             case "serviceAmount":
-                return formatCurrencyInr(item.serviceAmount);
+                return (
+                    <span className="text-sm">
+                        {formatCurrencyInr(item.bookingsAmount)} <br />
+                        <span className="text-xs text-gray-500"> {formatCurrencyInr(item.serviceAmount)}</span> <br />
+                       <span className="text-xs text-gray-500">{formatCurrencyInr((Number(item.bookingsAmount) || 0) - (Number(item.serviceAmount) || 0))}</span>
+                    </span>
+                );
+            case "ratioOfPaymentReceived":
+                return (() => {
+                    const ratioFromApi = Number(item?.ratioOfPaymentReceived);
+                    const computed = item?.finalPackageCost
+                        ? (Number(item?.paymentReceived || 0) / Number(item.finalPackageCost)) * 100
+                        : NaN;
+                    const ratio = Number.isFinite(ratioFromApi) ? ratioFromApi : computed;
+                    if (!Number.isFinite(ratio)) return "-";
+                    return <span className="text-sm">{`${ratio.toFixed(2)}%`}</span>;
+                })();
             case "noOfRooms":
                 return (
                     <>
@@ -237,9 +253,10 @@ export default function BookingPage() {
                 )
             case "adultsKids":
                 return (<>
-                    {item.noOfAdult}{item.noOfKids > 0 ? `, ${item.noOfKids}` : ''} <br /> {
+                  <span className="text-xs text-gray-500">   {item.noOfAdult}</span>
+                  <span className="text-xs text-gray-500">{item.noOfKids > 0 ? `, ${item.noOfKids}` : ''}</span> <br /> {
                         item.kidsAges && item.kidsAges.map((age: any, index: any) => (
-                            <span key={index}>[{age}]</span>
+                            <span key={index} className="text-xs text-gray-500">[{age}]</span>
                         ))
                     }
                 </>)
@@ -247,9 +264,8 @@ export default function BookingPage() {
                 if (item.verifyTime == null || item.verifyTime === "") return "-";
                 return (
                     <>
-                        {formatShortDate(item.verifyTime)}
-                        <br />
-                        {formatTime(item.verifyTime)}
+                         <span className="text-xs text-gray-500"> {formatShortDate(item.verifyTime)} </span> <br />
+                        <span className="text-xs text-gray-500">{formatTime(item.verifyTime)}</span>
                     </>
                 );
             case "status":
@@ -392,8 +408,14 @@ export default function BookingPage() {
         status: searchParams.get("status") || "",
         packageId: searchParams.get("packageId") || "",
         clientDetails: searchParams.get("clientDetails") || "",
-        bookingDate: searchParams.get("bookingDate") || "",
-        tourDate: searchParams.get("tourDate") || "",
+        sortField: searchParams.get("sortField") || "tourDate",
+        sortOrder: (searchParams.get("sortOrder") || "ASC").toUpperCase(),
+        bookingDateMode: searchParams.get("bookingDateMode") || "",
+        bookingDateFrom: searchParams.get("bookingDateFrom") || searchParams.get("bookingDate") || "",
+        bookingDateTo: searchParams.get("bookingDateTo") || "",
+        tourDateMode: searchParams.get("tourDateMode") || "",
+        tourDateFrom: searchParams.get("tourDateFrom") || searchParams.get("tourDate") || "",
+        tourDateTo: searchParams.get("tourDateTo") || "",
         travelLocation: searchParams.get("travelLocation") || "",
         homeLocation: searchParams.get("homeLocation") || "",
         packageCost: searchParams.get("packageCost") || "",
@@ -413,7 +435,15 @@ export default function BookingPage() {
 
     const [debouncedFilters, setDebouncedFilters] = useState(filters);
     const [tempFilters, setTempFilters] = useState(filters);
-    const isFilterActive = Object.values(filters).some(Boolean);
+    const isFilterActive = Object.entries(filters).some(([key, value]) => {
+        if (key === "sortField" || key === "sortOrder") return false;
+        return Boolean(value);
+    });
+
+    const setQuickFilters = (patch: Record<string, any>) => {
+        setFilters((prev) => ({ ...prev, ...patch }));
+        setTempFilters((prev) => ({ ...prev, ...patch }));
+    };
 
     const handleOpenFilters = () => {
         setTempFilters(filters);
@@ -429,8 +459,14 @@ export default function BookingPage() {
             status: "",
             packageId: "",
             clientDetails: "",
-            bookingDate: "",
-            tourDate: "",
+            sortField: "tourDate",
+            sortOrder: "ASC",
+            bookingDateMode: "",
+            bookingDateFrom: "",
+            bookingDateTo: "",
+            tourDateMode: "",
+            tourDateFrom: "",
+            tourDateTo: "",
             travelLocation: "",
             homeLocation: "",
             packageCost: "",
@@ -454,6 +490,20 @@ export default function BookingPage() {
     };
 
     const handleRemoveFilter = (key: string) => {
+        if (key === "bookingDate") {
+            const resetState = { ...filters, bookingDateMode: "", bookingDateFrom: "", bookingDateTo: "" };
+            setFilters(resetState);
+            setTempFilters(resetState);
+            setDebouncedFilters(resetState);
+            return;
+        }
+        if (key === "tourDate") {
+            const resetState = { ...filters, tourDateMode: "", tourDateFrom: "", tourDateTo: "" };
+            setFilters(resetState);
+            setTempFilters(resetState);
+            setDebouncedFilters(resetState);
+            return;
+        }
         const resetState = { ...filters, [key]: "" };
         setFilters(resetState);
         setTempFilters(resetState);
@@ -496,14 +546,18 @@ export default function BookingPage() {
                     limit,
                     populate: "agentName",
                     verify: "true",
-                    sortField: "tourDate",
-                    sortOrder: "ASC",
+                    sortField: debouncedFilters.sortField || "tourDate",
+                    sortOrder: debouncedFilters.sortOrder || "ASC",
                 };
                 addParam("status", debouncedFilters.status);
                 addParam("packageId", debouncedFilters.packageId);
                 addParam("clientDetails", debouncedFilters.clientDetails);
-                addParam("bookingDate", debouncedFilters.bookingDate);
-                addParam("tourDate", debouncedFilters.tourDate);
+                addParam("bookingDateMode", debouncedFilters.bookingDateMode);
+                addParam("bookingDateFrom", debouncedFilters.bookingDateFrom);
+                addParam("bookingDateTo", debouncedFilters.bookingDateTo);
+                addParam("tourDateMode", debouncedFilters.tourDateMode);
+                addParam("tourDateFrom", debouncedFilters.tourDateFrom);
+                addParam("tourDateTo", debouncedFilters.tourDateTo);
                 addParam("travelLocation", debouncedFilters.travelLocation);
                 addParam("homeLocation", debouncedFilters.homeLocation);
                 addParam("packageCost", debouncedFilters.packageCost);
@@ -608,6 +662,31 @@ export default function BookingPage() {
                         contentTrailing={
                             <div className="flex flex-col gap-2 md:flex-row md:items-center">
                                 <Select
+                                    aria-label="Sort by"
+                                    className="w-full md:w-40"
+                                    selectedKey={filters.sortField}
+                                    onSelectionChange={(key) => setQuickFilters({ sortField: String(key) })}
+                                    items={[
+                                        { id: "tourDate", label: "Tour Date" },
+                                        { id: "bookingDate", label: "Booking Date" },
+                                        { id: "createdAt", label: "Created At" },
+                                    ]}
+                                >
+                                    {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
+                                </Select>
+                                <Select
+                                    aria-label="Sort order"
+                                    className="w-full md:w-32"
+                                    selectedKey={filters.sortOrder}
+                                    onSelectionChange={(key) => setQuickFilters({ sortOrder: String(key).toUpperCase() })}
+                                    items={[
+                                        { id: "ASC", label: "Ascending" },
+                                        { id: "DESC", label: "Descending" },
+                                    ]}
+                                >
+                                    {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
+                                </Select>
+                                <Select
                                     aria-label="Rows per page"
                                     className="w-full md:w-32"
                                     selectedKey={String(limit)}
@@ -633,16 +712,68 @@ export default function BookingPage() {
 
                     <div className="flex flex-col gap-4 border-b border-secondary bg-primary px-4 py-4 md:px-6">
                         <div className="flex flex-col gap-3 md:flex-row md:items-center justify-between">
-                            <Input
-                                placeholder="Search by customer details"
-                                value={tempFilters.clientDetails}
-                                onChange={(value) => {
-                                    setFilters((prev) => ({ ...prev, clientDetails: value }));
-                                    setTempFilters((prev) => ({ ...prev, clientDetails: value }));
-                                }}
-                                icon={SearchLg}
-                                className="w-full md:w-80"
-                            />
+                            <div className="flex flex-col gap-3 md:flex-row md:items-end w-full">
+                                <Input
+                                    placeholder="Search by customer details"
+                                    value={tempFilters.clientDetails}
+                                    onChange={(value) => {
+                                        setQuickFilters({ clientDetails: value });
+                                    }}
+                                    icon={SearchLg}
+                                    className="w-full md:w-80"
+                                />
+                                <div className="flex flex-col gap-1.5 w-full md:w-auto">
+                                    <Label>Travel Date</Label>
+                                    <div className="flex flex-col gap-2 md:flex-row md:items-center">
+                                        <Select
+                                            aria-label="Travel Date Mode"
+                                            className="w-full md:w-40"
+                                            selectedKey={tempFilters.tourDateMode || ""}
+                                            onSelectionChange={(key) =>
+                                                setQuickFilters({
+                                                    tourDateMode: String(key),
+                                                    tourDateFrom: "",
+                                                    tourDateTo: "",
+                                                })
+                                            }
+                                            items={[
+                                                { id: "", label: "Fixed date" },
+                                                { id: "range", label: "Date range" },
+                                                { id: "before", label: "Before" },
+                                                { id: "after", label: "After" },
+                                            ]}
+                                        >
+                                            {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
+                                        </Select>
+                                        {String(tempFilters.tourDateMode || "") === "range" ? (
+                                            <div className="flex gap-2 w-full md:w-auto">
+                                                <Input
+                                                    aria-label="Travel Date From"
+                                                    type="date"
+                                                    value={tempFilters.tourDateFrom}
+                                                    onChange={(value) => setQuickFilters({ tourDateFrom: value })}
+                                                    className="w-full md:w-44"
+                                                />
+                                                <Input
+                                                    aria-label="Travel Date To"
+                                                    type="date"
+                                                    value={tempFilters.tourDateTo}
+                                                    onChange={(value) => setQuickFilters({ tourDateTo: value })}
+                                                    className="w-full md:w-44"
+                                                />
+                                            </div>
+                                        ) : (
+                                            <Input
+                                                aria-label="Travel Date"
+                                                type="date"
+                                                value={tempFilters.tourDateFrom}
+                                                onChange={(value) => setQuickFilters({ tourDateFrom: value })}
+                                                className="w-full md:w-44"
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
                             <div className="flex items-center gap-2">
                                 <SlideoutMenu.Trigger>
                                     <Button color="primary" iconLeading={FilterLines} onClick={handleOpenFilters}>
@@ -711,18 +842,54 @@ export default function BookingPage() {
                                                                 {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
                                                             </Select>
                                                         </div>
-                                                        <Input
-                                                            label="Booking Date"
-                                                            placeholder="Booking Date"
-                                                            value={tempFilters.bookingDate}
-                                                            onChange={(value) => setTempFilters((prev) => ({ ...prev, bookingDate: value }))}
-                                                        />
-                                                        <Input
-                                                            label="Travel Date"
-                                                            placeholder="Travel Date"
-                                                            value={tempFilters.tourDate}
-                                                            onChange={(value) => setTempFilters((prev) => ({ ...prev, tourDate: value }))}
-                                                        />
+                                                        <div className="flex flex-col gap-3">
+                                                            <div className="flex flex-col gap-1.5">
+                                                                <Label>Booking Date</Label>
+                                                                <Select
+                                                                    aria-label="Booking Date Mode"
+                                                                    selectedKey={tempFilters.bookingDateMode || ""}
+                                                                    onSelectionChange={(key) =>
+                                                                        setTempFilters((prev) => ({
+                                                                            ...prev,
+                                                                            bookingDateMode: String(key),
+                                                                            bookingDateFrom: "",
+                                                                            bookingDateTo: "",
+                                                                        }))
+                                                                    }
+                                                                    items={[
+                                                                        { id: "", label: "Fixed date" },
+                                                                        { id: "range", label: "Date range" },
+                                                                        { id: "before", label: "Before" },
+                                                                        { id: "after", label: "After" },
+                                                                    ]}
+                                                                >
+                                                                    {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
+                                                                </Select>
+                                                            </div>
+                                                            {String(tempFilters.bookingDateMode || "") === "range" ? (
+                                                                <div className="flex gap-2">
+                                                                    <Input
+                                                                        aria-label="Booking Date From"
+                                                                        type="date"
+                                                                        value={tempFilters.bookingDateFrom}
+                                                                        onChange={(value) => setTempFilters((prev) => ({ ...prev, bookingDateFrom: value }))}
+                                                                    />
+                                                                    <Input
+                                                                        aria-label="Booking Date To"
+                                                                        type="date"
+                                                                        value={tempFilters.bookingDateTo}
+                                                                        onChange={(value) => setTempFilters((prev) => ({ ...prev, bookingDateTo: value }))}
+                                                                    />
+                                                                </div>
+                                                            ) : (
+                                                                <Input
+                                                                    aria-label="Booking Date"
+                                                                    type="date"
+                                                                    value={tempFilters.bookingDateFrom}
+                                                                    onChange={(value) => setTempFilters((prev) => ({ ...prev, bookingDateFrom: value }))}
+                                                                />
+                                                            )}
+                                                        </div>
                                                         <Input
                                                             label="Travel Location"
                                                             placeholder="Travel Location"
@@ -837,16 +1004,74 @@ export default function BookingPage() {
                             </div>
                         </div>
                         <div className="flex flex-wrap gap-2">
+                            {(() => {
+                                const bookingMode = String(filters.bookingDateMode || "");
+                                const bookingFrom = String(filters.bookingDateFrom || "");
+                                const bookingTo = String(filters.bookingDateTo || "");
+                                if (!bookingFrom && !bookingTo) return null;
+                                let displayValue = "";
+                                if (bookingMode === "range") {
+                                    displayValue = `${formatShortDate(bookingFrom)} → ${formatShortDate(bookingTo)}`;
+                                } else if (bookingMode === "before") {
+                                    displayValue = `Before ${formatShortDate(bookingFrom)}`;
+                                } else if (bookingMode === "after") {
+                                    displayValue = `After ${formatShortDate(bookingFrom)}`;
+                                } else {
+                                    displayValue = formatShortDate(bookingFrom);
+                                }
+                                return (
+                                    <div onClick={() => handleRemoveFilter("bookingDate")} className="cursor-pointer">
+                                        <BadgeWithIcon iconTrailing={X} color="brand">
+                                            <span className="font-medium text-gray-500 mr-1">Booking Date:</span>
+                                            <span className="font-semibold text-brand-700">{displayValue}</span>
+                                        </BadgeWithIcon>
+                                    </div>
+                                );
+                            })()}
+                            {(() => {
+                                const tourMode = String(filters.tourDateMode || "");
+                                const tourFrom = String(filters.tourDateFrom || "");
+                                const tourTo = String(filters.tourDateTo || "");
+                                if (!tourFrom && !tourTo) return null;
+                                let displayValue = "";
+                                if (tourMode === "range") {
+                                    displayValue = `${formatShortDate(tourFrom)} → ${formatShortDate(tourTo)}`;
+                                } else if (tourMode === "before") {
+                                    displayValue = `Before ${formatShortDate(tourFrom)}`;
+                                } else if (tourMode === "after") {
+                                    displayValue = `After ${formatShortDate(tourFrom)}`;
+                                } else {
+                                    displayValue = formatShortDate(tourFrom);
+                                }
+                                return (
+                                    <div onClick={() => handleRemoveFilter("tourDate")} className="cursor-pointer">
+                                        <BadgeWithIcon iconTrailing={X} color="brand">
+                                            <span className="font-medium text-gray-500 mr-1">Travel Date:</span>
+                                            <span className="font-semibold text-brand-700">{displayValue}</span>
+                                        </BadgeWithIcon>
+                                    </div>
+                                );
+                            })()}
                             {Object.entries(filters).map(([key, value]) => {
                                 if (!value) return null;
+                                if (
+                                    key === "sortField" ||
+                                    key === "sortOrder" ||
+                                    key === "bookingDateMode" ||
+                                    key === "bookingDateFrom" ||
+                                    key === "bookingDateTo" ||
+                                    key === "tourDateMode" ||
+                                    key === "tourDateFrom" ||
+                                    key === "tourDateTo"
+                                ) {
+                                    return null;
+                                }
                                 let label = key;
                                 if (key === "packageId") label = "Package ID";
                                 if (key === "clientDetails") label = "Customer Details";
                                 if (key === "bookingStatus") label = "Booking Status";
                                 if (key === "paymentStatus") label = "Payment Status";
                                 if (key === "finished") label = "Finished";
-                                if (key === "bookingDate") label = "Booking Date";
-                                if (key === "tourDate") label = "Travel Date";
                                 if (key === "travelLocation") label = "Travel Location";
                                 if (key === "homeLocation") label = "Home Location";
                                 if (key === "packageCost") label = "Package Cost";
