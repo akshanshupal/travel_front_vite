@@ -1,6 +1,6 @@
 import type { FC, HTMLAttributes, MouseEventHandler, ReactNode } from "react";
 import { ChevronDown, Share04 } from "@untitledui/icons";
-import { Link as AriaLink } from "react-aria-components";
+import { Link } from "react-router";
 import { Badge } from "@/components/base/badges/badges";
 import { cx, sortCx } from "@/utils/cx";
 
@@ -83,10 +83,10 @@ export const NavItemBase = ({ current, type, open, badge, href, icon: Icon, chil
     }
 
     if (type === "collapsible-child") {
-        return (
-            <AriaLink
+        return isExternal ? (
+            <a
                 href={href!}
-                target={isExternal ? "_blank" : "_self"}
+                target="_blank"
                 rel="noopener noreferrer"
                 className={cx("py-2 pr-3 pl-10", styles.root, current && styles.rootSelected, className)}
                 onClick={onClick}
@@ -95,26 +95,50 @@ export const NavItemBase = ({ current, type, open, badge, href, icon: Icon, chil
                 {labelElement}
                 {externalIcon}
                 {badgeElement}
-            </AriaLink>
+            </a>
+        ) : (
+            <Link
+                to={href!}
+                className={cx("py-2 pr-3 pl-10", styles.root, current && styles.rootSelected, className)}
+                onClick={onClick}
+                aria-current={current ? "page" : undefined}
+            >
+                {labelElement}
+                {externalIcon}
+                {badgeElement}
+            </Link>
         );
     }
 
     return (
         <>
-        <AriaLink
-            href={href!}
-            target={isExternal ? "_blank" : "_self"}
-            rel="noopener noreferrer"
-            className={cx("px-3 py-2", styles.root, current && styles.rootSelected, className)}
-            onClick={onClick}
-            aria-current={current ? "page" : undefined}
-        >
-            {iconElement}
-            {labelElement}
-            {externalIcon}
-            {badgeElement}
-        </AriaLink>
-        
+        {isExternal ? (
+            <a
+                href={href!}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cx("px-3 py-2", styles.root, current && styles.rootSelected, className)}
+                onClick={onClick}
+                aria-current={current ? "page" : undefined}
+            >
+                {iconElement}
+                {labelElement}
+                {externalIcon}
+                {badgeElement}
+            </a>
+        ) : (
+            <Link
+                to={href!}
+                className={cx("px-3 py-2", styles.root, current && styles.rootSelected, className)}
+                onClick={onClick}
+                aria-current={current ? "page" : undefined}
+            >
+                {iconElement}
+                {labelElement}
+                {externalIcon}
+                {badgeElement}
+            </Link>
+        )}
         </>
     );
 };

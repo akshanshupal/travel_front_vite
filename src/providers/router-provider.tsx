@@ -31,8 +31,17 @@ export const RouteProvider = ({ children }: PropsWithChildren) => {
 
     useEffect(() => {
         // Public routes that don't require login
-        const publicRoutes = ["/login", "/package-mail", "/package-voucher", "/payments-receipt", "/hotel-images"];
+        const publicRoutes = ["/package-mail", "/package-voucher", "/payments-receipt", "/hotel-images"];
         if (publicRoutes.some(route => pathname.startsWith(route))) return;
+
+        if (pathname === "/login" || pathname === "/") {
+            if (user) {
+                navigate("/dashboard", { replace: true });
+            } else if (pathname === "/") {
+                navigate("/login", { replace: true });
+            }
+            return;
+        }
 
         if (!user) {
             navigate("/login", { replace: true });
