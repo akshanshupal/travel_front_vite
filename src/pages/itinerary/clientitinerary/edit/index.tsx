@@ -71,6 +71,33 @@ const getUploadUrl = (response: any) => {
     return "";
 };
 
+const toAsiaKolkataDateString = (value: unknown) => {
+    if (!value) return "";
+    if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+
+    const date = new Date(value as any);
+    if (Number.isNaN(date.getTime())) {
+        if (typeof value === "string") {
+            const maybeDate = value.split("T")[0];
+            if (/^\d{4}-\d{2}-\d{2}$/.test(maybeDate)) return maybeDate;
+        }
+        return "";
+    }
+
+    const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Kolkata",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+    }).formatToParts(date);
+
+    const y = parts.find((p) => p.type === "year")?.value;
+    const m = parts.find((p) => p.type === "month")?.value;
+    const d = parts.find((p) => p.type === "day")?.value;
+    if (!y || !m || !d) return "";
+    return `${y}-${m}-${d}`;
+};
+
 export default function ClientItineraryEditPage() {
     const navigate = useNavigate();
     const { id } = useParams();
@@ -217,7 +244,7 @@ export default function ClientItineraryEditPage() {
                             hotelCategory: res.hotelCategory ? { id: res.hotelCategory.id || res.hotelCategory._id, title: res.hotelCategory.title } : "",
                             salesExecutive: res.salesExecutive ? { id: res.salesExecutive.id || res.salesExecutive._id, name: res.salesExecutive.name } : "",
                             templateId: res.templateId ? { id: res.templateId.id || res.templateId._id, name: res.templateId.name } : "",
-                            tourDate: res.tourDate ? res.tourDate.split('T')[0] : "",
+                            tourDate: toAsiaKolkataDateString(res.tourDate),
                             kidsAges: res.kidsAges || [],
                             clientArea: res.clientArea || { title: "", headerContent: "", description: "", featureImg: "", hotelImg: "" },
                             clientSites: res.clientSites || []

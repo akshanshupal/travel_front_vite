@@ -77,6 +77,28 @@ export const paymentStatusAssignment = async (id: string, formUpdatedData: Recor
     return response;
 };
 
+export const addAdjustment = async (id: string, formUpdatedData: Record<string, any>) => {
+    const response = await fetchWithToken(`/api/assignment/adjustment/${id}`, formUpdatedData, { method: 'PUT' });
+    
+    if (response.error) {
+        console.error('Error adding adjustment:', response.error);
+        return { error: response.error, details: response?.details };
+    }
+
+    return response;
+};
+
+export const deleteAdjustment = async (id: string, formUpdatedData: Record<string, any>) => {
+    const response = await fetchWithToken(`/api/assignment/adjustment/${id}`, formUpdatedData, { method: 'DELETE' });
+    
+    if (response.error) {
+        console.error('Error deleting adjustment:', response.error);
+        return { error: response.error, details: response?.details };
+    }
+
+    return response;
+};
+
 export const getAssignmentDelete = async (id: string, formUpdatedData: Record<string, any> = {}) => {
     const response = await fetchWithToken(`/api/assignment/${id}`, formUpdatedData, { method: 'DELETE' });
     

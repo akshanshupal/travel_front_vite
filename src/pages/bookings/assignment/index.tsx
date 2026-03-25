@@ -4,12 +4,27 @@ import { StickyTable, Table, TableCard } from "@/components/application/table/ta
 import { Badge, BadgeWithButton } from "@/components/base/badges/badges";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { Button } from "@/components/base/buttons/button";
+import { CloseButton } from "@/components/base/buttons/close-button";
+import { ModalOverlay, Modal, Dialog } from "@/components/application/modals/modal";
+import MailConfirmation from "@/components/application/mail-confirmation/mail-confirmation";
 import { Input } from "@/components/base/input/input";
 import { Select } from "@/components/base/select/select";
 import { Label } from "@/components/base/input/label";
-import { getAssignment } from "@/utils/services/assignmentService";
+import { Checkbox } from "@/components/base/checkbox/checkbox";
+import Tmodal from "@/components/utils/Tmodal";
+import { Dropdown } from "@/components/base/dropdown/dropdown";
+import {
+    addAdjustment,
+    bookingStatusAssignment,
+    finishedAssignment,
+    getAssignment,
+    getAssignmentDelete,
+    paymentStatusAssignment,
+    verifyAssignment,
+} from "@/utils/services/assignmentService";
 import { useStoreSnackbar } from "@/store/snackbar";
-import { Eye, RefreshCw01, FilterLines, SearchLg } from "@untitledui/icons";
+import { useStoreLogin } from "@/store/login";
+import { CheckCircle, ClipboardCheck, CreditCard01, Edit01, Eye, FilterLines, Mail01, RefreshCw01, Trash01, SearchLg } from "@untitledui/icons";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router";
 import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
@@ -28,7 +43,7 @@ const columns = [
     { id: "verify", name: "Verify", widthRatio: 5, minWidth: 100 },
     { id: "status", name: "Status", widthRatio: 5, minWidth: 100 },
     { id: "bookingStatus", name: "Booking Payment Finished", widthRatio: 8, minWidth: 140 },
-    { id: "actions", name: "Actions", widthRatio: 6, minWidth: 100, className: "pr-4 pl-4" },
+    { id: "actions", name: "Actions", widthRatio: 6, minWidth: 140, className: "pr-4 pl-4" },
 ];
 const parseSearch = (search: string) => {
     const sp = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
@@ -58,12 +73,27 @@ export default function AssignmentPage() {
     const navigate = useNavigate();
     const { pathname, search } = useLocation();
     const { showSnackbar } = useStoreSnackbar();
+    const user = useStoreLogin((state) => state.user);
 
     const initial = parseSearch(search);
 
     const [loading, setLoading] = useState(false);
     const [items, setItems] = useState<any[]>([]);
     const [totalRecords, setTotalRecords] = useState(0);
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState<any>(null);
+    const [finishModalOpen, setFinishModalOpen] = useState(false);
+    const [finishTarget, setFinishTarget] = useState<any>(null);
+    const [mailModalOpen, setMailModalOpen] = useState(false);
+    const [selectedId, setSelectedId] = useState("");
+    const [selectedEmail, setSelectedEmail] = useState("");
+    const [adjustmentModalOpen, setAdjustmentModalOpen] = useState(false);
+    const [adjustmentTarget, setAdjustmentTarget] = useState<any>(null);
+    const [adjustmentAmount, setAdjustmentAmount] = useState("");
+    const [adjustmentRemark, setAdjustmentRemark] = useState("");
+    const [adjustmentGstInclusive, setAdjustmentGstInclusive] = useState(false);
+
+    const getId = (value: any) => String(value?.id ?? value?._id ?? value ?? "").trim();
     const indexById = useMemo(
         () => new Map(items.map((item, index) => [item.id || item._id, index + 1])),
         [items]
@@ -140,7 +170,7 @@ export default function AssignmentPage() {
                     populate: "agentName",
                     sortField: 'bookingDate',
                     sortOrder: 'DESC',
-                    select: "createdAt,id,clientName,mobile,email,title,status,bookingDate,packageId,agentName,tourDate,travelLocation,packageCost,finalPackageCost,paymentReceived,verify,bookingStatus,paymentStatus,finished",
+                    select: "createdAt,id,clientName,mobile,email,title,status,bookingDate,packageId,agentName,tourDate,travelLocation,packageCost,finalPackageCost,paymentReceived,verify,bookingStatus,paymentStatus,finished,callDone,emailSent,whatsappSent,agentCallRecordingChecked",
                     ...debouncedFilters,
                 };
                 Object.keys(params).forEach(key => {
@@ -168,6 +198,84 @@ export default function AssignmentPage() {
         if (value === true || value === "true" || value === 1 || value === "1") return true;
         if (value === false || value === "false" || value === 0 || value === "0") return false;
         return null;
+    };
+
+    const handleDelete = async () => {
+        if (!deleteTarget) return;
+        try {
+            const itemId = getId(deleteTarget);
+            const response = await getAssignmentDelete(itemId);
+            if ((response as any)?.error) throw new Error((response as any).error);
+            setItems((prev) => prev.filter((row) => getId(row) !== itemId));
+            setTotalRecords((prev) => Math.max(0, prev - 1));
+            setDeleteModalOpen(false);
+            setDeleteTarget(null);
+        } catch (error: any) {
+            showSnackbar({
+                title: "Error",
+                description: error?.message || "Failed to delete assignment",
+                color: "danger",
+            });
+        }
+    };
+
+    const handleFinishedStatus = async () => {
+        if (!finishTarget) return;
+        try {
+            const itemId = getId(finishTarget);
+            if (normalizeBoolean(finishTarget.finished)) {
+                setFinishModalOpen(false);
+                setFinishTarget(null);
+                return;
+            }
+            const response = await finishedAssignment(itemId, { ...finishTarget, finished: true });
+            if ((response as any)?.error) throw new Error((response as any).error);
+            setItems((prev) => prev.map((row) => (getId(row) === itemId ? { ...row, finished: true } : row)));
+            setFinishModalOpen(false);
+            setFinishTarget(null);
+        } catch (error: any) {
+            showSnackbar({
+                title: "Error",
+                description: error?.message || "Failed to update finish status",
+                color: "danger",
+            });
+        }
+    };
+
+    const handleSaveAdjustment = async () => {
+        if (!adjustmentTarget) return;
+        try {
+            const itemId = getId(adjustmentTarget);
+            const amount = Number(adjustmentAmount);
+            if (!Number.isFinite(amount) || amount <= 0) {
+                showSnackbar({
+                    title: "Invalid Input",
+                    description: "Amount must be greater than 0",
+                    color: "danger",
+                });
+                return;
+            }
+            const response = await addAdjustment(itemId, {
+                amount,
+                remark: adjustmentRemark,
+                gstInclusive: adjustmentGstInclusive,
+            });
+            if ((response as any)?.error) throw new Error((response as any).error);
+            setItems((prev) =>
+                prev.map((row) => (getId(row) === itemId ? { ...row, ...(response as any)?.data } : row)),
+            );
+            setAdjustmentModalOpen(false);
+            setAdjustmentTarget(null);
+            setAdjustmentAmount("");
+            setAdjustmentRemark("");
+            setAdjustmentGstInclusive(false);
+        } catch (error: any) {
+            showSnackbar({
+                title: "Error",
+                description: error?.message || "Failed to add adjustment",
+                color: "danger",
+            });
+        }
     };
 
 
@@ -481,7 +589,7 @@ export default function AssignmentPage() {
                                                     {normalizeBoolean(item.finished) ? "Finished" : "Pending"}
                                                 </Badge>
                                             </>
-                                        ) : (
+                                        ) : column.id === "actions" ? (
                                             <div className="flex w-full items-center justify-end gap-1.5">
                                                 <ButtonUtility
                                                     icon={Eye}
@@ -490,7 +598,166 @@ export default function AssignmentPage() {
                                                     size="sm"
                                                     tooltip="View"
                                                 />
+                                                {(() => {
+                                                    const userType = String((user as any)?.type || "").toUpperCase();
+                                                    const canEdit =
+                                                        userType === "ADMIN" ||
+                                                        userType === "MANAGER" ||
+                                                        (userType === "AGENT" && normalizeBoolean(item.verify) !== true);
+                                                    const canDelete = userType !== "AGENT" && userType !== "MANAGER";
+
+                                                    return (
+                                                        <>
+                                                            {canEdit && (
+                                                                <ButtonUtility
+                                                                    icon={Edit01}
+                                                                    onClick={() => navigate(`/bookings/assignment/edit/${item.id || item._id}`)}
+                                                                    color="secondary"
+                                                                    size="sm"
+                                                                    tooltip="Edit"
+                                                                />
+                                                            )}
+                                                            {canDelete && (
+                                                                <ButtonUtility
+                                                                    icon={Trash01}
+                                                                    onClick={() => {
+                                                                        setDeleteTarget(item);
+                                                                        setDeleteModalOpen(true);
+                                                                    }}
+                                                                    color="secondary"
+                                                                    size="sm"
+                                                                    tooltip="Delete"
+                                                                />
+                                                            )}
+
+                                                            <Dropdown.Root>
+                                                                <Dropdown.DotsButton />
+                                                                <Dropdown.Popover>
+                                                                    <Dropdown.Menu>
+                                                                        <Dropdown.Item
+                                                                            icon={Mail01}
+                                                                            onAction={() => {
+                                                                                setSelectedId(getId(item));
+                                                                                setSelectedEmail(String(item?.email || ""));
+                                                                                setMailModalOpen(true);
+                                                                            }}
+                                                                        >
+                                                                            Send Mail
+                                                                        </Dropdown.Item>
+
+                                                                        <Dropdown.Item
+                                                                            icon={CheckCircle}
+                                                                            isDisabled={normalizeBoolean(item.verify) === true}
+                                                                            onAction={async () => {
+                                                                                try {
+                                                                                    const itemId = getId(item);
+                                                                                    const response = await verifyAssignment(itemId, { verify: true });
+                                                                                    if ((response as any)?.error) throw new Error((response as any).error);
+                                                                                    setItems((prev) =>
+                                                                                        prev.map((row) =>
+                                                                                            getId(row) === itemId ? { ...row, verify: true } : row,
+                                                                                        ),
+                                                                                    );
+                                                                                } catch (error: any) {
+                                                                                    showSnackbar({
+                                                                                        title: "Error",
+                                                                                        description: error?.message || "Failed to verify assignment",
+                                                                                        color: "danger",
+                                                                                    });
+                                                                                }
+                                                                            }}
+                                                                        >
+                                                                            {normalizeBoolean(item.verify) ? "Verified" : "Verify"}
+                                                                        </Dropdown.Item>
+
+                                                                        <Dropdown.Item
+                                                                            icon={ClipboardCheck}
+                                                                            onAction={async () => {
+                                                                                try {
+                                                                                    const itemId = getId(item);
+                                                                                    const updatedStatus = !normalizeBoolean(item.bookingStatus);
+                                                                                    const response = await bookingStatusAssignment(itemId, { bookingStatus: updatedStatus });
+                                                                                    if ((response as any)?.error) throw new Error((response as any).error);
+                                                                                    setItems((prev) =>
+                                                                                        prev.map((row) =>
+                                                                                            getId(row) === itemId ? { ...row, bookingStatus: updatedStatus } : row,
+                                                                                        ),
+                                                                                    );
+                                                                                } catch (error: any) {
+                                                                                    showSnackbar({
+                                                                                        title: "Error",
+                                                                                        description: error?.message || "Failed to update booking status",
+                                                                                        color: "danger",
+                                                                                    });
+                                                                                }
+                                                                            }}
+                                                                        >
+                                                                            {normalizeBoolean(item.bookingStatus) ? "Booked" : "Booking Status Change"}
+                                                                        </Dropdown.Item>
+
+                                                                        {normalizeBoolean(item.verify) && normalizeBoolean(item.bookingStatus) && (
+                                                                            <Dropdown.Item
+                                                                                icon={CreditCard01}
+                                                                                onAction={async () => {
+                                                                                    try {
+                                                                                        const itemId = getId(item);
+                                                                                        const updatedStatus = !normalizeBoolean(item.paymentStatus);
+                                                                                        const response = await paymentStatusAssignment(itemId, { paymentStatus: updatedStatus });
+                                                                                        if ((response as any)?.error) throw new Error((response as any).error);
+                                                                                        setItems((prev) =>
+                                                                                            prev.map((row) =>
+                                                                                                getId(row) === itemId ? { ...row, paymentStatus: updatedStatus } : row,
+                                                                                            ),
+                                                                                        );
+                                                                                    } catch (error: any) {
+                                                                                        showSnackbar({
+                                                                                            title: "Error",
+                                                                                            description: error?.message || "Failed to update payment status",
+                                                                                            color: "danger",
+                                                                                        });
+                                                                                    }
+                                                                                }}
+                                                                            >
+                                                                                {normalizeBoolean(item.paymentStatus) ? "Done" : "Change Payment Status"}
+                                                                            </Dropdown.Item>
+                                                                        )}
+
+                                                                        {normalizeBoolean(item.verify) && normalizeBoolean(item.bookingStatus) && (
+                                                                            <Dropdown.Item
+                                                                                icon={CheckCircle}
+                                                                                isDisabled={normalizeBoolean(item.finished) === true}
+                                                                                onAction={() => {
+                                                                                    setFinishTarget(item);
+                                                                                    setFinishModalOpen(true);
+                                                                                }}
+                                                                            >
+                                                                                {normalizeBoolean(item.finished) ? "finished" : "Change Finish Status"}
+                                                                            </Dropdown.Item>
+                                                                        )}
+
+                                                                        {canDelete && (
+                                                                            <Dropdown.Item
+                                                                                icon={CreditCard01}
+                                                                                onAction={() => {
+                                                                                    setAdjustmentTarget(item);
+                                                                                    setAdjustmentAmount("");
+                                                                                    setAdjustmentRemark("");
+                                                                                    setAdjustmentGstInclusive(false);
+                                                                                    setAdjustmentModalOpen(true);
+                                                                                }}
+                                                                            >
+                                                                                Payment Adjustment
+                                                                            </Dropdown.Item>
+                                                                        )}
+                                                                    </Dropdown.Menu>
+                                                                </Dropdown.Popover>
+                                                            </Dropdown.Root>
+                                                        </>
+                                                    );
+                                                })()}
                                             </div>
+                                        ) : (
+                                            <span className="text-sm text-tertiary">-</span>
                                         )}
                                     </Table.Cell>
                                 )}
@@ -507,6 +774,97 @@ export default function AssignmentPage() {
                     />
                 </TableCard.Root>
             </div>
+
+            <ModalOverlay isOpen={mailModalOpen} onOpenChange={setMailModalOpen}>
+                {() => (
+                    <Modal className="max-w-4xl">
+                        <Dialog>
+                            <div className="relative w-full rounded-xl border border-secondary bg-primary p-6 shadow-lg">
+                                <CloseButton onPress={() => setMailModalOpen(false)} className="absolute right-4 top-4" size="sm" />
+                                <MailConfirmation
+                                    selectedId={selectedId}
+                                    email={selectedEmail}
+                                    header="Send Assignment Mail"
+                                    modalClose={() => setMailModalOpen(false)}
+                                    sendMailFnName="sendAssignmentMail"
+                                    showPreview={true}
+                                />
+                            </div>
+                        </Dialog>
+                    </Modal>
+                )}
+            </ModalOverlay>
+
+            <ModalOverlay isOpen={adjustmentModalOpen} onOpenChange={setAdjustmentModalOpen}>
+                {() => (
+                    <Modal className="max-w-xl">
+                        <Dialog>
+                            <div className="relative w-full rounded-xl border border-secondary bg-primary p-6 shadow-lg">
+                                <CloseButton onPress={() => setAdjustmentModalOpen(false)} className="absolute right-4 top-4" size="sm" />
+                                <div className="flex flex-col gap-4">
+                                    <div className="text-lg text-primary font-bold">Payment Adjustment</div>
+                                    <Input
+                                        label="Amount"
+                                        type="number"
+                                        placeholder="Enter amount"
+                                        value={adjustmentAmount}
+                                        onChange={(value) => setAdjustmentAmount(value)}
+                                    />
+                                    <Input
+                                        label="Remark"
+                                        placeholder="Optional remark"
+                                        value={adjustmentRemark}
+                                        onChange={(value) => setAdjustmentRemark(value)}
+                                    />
+                                    <Checkbox isSelected={adjustmentGstInclusive} onChange={setAdjustmentGstInclusive} label="GST Inclusive" />
+                                    <div className="flex gap-3 justify-end">
+                                        <Button color="secondary" onClick={() => setAdjustmentModalOpen(false)}>
+                                            Cancel
+                                        </Button>
+                                        <Button color="primary" onClick={handleSaveAdjustment}>
+                                            Save
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </Dialog>
+                    </Modal>
+                )}
+            </ModalOverlay>
+
+            <Tmodal
+                isOpen={deleteModalOpen}
+                onClose={() => setDeleteModalOpen(false)}
+                header="Confirm Deletion"
+                content={
+                    <p className="text-sm text-tertiary">
+                        Are you sure you want to delete this assignment:{" "}
+                        <span className="font-semibold text-primary">{deleteTarget?.packageId || deleteTarget?.clientName || "-"}</span> ?
+                    </p>
+                }
+                footerActions={
+                    <Button color="primary-destructive" onClick={handleDelete}>
+                        Delete
+                    </Button>
+                }
+            />
+
+            <Tmodal
+                isOpen={finishModalOpen}
+                onClose={() => setFinishModalOpen(false)}
+                header="Finished Assignment"
+                content={
+                    <p className="text-sm text-tertiary">
+                        Are you sure you want to mark this assignment as finished for:{" "}
+                        <span className="font-semibold text-primary">{finishTarget?.packageId || finishTarget?.clientName || "-"}</span> ?
+                    </p>
+                }
+                footerActions={
+                    <Button color="primary" onClick={handleFinishedStatus}>
+                        Confirm
+                    </Button>
+                }
+            />
         </DefaultLayout>
     );
 }
