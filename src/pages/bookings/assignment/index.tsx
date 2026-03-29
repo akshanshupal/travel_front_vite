@@ -64,6 +64,7 @@ const parseSearch = (search: string) => {
         verify: sp.get("verify") || "",
         paymentStatus: sp.get("paymentStatus") || "",
         finished: sp.get("finished") || "",
+        dateNotDecided: sp.get("dateNotDecided") || "",
         status: sp.get("status") || "",
     };
 };
@@ -114,6 +115,7 @@ export default function AssignmentPage() {
         verify: initial.verify,
         paymentStatus: initial.paymentStatus,
         finished: initial.finished,
+        dateNotDecided: initial.dateNotDecided,
         status: initial.status,
     });
 
@@ -170,7 +172,7 @@ export default function AssignmentPage() {
                     populate: "agentName",
                     sortField: 'bookingDate',
                     sortOrder: 'DESC',
-                    select: "createdAt,id,clientName,mobile,email,title,status,bookingDate,packageId,agentName,tourDate,travelLocation,packageCost,finalPackageCost,paymentReceived,verify,bookingStatus,paymentStatus,finished,callDone,emailSent,whatsappSent,agentCallRecordingChecked",
+                    select: "createdAt,id,clientName,mobile,email,title,status,bookingDate,packageId,agentName,tourDate,dateNotDecided,travelLocation,packageCost,finalPackageCost,paymentReceived,verify,bookingStatus,paymentStatus,finished,callDone,emailSent,whatsappSent,agentCallRecordingChecked",
                     ...debouncedFilters,
                 };
                 Object.keys(params).forEach(key => {
@@ -293,6 +295,7 @@ export default function AssignmentPage() {
             verify: "",
             paymentStatus: "",
             finished: "",
+            dateNotDecided: "",
             status: "",
         };
         setTempFilters(resetState);
@@ -463,6 +466,22 @@ export default function AssignmentPage() {
                                                                 {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
                                                             </Select>
                                                         </div>
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <Label>Date Not Decided</Label>
+                                                            <Select
+                                                                aria-label="Date Not Decided"
+                                                                selectedKey={tempFilters.dateNotDecided || ""}
+                                                                onChange={undefined}
+                                                                onSelectionChange={(key) => setTempFilters((prev) => ({ ...prev, dateNotDecided: key === "" ? "" : String(key) }))}
+                                                                items={[
+                                                                    { id: "", label: "All" },
+                                                                    { id: "true", label: "Yes" },
+                                                                    { id: "false", label: "No" },
+                                                                ]}
+                                                            >
+                                                                {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
+                                                            </Select>
+                                                        </div>
                                                     </div>
                                                 </SlideoutMenu.Content>
                                                 <SlideoutMenu.Footer>
@@ -524,6 +543,10 @@ export default function AssignmentPage() {
                                     label = "Finished";
                                     displayValue = value === "true" ? "Yes" : "No";
                                 }
+                                if (key === "dateNotDecided") {
+                                    label = "Date Not Decided";
+                                    displayValue = value === "true" ? "Yes" : "No";
+                                }
                                 return (
                                     <BadgeWithButton key={key} onButtonClick={() => handleRemoveFilter(key)}>
                                         <span className="font-medium text-gray-500 mr-1">{label}:</span>
@@ -559,7 +582,7 @@ export default function AssignmentPage() {
                                             </span>
                                         ) : column.id === "bookingDate" ? (
                                             <span className="text-sm text-tertiary">
-                                                {item.tourDate ? formatShortDate(item.tourDate) : "-"}<br />
+                                                {item.tourDate ? `${formatShortDate(item.tourDate)}${normalizeBoolean(item.dateNotDecided) ? " (T)" : ""}` : "-"}<br />
                                                 {item.bookingDate ? formatShortDate(item.bookingDate) : "-"}
                                             </span>
                                         ) : column.id === "travelLocation" ? (

@@ -58,6 +58,12 @@ const formatDateInput = (dateStr?: string) => {
     return `${year}-${month}-${day}`;
 };
 
+const formatTimeInput = (timeValue?: string) => {
+    if (!timeValue || typeof timeValue !== "string") return "";
+    const match = timeValue.match(/^(\d{2}):(\d{2})/);
+    return match ? `${match[1]}:${match[2]}` : "";
+};
+
 const normalizeBool = (value: any) => value === true || value === "Yes" || value === "true";
 
 const SectionHeader = ({ title }: { title: string }) => {
@@ -126,6 +132,7 @@ export default function AssignmentEditPage() {
         textForBookingTeam: "",
         siteSeeing: "",
         pickUpAddress: "",
+        dateNotDecided: false,
         pickUpDate: "",
         pickUpTime: "",
         dropAddress: "",
@@ -210,11 +217,12 @@ export default function AssignmentEditPage() {
                     textForBookingTeam: resolved?.textForBookingTeam ?? "",
                     siteSeeing: resolved?.siteSeeing ?? "",
                     pickUpAddress: resolved?.pickUpAddress ?? "",
+                    dateNotDecided: Boolean(resolved?.dateNotDecided),
                     pickUpDate: formatDateInput(resolved?.pickUpDate),
-                    pickUpTime: resolved?.pickUpTime ?? "",
+                    pickUpTime: formatTimeInput(resolved?.pickUpTime),
                     dropAddress: resolved?.dropAddress ?? "",
                     dropDate: formatDateInput(resolved?.dropDate),
-                    dropTime: resolved?.dropTime ?? "",
+                    dropTime: formatTimeInput(resolved?.dropTime),
                     idProof: asArray(resolved?.idProof).length
                         ? asArray(resolved?.idProof)
                         : [{ name: "", number: "", file: "" }],
@@ -277,7 +285,7 @@ export default function AssignmentEditPage() {
         if (!form.leadCode) next.leadCode = "Lead Code is required";
         if (!form.leadDate) next.leadDate = "Lead Date is required";
         if (!form.bookingDate) next.bookingDate = "Booking Date is required";
-        if (!form.tourDate) next.tourDate = "Travel Date is required";
+        if (!form.tourDate) next.tourDate = form.dateNotDecided ? "Tentative Date is required" : "Travel Date is required";
         if (!form.clientName) next.clientName = "Customer Name is required";
         if (!form.agentName) next.agentName = "Agent Name is required";
         if (!form.mobile) next.mobile = "Mobile is required";
@@ -296,11 +304,15 @@ export default function AssignmentEditPage() {
         if (!form.carSeater) next.carSeater = "Car Seater is required";
         if (!form.textForBookingTeam) next.textForBookingTeam = "Text for Booking Team is required";
         if (!form.pickUpAddress) next.pickUpAddress = "Pickup Address is required";
-        if (!form.pickUpDate) next.pickUpDate = "Pickup Date is required";
-        if (!form.pickUpTime) next.pickUpTime = "Pickup Time is required";
+        if (!form.dateNotDecided) {
+            if (!form.pickUpDate) next.pickUpDate = "Pickup Date is required";
+            if (!form.pickUpTime) next.pickUpTime = "Pickup Time is required";
+        }
         if (!form.dropAddress) next.dropAddress = "Drop Address is required";
-        if (!form.dropDate) next.dropDate = "Drop Date is required";
-        if (!form.dropTime) next.dropTime = "Drop Time is required";
+        if (!form.dateNotDecided) {
+            if (!form.dropDate) next.dropDate = "Drop Date is required";
+            if (!form.dropTime) next.dropTime = "Drop Time is required";
+        }
         setErrors(next);
         return Object.keys(next).length === 0;
     };
@@ -322,6 +334,12 @@ export default function AssignmentEditPage() {
             if (key === "food") {
                 next.selectedFood = [];
                 selectedFoodList.items.forEach((item) => selectedFoodList.remove(item.id));
+            }
+            if (key === "dateNotDecided" && value) {
+                next.pickUpDate = "";
+                next.pickUpTime = "";
+                next.dropDate = "";
+                next.dropTime = "";
             }
             return next;
         });
@@ -422,7 +440,15 @@ export default function AssignmentEditPage() {
                 }
             }
 
-            const payload = { ...form, idProof, tokenImg: tokenImgUrl };
+            const payload = {
+                ...form,
+                idProof,
+                tokenImg: tokenImgUrl,
+                pickUpDate: form.dateNotDecided ? "" : form.pickUpDate,
+                pickUpTime: form.dateNotDecided ? "" : form.pickUpTime,
+                dropDate: form.dateNotDecided ? "" : form.dropDate,
+                dropTime: form.dateNotDecided ? "" : form.dropTime,
+            };
             delete payload.tokenAmount;
             delete payload.paymentStore;
             delete payload.paymentDate;
@@ -495,11 +521,11 @@ export default function AssignmentEditPage() {
                                 )}
                             </div>
                         </div>
-                        <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center md:justify-end">
-                            <Button color="secondary" iconLeading={ArrowLeft} onClick={() => navigate("/bookings/assignment")}>
+                        <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-end md:w-auto">
+                            <Button color="secondary" iconLeading={ArrowLeft} onClick={() => navigate("/bookings/assignment")} className="w-full sm:w-auto">
                                 Back
                             </Button>
-                            <Button color="primary" isDisabled={!canSave} isLoading={saving} onClick={handleSave}>
+                            <Button color="primary" isDisabled={!canSave} isLoading={saving} onClick={handleSave} className="w-full sm:w-auto">
                                 Save
                             </Button>
                         </div>
@@ -558,7 +584,10 @@ export default function AssignmentEditPage() {
                                         {dirty.bookingDate && errors.bookingDate && <p className="text-sm text-error-primary">{errors.bookingDate}</p>}
                                     </div>
                                     <div className="flex flex-col gap-1.5">
-                                        <Label isRequired>Travel Date</Label>
+                                        <div className="flex items-center justify-between gap-2">
+                                            <Label isRequired>{form.dateNotDecided ? "Tentative Date" : "Travel Date"}</Label>
+                                            <Toggle label="Date Not Decided" isSelected={form.dateNotDecided} onChange={(value) => updateField("dateNotDecided", value)} />
+                                        </div>
                                         <DatePicker value={form.tourDate ? parseDate(form.tourDate) : null} onChange={(date) => updateField("tourDate", date ? date.toString() : "")} />
                                         {dirty.tourDate && errors.tourDate && <p className="text-sm text-error-primary">{errors.tourDate}</p>}
                                     </div>
@@ -722,19 +751,23 @@ export default function AssignmentEditPage() {
                                 <SectionHeader title="Pickup & Drop Details" />
                                 <div className="grid grid-cols-1 gap-3 px-4 py-4 md:grid-cols-2 lg:grid-cols-3">
                                     <Input label="Pickup Address" isRequired value={form.pickUpAddress} onChange={(value) => updateField("pickUpAddress", value)} isInvalid={dirty.pickUpAddress && !!errors.pickUpAddress} hint={dirty.pickUpAddress ? errors.pickUpAddress : ""} />
-                                    <div className="flex flex-col gap-1.5">
-                                        <Label isRequired>Pickup Date</Label>
-                                        <DatePicker value={form.pickUpDate ? parseDate(form.pickUpDate) : null} onChange={(date) => updateField("pickUpDate", date ? date.toString() : "")} />
-                                        {dirty.pickUpDate && errors.pickUpDate && <p className="text-sm text-error-primary">{errors.pickUpDate}</p>}
-                                    </div>
-                                    <Input label="Pickup Time" isRequired type="time" value={form.pickUpTime} onChange={(value) => updateField("pickUpTime", value)} isInvalid={dirty.pickUpTime && !!errors.pickUpTime} hint={dirty.pickUpTime ? errors.pickUpTime : ""} />
                                     <Input label="Drop Address" isRequired value={form.dropAddress} onChange={(value) => updateField("dropAddress", value)} isInvalid={dirty.dropAddress && !!errors.dropAddress} hint={dirty.dropAddress ? errors.dropAddress : ""} />
-                                    <div className="flex flex-col gap-1.5">
-                                        <Label isRequired>Drop Date</Label>
-                                        <DatePicker value={form.dropDate ? parseDate(form.dropDate) : null} onChange={(date) => updateField("dropDate", date ? date.toString() : "")} />
-                                        {dirty.dropDate && errors.dropDate && <p className="text-sm text-error-primary">{errors.dropDate}</p>}
-                                    </div>
-                                    <Input label="Drop Time" isRequired type="time" value={form.dropTime} onChange={(value) => updateField("dropTime", value)} isInvalid={dirty.dropTime && !!errors.dropTime} hint={dirty.dropTime ? errors.dropTime : ""} />
+                                    {!form.dateNotDecided ? (
+                                        <>
+                                            <div className="flex flex-col gap-1.5">
+                                                <Label isRequired>Pickup Date</Label>
+                                                <DatePicker value={form.pickUpDate ? parseDate(form.pickUpDate) : null} onChange={(date) => updateField("pickUpDate", date ? date.toString() : "")} />
+                                                {dirty.pickUpDate && errors.pickUpDate && <p className="text-sm text-error-primary">{errors.pickUpDate}</p>}
+                                            </div>
+                                            <Input label="Pickup Time" isRequired type="time" value={form.pickUpTime} onChange={(value) => updateField("pickUpTime", value)} isInvalid={dirty.pickUpTime && !!errors.pickUpTime} hint={dirty.pickUpTime ? errors.pickUpTime : ""} />
+                                            <div className="flex flex-col gap-1.5">
+                                                <Label isRequired>Drop Date</Label>
+                                                <DatePicker value={form.dropDate ? parseDate(form.dropDate) : null} onChange={(date) => updateField("dropDate", date ? date.toString() : "")} />
+                                                {dirty.dropDate && errors.dropDate && <p className="text-sm text-error-primary">{errors.dropDate}</p>}
+                                            </div>
+                                            <Input label="Drop Time" isRequired type="time" value={form.dropTime} onChange={(value) => updateField("dropTime", value)} isInvalid={dirty.dropTime && !!errors.dropTime} hint={dirty.dropTime ? errors.dropTime : ""} />
+                                        </>
+                                    ) : null}
                                 </div>
                             </div>
 
@@ -861,11 +894,11 @@ export default function AssignmentEditPage() {
                         </div>
                     </div>
                 )}
-                         <div className="flex gap-2 justify-end">
-                            <Button color="secondary" iconLeading={ArrowLeft} onClick={() => navigate("/bookings/assignment")}>
+                         <div className="flex flex-col-reverse justify-end gap-2 sm:flex-row">
+                            <Button color="secondary" iconLeading={ArrowLeft} onClick={() => navigate("/bookings/assignment")} className="w-full sm:w-auto">
                                 Back
                             </Button>
-                            <Button color="primary" isDisabled={!canSave} isLoading={saving} onClick={handleSave}>
+                            <Button color="primary" isDisabled={!canSave} isLoading={saving} onClick={handleSave} className="w-full sm:w-auto">
                                 Save
                             </Button>
                         </div>

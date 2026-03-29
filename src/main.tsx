@@ -98,6 +98,7 @@ import PackageTagsListPage from "@/pages/packages/packageTags";
 import PackageTagsAddPage from "@/pages/packages/packageTags/add";
 import PackageTagsEditPage from "@/pages/packages/packageTags/edit/[id]";
 import PackageTagsViewPage from "@/pages/packages/packageTags/view/[id]";
+import { Snackbar } from "@/components/application/snackbar/snackbar";
 
 const shouldIgnoreConsoleMessage = (args: unknown[]) => {
     const first = args[0];
@@ -122,6 +123,7 @@ console.warn = (...args: unknown[]) => {
 createRoot(document.getElementById("root")!).render(
     <StrictMode>
         <ThemeProvider>
+            <Snackbar />
             <BrowserRouter>
                 <RouteProvider>
                     <Routes>

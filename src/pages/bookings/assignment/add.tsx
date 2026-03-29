@@ -39,6 +39,47 @@ const asArray = (value: any) => {
     return [];
 };
 
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+
+const formatBytes = (bytes: number) => {
+    if (!Number.isFinite(bytes) || bytes <= 0) return "0 B";
+    const units = ["B", "KB", "MB", "GB"];
+    const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+    const value = bytes / Math.pow(1024, i);
+    return `${value.toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+};
+
+const VALIDATION_LABELS: Record<string, string> = {
+    title: "Itinerary",
+    leadCode: "Lead Code",
+    leadDate: "Lead Date",
+    bookingDate: "Booking Date",
+    tourDate: "Travel Date",
+    clientName: "Customer Name",
+    agentName: "Agent Name",
+    mobile: "Mobile",
+    email: "Email",
+    homeLocation: "Home Location",
+    travelLocation: "Travel Location",
+    packageCost: "Package Amount",
+    finalPackageCost: "Final Package Cost",
+    tokenAmount: "Token Amount",
+    paymentStore: "Payment Mode",
+    noOfPackageDays: "Package Days",
+    noOfPackageNights: "Package Nights",
+    noOfAdult: "Number of Adults",
+    noOfRooms: "Number of Rooms",
+    hotelCategory: "Hotel Category",
+    carSeater: "Car Seater",
+    textForBookingTeam: "Text for Booking Team",
+    pickUpAddress: "Pickup Address",
+    pickUpDate: "Pickup Date",
+    pickUpTime: "Pickup Time",
+    dropAddress: "Drop Address",
+    dropDate: "Drop Date",
+    dropTime: "Drop Time",
+};
+
 const getUploadUrl = (response: any) => {
     const resolved = response?.data ?? response;
     if (typeof resolved === "string") return resolved;
@@ -128,6 +169,7 @@ export default function AssignmentAddPage() {
         textForBookingTeam: "",
         siteSeeing: "",
         pickUpAddress: "",
+        dateNotDecided: false,
         pickUpDate: "",
         pickUpTime: "",
         dropAddress: "",
@@ -253,7 +295,7 @@ export default function AssignmentAddPage() {
         if (!form.leadCode) next.leadCode = "Lead Code is required";
         if (!form.leadDate) next.leadDate = "Lead Date is required";
         if (!form.bookingDate) next.bookingDate = "Booking Date is required";
-        if (!form.tourDate) next.tourDate = "Travel Date is required";
+        if (!form.tourDate) next.tourDate = form.dateNotDecided ? "Tentative Date is required" : "Travel Date is required";
         if (!form.clientName) next.clientName = "Customer Name is required";
         if (!form.agentName) next.agentName = "Agent Name is required";
         if (!form.mobile) next.mobile = "Mobile is required";
@@ -272,12 +314,30 @@ export default function AssignmentAddPage() {
         if (!form.carSeater) next.carSeater = "Car Seater is required";
         if (!form.textForBookingTeam) next.textForBookingTeam = "Text for Booking Team is required";
         if (!form.pickUpAddress) next.pickUpAddress = "Pickup Address is required";
-        if (!form.pickUpDate) next.pickUpDate = "Pickup Date is required";
-        if (!form.pickUpTime) next.pickUpTime = "Pickup Time is required";
+        if (!form.dateNotDecided) {
+            if (!form.pickUpDate) next.pickUpDate = "Pickup Date is required";
+            if (!form.pickUpTime) next.pickUpTime = "Pickup Time is required";
+        }
         if (!form.dropAddress) next.dropAddress = "Drop Address is required";
-        if (!form.dropDate) next.dropDate = "Drop Date is required";
-        if (!form.dropTime) next.dropTime = "Drop Time is required";
+        if (!form.dateNotDecided) {
+            if (!form.dropDate) next.dropDate = "Drop Date is required";
+            if (!form.dropTime) next.dropTime = "Drop Time is required";
+        }
         setErrors(next);
+        const invalidKeys = Object.keys(next);
+        if (invalidKeys.length) {
+            const labels = invalidKeys.map((k) => (k === "tourDate" && form.dateNotDecided ? "Tentative Date" : VALIDATION_LABELS[k] || k));
+            const maxItems = 6;
+            const description =
+                labels.length > maxItems
+                    ? `${labels.slice(0, maxItems).join(", ")} +${labels.length - maxItems} more`
+                    : labels.join(", ");
+            showSnackbar({
+                title: "Please fill required fields",
+                description,
+                color: "danger",
+            });
+        }
         return Object.keys(next).length === 0;
     };
 
@@ -298,6 +358,12 @@ export default function AssignmentAddPage() {
             if (key === "food") {
                 next.selectedFood = [];
                 selectedFoodList.items.forEach((item) => selectedFoodList.remove(item.id));
+            }
+            if (key === "dateNotDecided" && value) {
+                next.pickUpDate = "";
+                next.pickUpTime = "";
+                next.dropDate = "";
+                next.dropTime = "";
             }
             return next;
         });
@@ -364,6 +430,7 @@ export default function AssignmentAddPage() {
                         fd.append("fmFile", item.file, item.file.name);
                         const uploaded = await fetchWithToken("/api/file/upload", fd as any, { method: "POST" });
                         const url = getUploadUrl(uploaded);
+                        if (!url) throw new Error("Failed to upload ID proof file");
                         return { ...item, file: url };
                     }
                     return item;
@@ -376,6 +443,7 @@ export default function AssignmentAddPage() {
                 fd.append("fmFile", form.tokenImg, form.tokenImg.name);
                 const uploaded = await fetchWithToken("/api/file/upload", fd as any, { method: "POST" });
                 tokenImgUrl = getUploadUrl(uploaded);
+                if (!tokenImgUrl) throw new Error("Failed to upload token payment file");
             }
 
             const payload = {
@@ -385,6 +453,10 @@ export default function AssignmentAddPage() {
                 savedItinerary: savedItineraryId || undefined,
                 verify: false,
                 paymentDate: isPaymentDateManual ? form.paymentDate || getTodayDateString() : getTodayDateString(),
+                pickUpDate: form.dateNotDecided ? "" : form.pickUpDate,
+                dropDate: form.dateNotDecided ? "" : form.dropDate,
+                pickUpTime: form.dateNotDecided ? "" : form.pickUpTime,
+                dropTime: form.dateNotDecided ? "" : form.dropTime,
             };
 
             const response = await addAssignment(payload);
@@ -450,11 +522,11 @@ export default function AssignmentAddPage() {
                                 )}
                             </div>
                         </div>
-                        <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center md:justify-end">
-                            <Button color="secondary" iconLeading={ArrowLeft} onClick={() => navigate("/bookings/assignment")}>
+                        <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-end md:w-auto">
+                            <Button color="secondary" iconLeading={ArrowLeft} onClick={() => navigate("/bookings/assignment")} className="w-full sm:w-auto">
                                 Back
                             </Button>
-                            <Button color="primary" isDisabled={!canSave} isLoading={saving} onClick={handleSave}>
+                            <Button color="primary" isDisabled={!canSave} isLoading={saving} onClick={handleSave} className="w-full sm:w-auto">
                                 Save
                             </Button>
                         </div>
@@ -491,7 +563,10 @@ export default function AssignmentAddPage() {
                                         {dirty.bookingDate && errors.bookingDate && <p className="text-sm text-error-primary">{errors.bookingDate}</p>}
                                     </div>
                                     <div className="flex flex-col gap-1.5">
-                                        <Label isRequired>Travel Date</Label>
+                                        <div className="flex items-center justify-between gap-2">
+                                            <Label isRequired>{form.dateNotDecided ? "Tentative Date" : "Travel Date"}</Label>
+                                            <Toggle label="Not Decided" isSelected={form.dateNotDecided} onChange={(value) => updateField("dateNotDecided", value)} />
+                                        </div>
                                         <DatePicker value={form.tourDate ? parseDate(form.tourDate) : null} onChange={(date) => updateField("tourDate", date ? date.toString() : "")} />
                                         {dirty.tourDate && errors.tourDate && <p className="text-sm text-error-primary">{errors.tourDate}</p>}
                                     </div>
@@ -611,10 +686,17 @@ export default function AssignmentAddPage() {
                                     >
                                         {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
                                     </Select>
-                                    <div className="flex flex-col gap-2">
-                                        <Toggle label="Manual Payment Date" isSelected={isPaymentDateManual} onChange={(value) => setIsPaymentDateManual(value)} />
-                                        <div className={`flex flex-col gap-1.5 ${isPaymentDateManual ? "" : "pointer-events-none opacity-60"}`}>
+                                    <div className="flex flex-col gap-1.5">
+                                        <div className="flex items-center justify-between gap-3">
                                             <Label>Payment Date</Label>
+                                            <Toggle
+                                                label="Manual"
+                                                slim
+                                                isSelected={isPaymentDateManual}
+                                                onChange={(value) => setIsPaymentDateManual(value)}
+                                            />
+                                        </div>
+                                        <div className={isPaymentDateManual ? "" : "pointer-events-none opacity-60"}>
                                             <DatePicker value={form.paymentDate ? parseDate(form.paymentDate) : null} onChange={(date) => updateField("paymentDate", date ? date.toString() : "")} />
                                         </div>
                                     </div>
@@ -637,12 +719,45 @@ export default function AssignmentAddPage() {
                                                     Remove
                                                 </Button>
                                             </div>
+                                        ) : form.tokenImg && form.tokenImg instanceof File ? (
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-sm text-secondary">{form.tokenImg.name}</span>
+                                                <Button
+                                                    color="secondary"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        updateField("tokenImg", "");
+                                                    }}
+                                                >
+                                                    Remove
+                                                </Button>
+                                            </div>
                                         ) : (
                                             <FileUploadDropZone
                                                 allowsMultiple={false}
+                                                maxSize={MAX_UPLOAD_BYTES}
+                                                hint={`PNG, JPG, GIF or PDF up to ${formatBytes(MAX_UPLOAD_BYTES)}`}
+                                                onSizeLimitExceed={(files) => {
+                                                    const file = files.item(0);
+                                                    showSnackbar({
+                                                        title: "File too large",
+                                                        description: file ? `${file.name} exceeds ${formatBytes(MAX_UPLOAD_BYTES)}` : `Max ${formatBytes(MAX_UPLOAD_BYTES)}`,
+                                                        color: "danger",
+                                                    });
+                                                    updateField("tokenImg", "");
+                                                }}
                                                 onDropFiles={(files) => {
                                                     const file = files.item(0);
                                                     if (file) {
+                                                        if (file.size > MAX_UPLOAD_BYTES) {
+                                                            showSnackbar({
+                                                                title: "File too large",
+                                                                description: `${file.name} exceeds ${formatBytes(MAX_UPLOAD_BYTES)}`,
+                                                                color: "danger",
+                                                            });
+                                                            updateField("tokenImg", "");
+                                                            return;
+                                                        }
                                                         updateField("tokenImg", file);
                                                     }
                                                 }}
@@ -656,19 +771,23 @@ export default function AssignmentAddPage() {
                                 <SectionHeader title="Pickup & Drop Details" />
                                 <div className="grid grid-cols-1 gap-3 px-4 py-4 md:grid-cols-2 lg:grid-cols-3">
                                     <Input label="Pickup Address" isRequired value={form.pickUpAddress} onChange={(value) => updateField("pickUpAddress", value)} isInvalid={dirty.pickUpAddress && !!errors.pickUpAddress} hint={dirty.pickUpAddress ? errors.pickUpAddress : ""} />
-                                    <div className="flex flex-col gap-1.5">
-                                        <Label isRequired>Pickup Date</Label>
-                                        <DatePicker value={form.pickUpDate ? parseDate(form.pickUpDate) : null} onChange={(date) => updateField("pickUpDate", date ? date.toString() : "")} />
-                                        {dirty.pickUpDate && errors.pickUpDate && <p className="text-sm text-error-primary">{errors.pickUpDate}</p>}
-                                    </div>
-                                    <Input label="Pickup Time" isRequired type="time" value={form.pickUpTime} onChange={(value) => updateField("pickUpTime", value)} isInvalid={dirty.pickUpTime && !!errors.pickUpTime} hint={dirty.pickUpTime ? errors.pickUpTime : ""} />
                                     <Input label="Drop Address" isRequired value={form.dropAddress} onChange={(value) => updateField("dropAddress", value)} isInvalid={dirty.dropAddress && !!errors.dropAddress} hint={dirty.dropAddress ? errors.dropAddress : ""} />
-                                    <div className="flex flex-col gap-1.5">
-                                        <Label isRequired>Drop Date</Label>
-                                        <DatePicker value={form.dropDate ? parseDate(form.dropDate) : null} onChange={(date) => updateField("dropDate", date ? date.toString() : "")} />
-                                        {dirty.dropDate && errors.dropDate && <p className="text-sm text-error-primary">{errors.dropDate}</p>}
-                                    </div>
-                                    <Input label="Drop Time" isRequired type="time" value={form.dropTime} onChange={(value) => updateField("dropTime", value)} isInvalid={dirty.dropTime && !!errors.dropTime} hint={dirty.dropTime ? errors.dropTime : ""} />
+                                    {!form.dateNotDecided ? (
+                                        <>
+                                            <div className="flex flex-col gap-1.5">
+                                                <Label isRequired>Pickup Date</Label>
+                                                <DatePicker value={form.pickUpDate ? parseDate(form.pickUpDate) : null} onChange={(date) => updateField("pickUpDate", date ? date.toString() : "")} />
+                                                {dirty.pickUpDate && errors.pickUpDate && <p className="text-sm text-error-primary">{errors.pickUpDate}</p>}
+                                            </div>
+                                            <Input label="Pickup Time" isRequired type="time" value={form.pickUpTime} onChange={(value) => updateField("pickUpTime", value)} isInvalid={dirty.pickUpTime && !!errors.pickUpTime} hint={dirty.pickUpTime ? errors.pickUpTime : ""} />
+                                            <div className="flex flex-col gap-1.5">
+                                                <Label isRequired>Drop Date</Label>
+                                                <DatePicker value={form.dropDate ? parseDate(form.dropDate) : null} onChange={(date) => updateField("dropDate", date ? date.toString() : "")} />
+                                                {dirty.dropDate && errors.dropDate && <p className="text-sm text-error-primary">{errors.dropDate}</p>}
+                                            </div>
+                                            <Input label="Drop Time" isRequired type="time" value={form.dropTime} onChange={(value) => updateField("dropTime", value)} isInvalid={dirty.dropTime && !!errors.dropTime} hint={dirty.dropTime ? errors.dropTime : ""} />
+                                        </>
+                                    ) : null}
                                 </div>
                             </div>
 
@@ -743,12 +862,39 @@ export default function AssignmentAddPage() {
                                                             Remove
                                                         </Button>
                                                     </div>
+                                                ) : item.file && item.file instanceof File ? (
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-sm text-secondary">{item.file.name}</span>
+                                                        <Button color="secondary" size="sm" onClick={() => updateNestedField("file", "", index, "idProof")}>
+                                                            Remove
+                                                        </Button>
+                                                    </div>
                                                 ) : (
                                                     <FileUploadDropZone
                                                         allowsMultiple={false}
+                                                        maxSize={MAX_UPLOAD_BYTES}
+                                                        hint={`PNG, JPG, GIF or PDF up to ${formatBytes(MAX_UPLOAD_BYTES)}`}
+                                                        onSizeLimitExceed={(files) => {
+                                                            const file = files.item(0);
+                                                            showSnackbar({
+                                                                title: "File too large",
+                                                                description: file ? `${file.name} exceeds ${formatBytes(MAX_UPLOAD_BYTES)}` : `Max ${formatBytes(MAX_UPLOAD_BYTES)}`,
+                                                                color: "danger",
+                                                            });
+                                                            updateNestedField("file", "", index, "idProof");
+                                                        }}
                                                         onDropFiles={(files) => {
                                                             const file = files.item(0);
                                                             if (file) {
+                                                                if (file.size > MAX_UPLOAD_BYTES) {
+                                                                    showSnackbar({
+                                                                        title: "File too large",
+                                                                        description: `${file.name} exceeds ${formatBytes(MAX_UPLOAD_BYTES)}`,
+                                                                        color: "danger",
+                                                                    });
+                                                                    updateNestedField("file", "", index, "idProof");
+                                                                    return;
+                                                                }
                                                                 updateNestedField("file", file, index, "idProof");
                                                             }
                                                         }}
@@ -784,11 +930,11 @@ export default function AssignmentAddPage() {
                         </div>
                     </div>
                 )}
-                <div className="flex gap-2 justify-end">
-                    <Button color="secondary" iconLeading={ArrowLeft} onClick={() => navigate("/bookings/assignment")}>
+                <div className="flex flex-col-reverse justify-end gap-2 sm:flex-row">
+                    <Button color="secondary" iconLeading={ArrowLeft} onClick={() => navigate("/bookings/assignment")} className="w-full sm:w-auto">
                         Back
                     </Button>
-                    <Button color="primary" isDisabled={!canSave} isLoading={saving} onClick={handleSave}>
+                    <Button color="primary" isDisabled={!canSave} isLoading={saving} onClick={handleSave} className="w-full sm:w-auto">
                         Save
                     </Button>
                 </div>

@@ -109,6 +109,7 @@ export const fetchWithToken = async (
     url: string,
     data: Record<string, unknown> = {},
     options: RequestInit = {},
+    retryAttempt = 0,
 ): Promise<any> => {
     try {
         const { apihost, baseUrl } = resolveBaseUrl();
@@ -119,15 +120,14 @@ export const fetchWithToken = async (
             return { error: "No auth token, redirecting to login." } as any;
         }
 
-        const headers = {
-            ...(options.headers || {}),
-            token: authToken || "",
-            apihost: apihostHeader,
-        } as HeadersInit;
+        const headers = new Headers(options.headers || {});
+        headers.set("token", authToken || "");
+        headers.set("apihost", apihostHeader);
 
         const method = (options.method || "GET").toUpperCase();
         const fetchOptions: RequestInit = { ...options, headers, method };
         const requestData = withAccessLookupContext(data, method);
+        const isFormDataRequest = typeof FormData !== "undefined" && requestData instanceof FormData;
 
         const useProxy =
             Boolean(import.meta.env.DEV) &&
@@ -137,10 +137,13 @@ export const fetchWithToken = async (
 
         let newUrl: string;
         if (method === "POST" || method === "PUT" || method === "DELETE") {
-            if (!url.includes("/file/upload")) {
-                fetchOptions.body = JSON.stringify(requestData);
-            } else {
-                fetchOptions.body = requestData as any;
+            if (fetchOptions.body == null) {
+                if (isFormDataRequest) {
+                    fetchOptions.body = requestData as any;
+                } else {
+                    if (!headers.has("content-type")) headers.set("content-type", "application/json");
+                    fetchOptions.body = JSON.stringify(requestData);
+                }
             }
             newUrl = url.startsWith("http") ? url : `${baseForRelative}${url}`;
         } else {
@@ -151,20 +154,25 @@ export const fetchWithToken = async (
 
         const response = await fetch(newUrl, fetchOptions);
         if (!response.ok) {
-            if (response.status === 403) {
+            if (response.status === 403 && retryAttempt < 1 && !isFormDataRequest) {
                 try {
                     await useStoreLogin.getState().getNewAuthToken();
                 } catch {
                     if (typeof window !== "undefined") window.location.href = "/login";
                     return { error: "Error fetching new auth token." } as any;
                 }
-                return await fetchWithToken(url, data, options);
+                return await fetchWithToken(url, data, options, retryAttempt + 1);
             }
             let errorData: any;
             try {
                 errorData = await response.json();
             } catch {
-                errorData = { message: "Failed to parse error response as JSON." };
+                try {
+                    const text = await response.text();
+                    errorData = text ? { message: text } : { message: "Request failed." };
+                } catch {
+                    errorData = { message: "Request failed." };
+                }
             }
             throw errorData;
         }
@@ -174,8 +182,16 @@ export const fetchWithToken = async (
         if (contentType && contentType.includes("text/html")) {
             throw new Error("API endpoint not found (HTML response). Check proxy configuration.");
         }
-
-        return await response.json();
+        if (contentType && (contentType.includes("application/json") || contentType.includes("+json"))) {
+            return await response.json();
+        }
+        const text = await response.text();
+        if (!text) return "";
+        try {
+            return JSON.parse(text);
+        } catch {
+            return text;
+        }
     } catch (error: any) {
         useStoreSnackbar
             .getState()
