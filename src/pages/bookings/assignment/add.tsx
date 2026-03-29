@@ -96,7 +96,6 @@ export default function AssignmentAddPage() {
 
     const [form, setForm] = useState<any>({
         title: "",
-        packageId: "",
         leadCode: "",
         leadDate: "",
         bookingDate: "",
@@ -251,7 +250,6 @@ export default function AssignmentAddPage() {
     const validate = () => {
         const next: Record<string, string> = {};
         if (!form.title) next.title = "Itinerary is required";
-        if (!form.packageId) next.packageId = "Package ID is required";
         if (!form.leadCode) next.leadCode = "Lead Code is required";
         if (!form.leadDate) next.leadDate = "Lead Date is required";
         if (!form.bookingDate) next.bookingDate = "Booking Date is required";
@@ -327,7 +325,6 @@ export default function AssignmentAddPage() {
     const handleSave = async () => {
         setDirty({
             title: true,
-            packageId: true,
             leadCode: true,
             leadDate: true,
             bookingDate: true,
@@ -394,9 +391,10 @@ export default function AssignmentAddPage() {
             if (response?.error) {
                 throw new Error(response.error);
             }
+            const created = (response as any)?.data ?? response;
             showSnackbar({
                 title: "Success",
-                description: "Assignment added successfully",
+                description: created?.packageId ? `Assignment added successfully (${created.packageId})` : "Assignment added successfully",
                 color: "success",
             });
             navigate("/bookings/assignment");
@@ -440,11 +438,6 @@ export default function AssignmentAddPage() {
                         <div className="space-y-1">
                             <h2 className="text-lg font-semibold text-primary">Add Assignment</h2>
                             <div className="flex flex-wrap items-center gap-2 text-xs text-tertiary">
-                                {form.packageId && (
-                                    <span className="rounded-full border border-secondary bg-secondary px-2 py-0.5 text-xs font-medium text-primary">
-                                        {form.packageId}
-                                    </span>
-                                )}
                                 {form.leadCode && (
                                     <span className="rounded-full border border-secondary bg-secondary px-2 py-0.5 text-xs font-medium text-primary">
                                         Lead {form.leadCode}
@@ -486,7 +479,6 @@ export default function AssignmentAddPage() {
                                 <SectionHeader title="Booking Details" />
                                 <div className="grid grid-cols-1 gap-3 px-4 py-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                                     <Input label="Itinerary" isRequired value={form.title} onChange={(value) => updateField("title", value)} isInvalid={dirty.title && !!errors.title} hint={dirty.title ? errors.title : ""} />
-                                    <Input label="Package ID" isRequired value={form.packageId} onChange={(value) => updateField("packageId", value)} isInvalid={dirty.packageId && !!errors.packageId} hint={dirty.packageId ? errors.packageId : ""} />
                                     <Input label="Lead Code" isRequired value={form.leadCode} onChange={(value) => updateField("leadCode", value)} isInvalid={dirty.leadCode && !!errors.leadCode} hint={dirty.leadCode ? errors.leadCode : ""} />
                                     <div className="flex flex-col gap-1.5">
                                         <Label isRequired>Lead Date</Label>
