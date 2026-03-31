@@ -431,6 +431,7 @@ export default function BookingPage() {
         bookingStatus: searchParams.get("bookingStatus") || "",
         paymentStatus: searchParams.get("paymentStatus") || "",
         finished: searchParams.get("finished") || "false",
+        dateNotDecided: searchParams.get("dateNotDecided") || "false",
     });
 
     const [debouncedFilters, setDebouncedFilters] = useState(filters);
@@ -481,7 +482,8 @@ export default function BookingPage() {
             verifyTime: "",
             bookingStatus: "",
             paymentStatus: "",
-            finished: "",
+            finished: "false",
+            dateNotDecided: "false",
         };
         setTempFilters(resetState);
         setFilters(resetState);
@@ -574,6 +576,7 @@ export default function BookingPage() {
                 addParam("bookingStatus", debouncedFilters.bookingStatus);
                 addParam("paymentStatus", debouncedFilters.paymentStatus);
                 addParam("finished", debouncedFilters.finished);
+                addParam("dateNotDecided", debouncedFilters.dateNotDecided);
                 const response = await getAssignment(params);
                 if (response.error) {
                     throw new Error(response.error);
@@ -786,12 +789,6 @@ export default function BookingPage() {
                                                 <SlideoutMenu.Header onClose={close}>Filters</SlideoutMenu.Header>
                                                 <SlideoutMenu.Content>
                                                     <div className="flex flex-col gap-4">
-                                                        <Input
-                                                            label="Package ID"
-                                                            placeholder="Package ID"
-                                                            value={tempFilters.packageId}
-                                                            onChange={(value) => setTempFilters((prev) => ({ ...prev, packageId: value }))}
-                                                        />
                                                         <div className="flex flex-col gap-1.5">
                                                             <Label>Booking Status</Label>
                                                             <Select
@@ -838,6 +835,23 @@ export default function BookingPage() {
                                                                     { id: "", label: "All Finished Status" },
                                                                     { id: "true", label: "Finished" },
                                                                     { id: "false", label: "Pending" },
+                                                                ]}
+                                                            >
+                                                                {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
+                                                            </Select>
+                                                        </div>
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <Label>Date Not Decided</Label>
+                                                            <Select
+                                                                aria-label="Date Not Decided"
+                                                                selectedKey={tempFilters.dateNotDecided || ""}
+                                                                onSelectionChange={(key) =>
+                                                                    setTempFilters((prev) => ({ ...prev, dateNotDecided: key === "" ? "" : String(key) }))
+                                                                }
+                                                                items={[
+                                                                    { id: "", label: "All" },
+                                                                    { id: "true", label: "True" },
+                                                                    { id: "false", label: "False" },
                                                                 ]}
                                                             >
                                                                 {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
@@ -1073,6 +1087,7 @@ export default function BookingPage() {
                                 if (key === "bookingStatus") label = "Booking Status";
                                 if (key === "paymentStatus") label = "Payment Status";
                                 if (key === "finished") label = "Finished";
+                                if (key === "dateNotDecided") label = "Date Not Decided";
                                 if (key === "travelLocation") label = "Travel Location";
                                 if (key === "homeLocation") label = "Home Location";
                                 if (key === "packageCost") label = "Package Cost";
@@ -1093,12 +1108,14 @@ export default function BookingPage() {
                                     else if (key === "bookingStatus") displayValue = "Booked";
                                     else if (key === "paymentStatus") displayValue = "Done";
                                     else if (key === "finished") displayValue = "Finished";
+                                    else if (key === "dateNotDecided") displayValue = "True";
                                     else displayValue = "Yes";
                                 } else if (value === "false") {
                                     if (key === "status") displayValue = "Inactive";
                                     else if (key === "bookingStatus") displayValue = "Not Booked";
                                     else if (key === "paymentStatus") displayValue = "Pending";
                                     else if (key === "finished") displayValue = "Pending";
+                                    else if (key === "dateNotDecided") displayValue = "False";
                                     else displayValue = "No";
                                 }
 
