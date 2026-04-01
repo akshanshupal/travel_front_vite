@@ -14,6 +14,7 @@ import { StickyTable, Table, TableCard } from "@/components/application/table/ta
 import { PaginationCardDefault } from "@/components/application/pagination/pagination";
 import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
+import { useAccess } from "@/hooks/use-access";
 
 const code = "PACKAGE_EXCLUSIONS";
 
@@ -28,6 +29,11 @@ export default function SettingsPackageExclusionsListPage() {
     const availableWidth = useAvailableTableWidth();
     const navigate = useNavigate();
     const { showSnackbar } = useStoreSnackbar();
+    const { can } = useAccess();
+    const canView = can("packageexclusion", "view");
+    const canAdd = can("packageexclusion", "add");
+    const canEdit = can("packageexclusion", "edit");
+    const canDelete = can("packageexclusion", "delete");
     const [isLoading, setIsLoading] = useState(true);
     const [data, setData] = useState<any[]>([]);
     const [totalRecords, setTotalRecords] = useState(0);
@@ -140,7 +146,7 @@ export default function SettingsPackageExclusionsListPage() {
                                         setPage(1);
                                     }}
                                 />
-                                <Button color="primary" size="sm" iconLeading={Plus} onClick={() => navigate("/additional-data/settings/package-exclusions/add")}>
+                                <Button color="primary" size="sm" iconLeading={Plus} isDisabled={!canAdd} onClick={() => navigate("/additional-data/settings/package-exclusions/add")}>
                                     Add Package Exclusion
                                 </Button>
                             </div>
@@ -193,7 +199,7 @@ export default function SettingsPackageExclusionsListPage() {
                                             {column.id === "index" ? (
                                                 <span className="text-sm text-tertiary">{indexById.get(getItemId(item)) ?? "—"}</span>
                                             ) : column.id === "title" ? (
-                                                <button type="button" className="text-left text-sm font-semibold text-primary hover:underline" onClick={() => navigate(`/additional-data/settings/package-exclusions/view/${getItemId(item)}`)}>
+                                                <button type="button" className="text-left text-sm font-semibold text-primary hover:underline" disabled={!canView} onClick={() => navigate(`/additional-data/settings/package-exclusions/view/${getItemId(item)}`)}>
                                                     {item.title || "—"}
                                                 </button>
                                             ) : column.id === "alias" ? (
@@ -204,8 +210,8 @@ export default function SettingsPackageExclusionsListPage() {
                                                 </Badge>
                                             ) : (
                                                 <div className="flex w-full items-center justify-end gap-1.5">
-                                                    <ButtonUtility tooltip="View" tooltipPlacement="bottom" icon={Eye} onClick={() => navigate(`/additional-data/settings/package-exclusions/view/${getItemId(item)}`)} color="secondary" size="sm" />
-                                                    <ButtonUtility tooltip="Edit" tooltipPlacement="bottom" icon={Edit01} onClick={() => navigate(`/additional-data/settings/package-exclusions/edit/${getItemId(item)}`)} color="secondary" size="sm" />
+                                                    <ButtonUtility tooltip="View" tooltipPlacement="bottom" icon={Eye} onClick={() => navigate(`/additional-data/settings/package-exclusions/view/${getItemId(item)}`)} color="secondary" size="sm" isDisabled={!canView} />
+                                                    <ButtonUtility tooltip="Edit" tooltipPlacement="bottom" icon={Edit01} onClick={() => navigate(`/additional-data/settings/package-exclusions/edit/${getItemId(item)}`)} color="secondary" size="sm" isDisabled={!canEdit} />
                                                     <ButtonUtility
                                                         tooltip="Delete"
                                                         tooltipPlacement="bottom"
@@ -216,6 +222,7 @@ export default function SettingsPackageExclusionsListPage() {
                                                         }}
                                                         color="secondary"
                                                         size="sm"
+                                                        isDisabled={!canDelete}
                                                     />
                                                 </div>
                                             )}
@@ -244,7 +251,7 @@ export default function SettingsPackageExclusionsListPage() {
                                         <Button color="secondary" onClick={close}>
                                             Cancel
                                         </Button>
-                                        <Button color="primary-destructive" onClick={handleDelete}>
+                                        <Button color="primary-destructive" onClick={handleDelete} isDisabled={!canDelete}>
                                             Delete
                                         </Button>
                                     </div>

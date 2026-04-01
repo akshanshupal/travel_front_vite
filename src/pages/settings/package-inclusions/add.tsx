@@ -4,6 +4,7 @@ import { TableCard } from "@/components/application/table/table";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { useStoreSnackbar } from "@/store/snackbar";
+import { useAccess } from "@/hooks/use-access";
 import { addGeneralData } from "@/utils/services/generalDataService";
 import { ArrowLeft, Plus, Trash01 } from "@untitledui/icons";
 import { useMemo, useState } from "react";
@@ -14,6 +15,8 @@ const code = "PACKAGE_INCLUSIONS";
 export default function SettingsPackageInclusionsAddPage() {
     const navigate = useNavigate();
     const { showSnackbar } = useStoreSnackbar();
+    const { can } = useAccess();
+    const canAdd = can("packageinclusion", "add");
     const [saving, setSaving] = useState(false);
     const [title, setTitle] = useState("");
     const [alias, setAlias] = useState("");
@@ -44,6 +47,7 @@ export default function SettingsPackageInclusionsAddPage() {
     };
 
     const handleSave = async () => {
+        if (!canAdd) return;
         if (!validate()) {
             showSnackbar({ title: "Validation Error", description: "Please fill all required fields", color: "danger" });
             return;
@@ -80,7 +84,7 @@ export default function SettingsPackageInclusionsAddPage() {
                                 <Button color="secondary" iconLeading={ArrowLeft} onClick={() => navigate("/additional-data/settings/package-inclusions")}>
                                     Back
                                 </Button>
-                                <Button color="primary" isLoading={saving} isDisabled={!canSave} onClick={handleSave}>
+                                <Button color="primary" isLoading={saving} isDisabled={!canSave || !canAdd} onClick={handleSave}>
                                     Save
                                 </Button>
                             </div>

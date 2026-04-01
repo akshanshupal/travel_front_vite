@@ -72,8 +72,8 @@ const parseSearch = (search: string) => {
         finished: sp.get("finished") || "false",
         dateNotDecided: sp.get("dateNotDecided") || "false",
         status: sp.get("status") || "",
-        sortField: sp.get("sortField") || "tourDate",
-        sortOrder: (sp.get("sortOrder") || "ASC").toUpperCase(),
+        sortField: sp.get("sortField") || "createdAt",
+        sortOrder: (sp.get("sortOrder") || "DESC").toUpperCase(),
     };
 };
 
@@ -210,7 +210,7 @@ export default function AssignmentPage() {
                     populate: "agentName",
                     select: "createdAt,id,clientName,mobile,email,title,status,bookingDate,packageId,agentName,tourDate,dateNotDecided,travelLocation,packageCost,finalPackageCost,paymentReceived,verify,bookingStatus,paymentStatus,finished,callDone,emailSent,whatsappSent,agentCallRecordingChecked",
                     ...debouncedFilters,
-                    sortField: debouncedFilters.sortField || 'tourDate',
+                    sortField: debouncedFilters.sortField || 'createdAt',
                     sortOrder: debouncedFilters.sortOrder || 'ASC',
                     tzOffsetMinutes: new Date().getTimezoneOffset(),
                 };
@@ -342,7 +342,7 @@ export default function AssignmentPage() {
             finished: "false",
             dateNotDecided: "false",
             status: "",
-            sortField: "tourDate",
+            sortField: "createdAt",
             sortOrder: "ASC",
         };
         setTempFilters(resetState);

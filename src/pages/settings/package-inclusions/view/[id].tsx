@@ -6,6 +6,7 @@ import { Badge } from "@/components/base/badges/badges";
 import { Input } from "@/components/base/input/input";
 import { Select } from "@/components/base/select/select";
 import { useStoreSnackbar } from "@/store/snackbar";
+import { useAccess } from "@/hooks/use-access";
 import { getGeneralDataById } from "@/utils/services/generalDataService";
 import { ArrowLeft, Edit01 } from "@untitledui/icons";
 import { useEffect, useMemo, useState } from "react";
@@ -22,6 +23,8 @@ export default function SettingsPackageInclusionsViewPage() {
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
     const { showSnackbar } = useStoreSnackbar();
+    const { can } = useAccess();
+    const canEdit = can("packageinclusion", "edit");
     const [loading, setLoading] = useState(true);
     const [item, setItem] = useState<any>(null);
     const breadcrumbsList = useMemo(
@@ -86,7 +89,7 @@ export default function SettingsPackageInclusionsViewPage() {
                                 <Button color="secondary" iconLeading={ArrowLeft} onClick={() => navigate("/additional-data/settings/package-inclusions")}>
                                     Back
                                 </Button>
-                                <Button color="primary" iconLeading={Edit01} onClick={() => navigate(`/additional-data/settings/package-inclusions/edit/${id}`)}>
+                                <Button color="primary" iconLeading={Edit01} isDisabled={!canEdit} onClick={() => navigate(`/additional-data/settings/package-inclusions/edit/${id}`)}>
                                     Edit
                                 </Button>
                             </div>
@@ -144,7 +147,7 @@ export default function SettingsPackageInclusionsViewPage() {
                             <Button color="secondary" iconLeading={ArrowLeft} onClick={() => navigate("/additional-data/settings/package-inclusions")}>
                                 Back
                             </Button>
-                            <Button color="primary" iconLeading={Edit01} onClick={() => navigate(`/additional-data/settings/package-inclusions/edit/${id}`)}>
+                            <Button color="primary" iconLeading={Edit01} isDisabled={!canEdit} onClick={() => navigate(`/additional-data/settings/package-inclusions/edit/${id}`)}>
                                 Edit
                             </Button>
                         </div>

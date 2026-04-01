@@ -5,6 +5,7 @@ import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { Select } from "@/components/base/select/select";
 import { useStoreSnackbar } from "@/store/snackbar";
+import { useAccess } from "@/hooks/use-access";
 import { getGeneralDataById, updateGeneralDataById } from "@/utils/services/generalDataService";
 import { ArrowLeft, Plus, Trash01 } from "@untitledui/icons";
 import { useEffect, useMemo, useState } from "react";
@@ -23,6 +24,8 @@ export default function SettingsPackageInclusionsEditPage() {
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
     const { showSnackbar } = useStoreSnackbar();
+    const { can } = useAccess();
+    const canEdit = can("packageinclusion", "edit");
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -79,6 +82,7 @@ export default function SettingsPackageInclusionsEditPage() {
 
     const handleSave = async () => {
         if (!id) return;
+        if (!canEdit) return;
         if (!validate()) {
             showSnackbar({ title: "Validation Error", description: "Please fill all required fields", color: "danger" });
             return;
@@ -125,7 +129,7 @@ export default function SettingsPackageInclusionsEditPage() {
                                 <Button color="secondary" iconLeading={ArrowLeft} onClick={() => navigate("/additional-data/settings/package-inclusions")}>
                                     Back
                                 </Button>
-                                <Button color="primary" isLoading={saving} isDisabled={!canSave} onClick={handleSave}>
+                                <Button color="primary" isLoading={saving} isDisabled={!canSave || !canEdit} onClick={handleSave}>
                                     Update
                                 </Button>
                             </div>

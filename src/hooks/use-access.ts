@@ -37,6 +37,7 @@ const routeToResourceKey = (parts: string[]) => {
         const subSection = parts[1] || "";
         const subPage = parts[2] || "";
         if (subSection !== "settings") return "";
+        if (subPage === "role") return "role";
         if (subPage === "template") return "template";
         if (subPage === "package-inclusions") return "packageinclusion";
         if (subPage === "package-exclusions") return "packageexclusion";
