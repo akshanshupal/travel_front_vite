@@ -27,6 +27,19 @@ const routeToResourceKey = (parts: string[]) => {
         if (page === "user") return "user";
         if (page === "mailer") return "mailer";
         if (page === "role") return "role";
+        if (page === "template") return "template";
+        if (page === "package-inclusions") return "packageinclusion";
+        if (page === "package-exclusions") return "packageexclusion";
+        return "";
+    }
+
+    if (section === "additional-data") {
+        const subSection = parts[1] || "";
+        const subPage = parts[2] || "";
+        if (subSection !== "settings") return "";
+        if (subPage === "template") return "template";
+        if (subPage === "package-inclusions") return "packageinclusion";
+        if (subPage === "package-exclusions") return "packageexclusion";
         return "";
     }
 
@@ -97,6 +110,10 @@ export const useAccess = () => {
         const resolveResourceAliases = (resource: string) => {
             if (resource === "saveditinerary") return ["saveditinerary", "saved-itinerary"];
             if (resource === "saved-itinerary") return ["saved-itinerary", "saveditinerary"];
+            if (resource === "packageinclusion") return ["packageinclusion", "package-inclusions"];
+            if (resource === "package-inclusions") return ["package-inclusions", "packageinclusion"];
+            if (resource === "packageexclusion") return ["packageexclusion", "package-exclusions"];
+            if (resource === "package-exclusions") return ["package-exclusions", "packageexclusion"];
             return [resource];
         };
 

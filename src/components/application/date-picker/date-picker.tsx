@@ -1,11 +1,11 @@
 import { getLocalTimeZone, today } from "@internationalized/date";
 import { useControlledState } from "@react-stately/utils";
 import { Calendar as CalendarIcon } from "@untitledui/icons";
-import { useDateFormatter } from "react-aria";
 import type { DatePickerProps as AriaDatePickerProps, DateValue } from "react-aria-components";
 import { DatePicker as AriaDatePicker, Dialog as AriaDialog, Group as AriaGroup, Popover as AriaPopover } from "react-aria-components";
 import { Button } from "@/components/base/buttons/button";
 import { cx } from "@/utils/cx";
+import { formatShortDate } from "@/utils/formatters";
 import { Calendar } from "./calendar";
 
 const highlightedDates = [today(getLocalTimeZone())];
@@ -20,14 +20,9 @@ interface DatePickerProps extends AriaDatePickerProps<DateValue> {
 }
 
 export const DatePicker = ({ value: valueProp, defaultValue, onChange, onApply, onCancel, placeholder = "Select date", ...props }: DatePickerProps) => {
-    const formatter = useDateFormatter({
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-    });
     const [value, setValue] = useControlledState(valueProp, defaultValue || null, onChange);
 
-    const formattedDate = value ? formatter.format(value.toDate(getLocalTimeZone())) : placeholder;
+    const formattedDate = value ? formatShortDate(value.toDate(getLocalTimeZone())) : placeholder;
 
     return (
         <AriaDatePicker shouldCloseOnSelect={false} {...props} value={value} onChange={setValue}>

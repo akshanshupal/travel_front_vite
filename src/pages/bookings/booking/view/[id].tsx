@@ -18,7 +18,7 @@ import { getbookingtype } from "@/utils/services/bookingTypeService";
 import { getVendor } from "@/utils/services/vendorService";
 import { getPaymentStore } from "@/utils/services/paymentStoreService";
 import { addPayment, getpayment, getPaymentDelete, updatePaymentById } from "@/utils/services/paymentService";
-import { formatShortDate, formatTime } from "@/utils/formatters";
+import { formatDateInput, formatDateTimeInput, formatShortDate, formatTime } from "@/utils/formatters";
 import { DatePicker } from "@/components/application/date-picker/date-picker";
 import { DateInputWithTime } from "@/components/application/date-picker/date-input-with-time";
 import { parseDate } from "@internationalized/date";
@@ -46,38 +46,6 @@ const formatShortDateTime = (value?: string) => {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return "-";
     return `${formatShortDate(date)}, ${formatTime(date)}`;
-};
-
-const formatDateInput = (dateStr?: string) => {
-    if (!dateStr) return "";
-    const date = new Date(dateStr);
-    if (Number.isNaN(date.getTime())) return "";
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-    const day = String(date.getUTCDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-};
-
-const formatDateTimeInput = (dateStr?: string) => {
-    if (!dateStr) return "";
-    const date = new Date(dateStr);
-    if (Number.isNaN(date.getTime())) return "";
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-    const day = String(date.getUTCDate()).padStart(2, "0");
-    const hours = String(date.getUTCHours()).padStart(2, "0");
-    const minutes = String(date.getUTCMinutes()).padStart(2, "0");
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-};
-
-const getLocalDateTime = () => {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
 const hasTimeComponent = (dateStr?: string) => {
@@ -144,7 +112,7 @@ export default function BookingViewPage() {
     const [paymentService, setPaymentService] = useState<any>(null);
     const [editingPayment, setEditingPayment] = useState<any>(null);
     const [paymentForm, setPaymentForm] = useState<any>({
-        paymentDate: getLocalDateTime(),
+        paymentDate: formatDateTimeInput(new Date()),
         amount: "",
         paymentStore: "",
         remarks: "",
@@ -428,7 +396,7 @@ export default function BookingViewPage() {
         setPaymentService(service);
         setEditingPayment(payment || null);
         setPaymentForm({
-            paymentDate: payment?.paymentDate ? formatDateTimeInput(payment.paymentDate) : getLocalDateTime(),
+            paymentDate: payment?.paymentDate ? formatDateTimeInput(payment.paymentDate) : formatDateTimeInput(new Date()),
             amount: payment?.amount ?? "",
             paymentStore: payment?.paymentStore ?? "",
             remarks: payment?.remarks ?? "",
@@ -472,7 +440,7 @@ export default function BookingViewPage() {
             }
             const payload: any = {
                 ...paymentForm,
-                paymentDate: paymentForm.paymentDate || getLocalDateTime(),
+                paymentDate: paymentForm.paymentDate || formatDateTimeInput(new Date()),
                 paymentStore: paymentForm.paymentStore,
                 paymentTo: "paymentForService",
                 paymentType: "Dr",

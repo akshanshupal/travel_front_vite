@@ -55,26 +55,35 @@ export default function PaymentPage() {
         packageId: searchParams.get("packageId") || "",
         clientDetails: searchParams.get("clientDetails") || "",
         bookingDate: searchParams.get("bookingDate") || "",
+        bookingDateMode: searchParams.get("bookingDateMode") || "",
+        bookingDateFrom: searchParams.get("bookingDateFrom") || searchParams.get("bookingDate") || "",
+        bookingDateTo: searchParams.get("bookingDateTo") || "",
         tourDate: searchParams.get("tourDate") || "",
+        tourDateMode: searchParams.get("tourDateMode") || "",
+        tourDateFrom: searchParams.get("tourDateFrom") || searchParams.get("tourDate") || "",
+        tourDateTo: searchParams.get("tourDateTo") || "",
         travelLocation: searchParams.get("travelLocation") || "",
         agentName: searchParams.get("agentName") || "",
         packageCost: searchParams.get("packageCost") || "",
         finalPackageCost: searchParams.get("finalPackageCost") || "",
+        finished: searchParams.get("finished") || "false",
+        dateNotDecided: searchParams.get("dateNotDecided") || "false",
+        sortField: searchParams.get("sortField") || "tourDate",
+        sortOrder: (searchParams.get("sortOrder") || "ASC").toUpperCase(),
     });
 
     const [debouncedFilters, setDebouncedFilters] = useState(filters);
     const [tempFilters, setTempFilters] = useState(filters);
-    const isFilterActive = Boolean(
-        filters.status ||
-        filters.packageId ||
-        filters.clientDetails ||
-        filters.bookingDate ||
-        filters.tourDate ||
-        filters.travelLocation ||
-        filters.agentName ||
-        filters.packageCost ||
-        filters.finalPackageCost
-    );
+    const isFilterActive = Object.entries(filters).some(([key, value]) => {
+        if (key === "sortField" || key === "sortOrder") return false;
+        return Boolean(value);
+    });
+    
+    const setQuickFilters = (patch: Record<string, any>) => {
+        setFilters((prev) => ({ ...prev, ...patch }));
+        setTempFilters((prev) => ({ ...prev, ...patch }));
+    };
+
     const indexById = useMemo(
         () => new Map(items.map((item, index) => [item.id || item._id, index + 1])),
         [items]
@@ -91,11 +100,21 @@ export default function PaymentPage() {
             packageId: "",
             clientDetails: "",
             bookingDate: "",
+            bookingDateMode: "",
+            bookingDateFrom: "",
+            bookingDateTo: "",
             tourDate: "",
+            tourDateMode: "",
+            tourDateFrom: "",
+            tourDateTo: "",
             travelLocation: "",
             agentName: "",
             packageCost: "",
             finalPackageCost: "",
+            finished: "false",
+            dateNotDecided: "false",
+            sortField: "tourDate",
+            sortOrder: "ASC",
         };
         setTempFilters(resetState);
         setFilters(resetState);
@@ -104,9 +123,24 @@ export default function PaymentPage() {
     };
 
     const handleRemoveFilter = (key: string) => {
+        if (key === "bookingDate") {
+            const resetState = { ...filters, bookingDateMode: "", bookingDateFrom: "", bookingDateTo: "" };
+            setFilters(resetState);
+            setTempFilters(resetState);
+            setDebouncedFilters(resetState);
+            return;
+        }
+        if (key === "tourDate") {
+            const resetState = { ...filters, tourDateMode: "", tourDateFrom: "", tourDateTo: "" };
+            setFilters(resetState);
+            setTempFilters(resetState);
+            setDebouncedFilters(resetState);
+            return;
+        }
         const resetState = { ...filters, [key]: "" };
         setFilters(resetState);
         setTempFilters(resetState);
+        setDebouncedFilters(resetState);
     };
 
     const handleOpenFilters = () => {
@@ -142,9 +176,10 @@ export default function PaymentPage() {
                     limit,
                     populate: "agentName",
                     verify: "true",
-                    sortField: 'bookingDate',
-                    sortOrder: 'DESC',
                     ...debouncedFilters,
+                    sortField: debouncedFilters.sortField || "tourDate",
+                    sortOrder: debouncedFilters.sortOrder || "ASC",
+                    tzOffsetMinutes: new Date().getTimezoneOffset(),
                 };
                 Object.keys(params).forEach(key => {
                     if (params[key] === "" || params[key] === undefined || params[key] === null) delete params[key];
@@ -168,6 +203,11 @@ export default function PaymentPage() {
         fetchData();
     }, [page, limit, debouncedFilters]);
 
+    const normalizeBoolean = (value: unknown) => {
+        if (value === true || value === "true" || value === 1 || value === "1") return true;
+        if (value === false || value === "false" || value === 0 || value === "0") return false;
+        return null;
+    };
     const handlePageChange = (newPage: number) => {
         const params = new URLSearchParams(searchParams);
         params.set("page", String(newPage));
@@ -190,6 +230,31 @@ export default function PaymentPage() {
                         contentTrailing={
                             <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center">
                                 <Select
+                                    aria-label="Sort by"
+                                    className="w-full md:w-40"
+                                    selectedKey={filters.sortField}
+                                    onSelectionChange={(key) => setQuickFilters({ sortField: String(key) })}
+                                    items={[
+                                        { id: "tourDate", label: "Tour Date" },
+                                        { id: "bookingDate", label: "Booking Date" },
+                                        { id: "createdAt", label: "Created At" },
+                                    ]}
+                                >
+                                    {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
+                                </Select>
+                                <Select
+                                    aria-label="Sort order"
+                                    className="w-full md:w-32"
+                                    selectedKey={filters.sortOrder}
+                                    onSelectionChange={(key) => setQuickFilters({ sortOrder: String(key).toUpperCase() })}
+                                    items={[
+                                        { id: "ASC", label: "Ascending" },
+                                        { id: "DESC", label: "Descending" },
+                                    ]}
+                                >
+                                    {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
+                                </Select>
+                                <Select
                                     aria-label="Rows per page"
                                     className="w-full md:w-32"
                                     selectedKey={String(limit)}
@@ -208,16 +273,68 @@ export default function PaymentPage() {
 
                     <div className="flex flex-col gap-4 border-b border-secondary bg-primary px-4 py-4 md:px-6">
                         <div className="flex flex-col gap-3 md:flex-row md:items-center justify-between">
-                            <Input
-                                placeholder="Search by customer details"
-                                value={tempFilters.clientDetails}
-                                onChange={(value) => {
-                                    setFilters((prev) => ({ ...prev, clientDetails: value }));
-                                    setTempFilters((prev) => ({ ...prev, clientDetails: value }));
-                                }}
-                                icon={SearchLg}
-                                className="w-full md:w-80"
-                            />
+                            <div className="flex flex-col gap-3 md:flex-row md:items-end w-full">
+                                <Input
+                                    placeholder="Search by customer details"
+                                    value={tempFilters.clientDetails}
+                                    onChange={(value) => {
+                                        setQuickFilters({ clientDetails: value });
+                                    }}
+                                    icon={SearchLg}
+                                    className="w-full md:w-80"
+                                />
+                                <div className="flex flex-col gap-1.5 w-full md:w-auto">
+                                    <Label>Travel Date</Label>
+                                    <div className="flex flex-col gap-2 md:flex-row md:items-center">
+                                        <Select
+                                            aria-label="Travel Date Mode"
+                                            className="w-full md:w-40"
+                                            selectedKey={tempFilters.tourDateMode || ""}
+                                            onSelectionChange={(key) =>
+                                                setQuickFilters({
+                                                    tourDateMode: String(key),
+                                                    tourDateFrom: "",
+                                                    tourDateTo: "",
+                                                })
+                                            }
+                                            items={[
+                                                { id: "", label: "Fixed date" },
+                                                { id: "range", label: "Date range" },
+                                                { id: "before", label: "Before" },
+                                                { id: "after", label: "After" },
+                                            ]}
+                                        >
+                                            {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
+                                        </Select>
+                                        {String(tempFilters.tourDateMode || "") === "range" ? (
+                                            <div className="flex gap-2 w-full md:w-auto">
+                                                <Input
+                                                    aria-label="Travel Date From"
+                                                    type="date"
+                                                    value={tempFilters.tourDateFrom}
+                                                    onChange={(value) => setQuickFilters({ tourDateFrom: value })}
+                                                    className="w-full md:w-44"
+                                                />
+                                                <Input
+                                                    aria-label="Travel Date To"
+                                                    type="date"
+                                                    value={tempFilters.tourDateTo}
+                                                    onChange={(value) => setQuickFilters({ tourDateTo: value })}
+                                                    className="w-full md:w-44"
+                                                />
+                                            </div>
+                                        ) : (
+                                            <Input
+                                                aria-label="Travel Date"
+                                                type="date"
+                                                value={tempFilters.tourDateFrom}
+                                                onChange={(value) => setQuickFilters({ tourDateFrom: value })}
+                                                className="w-full md:w-44"
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
                             <div className="flex items-center gap-2">
                                 <SlideoutMenu.Trigger>
                                     <Button color="primary" iconLeading={FilterLines} onClick={handleOpenFilters}>
@@ -256,6 +373,38 @@ export default function PaymentPage() {
                                                                 {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
                                                             </Select>
                                                         </div>
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <Label>Finished Status</Label>
+                                                            <Select
+                                                                aria-label="Finished Status"
+                                                                selectedKey={tempFilters.finished || ""}
+                                                                onChange={undefined}
+                                                                onSelectionChange={(key) => setTempFilters((prev) => ({ ...prev, finished: key === "" ? "" : String(key) }))}
+                                                                items={[
+                                                                    { id: "", label: "All Finished Status" },
+                                                                    { id: "true", label: "Finished" },
+                                                                    { id: "false", label: "Not Finished" },
+                                                                ]}
+                                                            >
+                                                                {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
+                                                            </Select>
+                                                        </div>
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <Label>Not Decided</Label>
+                                                            <Select
+                                                                aria-label="Not Decided"
+                                                                selectedKey={tempFilters.dateNotDecided || ""}
+                                                                onChange={undefined}
+                                                                onSelectionChange={(key) => setTempFilters((prev) => ({ ...prev, dateNotDecided: key === "" ? "" : String(key) }))}
+                                                                items={[
+                                                                    { id: "", label: "All" },
+                                                                    { id: "true", label: "Yes" },
+                                                                    { id: "false", label: "No" },
+                                                                ]}
+                                                            >
+                                                                {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
+                                                            </Select>
+                                                        </div>
                                                     </div>
                                                 </SlideoutMenu.Content>
                                                 <SlideoutMenu.Footer>
@@ -284,8 +433,23 @@ export default function PaymentPage() {
                         </div>
                         <div className="flex flex-wrap gap-2">
                             {Object.entries(filters).map(([key, value]) => {
-                                if (!value) return null;
+                                if (
+                                    !value ||
+                                    value === "__all__" ||
+                                    key === "sortField" ||
+                                    key === "sortOrder" ||
+                                    key === "bookingDateMode" ||
+                                    key === "bookingDateFrom" ||
+                                    key === "bookingDateTo" ||
+                                    key === "tourDateMode" ||
+                                    key === "tourDateFrom" ||
+                                    key === "tourDateTo"
+                                )
+                                    return null;
                                 let label = key;
+                                let displayValue = value;
+
+                                // Format label and value for better display
                                 if (key === "packageId") label = "Package ID";
                                 if (key === "clientDetails") label = "Client Details";
                                 if (key === "agentName") label = "Agent Name";
@@ -294,11 +458,18 @@ export default function PaymentPage() {
                                 if (key === "travelLocation") label = "Travel Location";
                                 if (key === "packageCost") label = "Package Cost";
                                 if (key === "finalPackageCost") label = "Final Package Cost";
-                                if (key === "status") label = "Status";
-
-                                let displayValue = value;
-                                if (value === "true" && key === "status") displayValue = "Active";
-                                if (value === "false" && key === "status") displayValue = "Inactive";
+                                if (key === "status") {
+                                    label = "Status";
+                                    displayValue = value === "true" ? "Active" : "Inactive";
+                                }
+                                if (key === "finished") {
+                                    label = "Finished";
+                                    displayValue = value === "true" ? "Yes" : "No";
+                                }
+                                if (key === "dateNotDecided") {
+                                    label = "Date Not Decided";
+                                    displayValue = value === "true" ? "Yes" : "No";
+                                }
 
                                 return (
                                     <BadgeWithButton key={key} onButtonClick={() => handleRemoveFilter(key)}>
@@ -307,6 +478,34 @@ export default function PaymentPage() {
                                     </BadgeWithButton>
                                 );
                             })}
+                            {filters.bookingDateMode || filters.bookingDateFrom || filters.bookingDateTo ? (
+                                <BadgeWithButton onButtonClick={() => handleRemoveFilter("bookingDate")}>
+                                    <span className="font-medium text-gray-500 mr-1">Booking Date:</span>
+                                    <span className="font-semibold text-brand-700">
+                                        {filters.bookingDateMode === "range"
+                                            ? `${filters.bookingDateFrom} to ${filters.bookingDateTo}`
+                                            : filters.bookingDateMode === "before"
+                                              ? `Before ${filters.bookingDateFrom}`
+                                              : filters.bookingDateMode === "after"
+                                                ? `After ${filters.bookingDateFrom}`
+                                                : filters.bookingDateFrom}
+                                    </span>
+                                </BadgeWithButton>
+                            ) : null}
+                            {filters.tourDateMode || filters.tourDateFrom || filters.tourDateTo ? (
+                                <BadgeWithButton onButtonClick={() => handleRemoveFilter("tourDate")}>
+                                    <span className="font-medium text-gray-500 mr-1">Travel Date:</span>
+                                    <span className="font-semibold text-brand-700">
+                                        {filters.tourDateMode === "range"
+                                            ? `${filters.tourDateFrom} to ${filters.tourDateTo}`
+                                            : filters.tourDateMode === "before"
+                                              ? `Before ${filters.tourDateFrom}`
+                                              : filters.tourDateMode === "after"
+                                                ? `After ${filters.tourDateFrom}`
+                                                : filters.tourDateFrom}
+                                    </span>
+                                </BadgeWithButton>
+                            ) : null}
                         </div>
                     </div>
 
@@ -336,7 +535,19 @@ export default function PaymentPage() {
                                                 <span className="text-sm text-tertiary uppercase">{item.agentName?.username || item.agentName?.name || item.agentName || "-"}</span>
                                             ) : column.id === "bookingDate" ? (
                                                 <span className="text-sm text-tertiary">
-                                                    {item.tourDate ? formatShortDate(item.tourDate) : "-"}<br />
+                                                    {item.tourDate ? (
+                                                        <div className="flex items-center gap-1.5">
+                                                            {formatShortDate(item.tourDate)}
+                                                            {normalizeBoolean(item.dateNotDecided) && (
+                                                                <span className="inline-flex items-center rounded-md bg-red-600 px-1.5 py-0.5 text-[10px] font-semibold text-white shadow-sm ring-1 ring-inset ring-red-600/20">
+                                                                    TBD
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        "-"
+                                                    )}
+                                                    <br />
                                                     {item.bookingDate ? formatShortDate(item.bookingDate) : "-"}
                                                 </span>
                                             ) : column.id === "travelLocation" ? (

@@ -25,9 +25,9 @@ export const formatDateTime = (dateStr?: string) => {
     if (!dateStr) return "";
     const date = new Date(dateStr);
     if (isNaN(date.getTime())) return "Invalid Date";
-    const dateOptions: Intl.DateTimeFormatOptions = { day: "2-digit", month: "short", year: "2-digit" };
+    const dateOptions: Intl.DateTimeFormatOptions = { day: "2-digit", month: "short", year: "2-digit", timeZone: "Asia/Kolkata" };
     const formattedDate = date.toLocaleDateString("en-GB", dateOptions).replace(/ /g, "-");
-    const timeOptions: Intl.DateTimeFormatOptions = { hour: "numeric", minute: "2-digit", hour12: true };
+    const timeOptions: Intl.DateTimeFormatOptions = { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "Asia/Kolkata" };
     const formattedTime = date.toLocaleTimeString("en-US", timeOptions);
     return `${formattedDate}, ${formattedTime}`;
 };
@@ -36,21 +36,16 @@ export const formatDateShortSec = (dateStr?: string) => {
     if (!dateStr) return "";
     const date = new Date(dateStr);
     if (isNaN(date.getTime())) return "Invalid Date";
-    const day = String(date.getDate()).padStart(2, "0");
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const month = monthNames[date.getMonth()];
-    const year = String(date.getFullYear()).slice(-2);
-    return `${day}-${month}-${year}`;
+    const options: Intl.DateTimeFormatOptions = { day: "2-digit", month: "short", year: "2-digit", timeZone: "Asia/Kolkata" };
+    return date.toLocaleDateString("en-GB", options).replace(/ /g, "-");
 };
 
 export const formatDateShort = (dateStr?: string) => {
     if (!dateStr) return "";
     const date = new Date(dateStr);
     if (isNaN(date.getTime())) return "Invalid Date";
-    const options: Intl.DateTimeFormatOptions = { day: "2-digit", month: "short", year: "2-digit", timeZone: "UTC" };
-    const [month, dayWithComma, year] = date.toLocaleDateString("en-US", options).split(" ");
-    const day = dayWithComma.replace(",", "");
-    return `${day}-${month}-${year}`;
+    const options: Intl.DateTimeFormatOptions = { day: "2-digit", month: "short", year: "2-digit", timeZone: "Asia/Kolkata" };
+    return date.toLocaleDateString("en-GB", options).replace(/ /g, "-");
 };
 
 const getPhoneHref = (value: any) => {

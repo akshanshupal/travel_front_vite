@@ -56,16 +56,24 @@ const parseSearch = (search: string) => {
         agentName: sp.get("agentName") || "",
         clientDetails: sp.get("clientDetails") || "",
         bookingDate: sp.get("bookingDate") || "",
+        bookingDateMode: sp.get("bookingDateMode") || "",
+        bookingDateFrom: sp.get("bookingDateFrom") || sp.get("bookingDate") || "",
+        bookingDateTo: sp.get("bookingDateTo") || "",
         tourDate: sp.get("tourDate") || "",
+        tourDateMode: sp.get("tourDateMode") || "",
+        tourDateFrom: sp.get("tourDateFrom") || sp.get("tourDate") || "",
+        tourDateTo: sp.get("tourDateTo") || "",
         travelLocation: sp.get("travelLocation") || "",
         packageCost: sp.get("packageCost") || "",
         finalPackageCost: sp.get("finalPackageCost") || "",
         bookingStatus: sp.get("bookingStatus") || "",
         verify: sp.get("verify") || "",
         paymentStatus: sp.get("paymentStatus") || "",
-        finished: sp.get("finished") || "",
-        dateNotDecided: sp.get("dateNotDecided") || "",
+        finished: sp.get("finished") || "false",
+        dateNotDecided: sp.get("dateNotDecided") || "false",
         status: sp.get("status") || "",
+        sortField: sp.get("sortField") || "tourDate",
+        sortOrder: (sp.get("sortOrder") || "ASC").toUpperCase(),
     };
 };
 
@@ -107,7 +115,13 @@ export default function AssignmentPage() {
         agentName: initial.agentName,
         clientDetails: initial.clientDetails,
         bookingDate: initial.bookingDate,
+        bookingDateMode: initial.bookingDateMode,
+        bookingDateFrom: initial.bookingDateFrom,
+        bookingDateTo: initial.bookingDateTo,
         tourDate: initial.tourDate,
+        tourDateMode: initial.tourDateMode,
+        tourDateFrom: initial.tourDateFrom,
+        tourDateTo: initial.tourDateTo,
         travelLocation: initial.travelLocation,
         packageCost: initial.packageCost,
         finalPackageCost: initial.finalPackageCost,
@@ -117,12 +131,22 @@ export default function AssignmentPage() {
         finished: initial.finished,
         dateNotDecided: initial.dateNotDecided,
         status: initial.status,
+        sortField: initial.sortField,
+        sortOrder: initial.sortOrder,
     });
 
     const [debouncedFilters, setDebouncedFilters] = useState(filters);
     const [tempFilters, setTempFilters] = useState(filters);
 
-    const isFilterActive = Object.values(filters).some(Boolean);
+    const isFilterActive = Object.entries(filters).some(([key, value]) => {
+        if (key === "sortField" || key === "sortOrder") return false;
+        return Boolean(value);
+    });
+
+    const setQuickFilters = (patch: Record<string, any>) => {
+        setFilters((prev) => ({ ...prev, ...patch }));
+        setTempFilters((prev) => ({ ...prev, ...patch }));
+    };
 
     useEffect(() => {
         const handler = setTimeout(() => {
@@ -138,6 +162,20 @@ export default function AssignmentPage() {
     };
 
     const handleRemoveFilter = (key: string) => {
+        if (key === "bookingDate") {
+            const resetState = { ...filters, bookingDateMode: "", bookingDateFrom: "", bookingDateTo: "" };
+            setFilters(resetState);
+            setTempFilters(resetState);
+            setDebouncedFilters(resetState);
+            return;
+        }
+        if (key === "tourDate") {
+            const resetState = { ...filters, tourDateMode: "", tourDateFrom: "", tourDateTo: "" };
+            setFilters(resetState);
+            setTempFilters(resetState);
+            setDebouncedFilters(resetState);
+            return;
+        }
         const resetState = { ...filters, [key]: "" };
         setFilters(resetState);
         setTempFilters(resetState);
@@ -170,10 +208,11 @@ export default function AssignmentPage() {
                     page,
                     limit,
                     populate: "agentName",
-                    sortField: 'bookingDate',
-                    sortOrder: 'DESC',
                     select: "createdAt,id,clientName,mobile,email,title,status,bookingDate,packageId,agentName,tourDate,dateNotDecided,travelLocation,packageCost,finalPackageCost,paymentReceived,verify,bookingStatus,paymentStatus,finished,callDone,emailSent,whatsappSent,agentCallRecordingChecked",
                     ...debouncedFilters,
+                    sortField: debouncedFilters.sortField || 'tourDate',
+                    sortOrder: debouncedFilters.sortOrder || 'ASC',
+                    tzOffsetMinutes: new Date().getTimezoneOffset(),
                 };
                 Object.keys(params).forEach(key => {
                     if (params[key] === "" || params[key] === undefined || params[key] === null) delete params[key];
@@ -287,16 +326,24 @@ export default function AssignmentPage() {
             agentName: "",
             clientDetails: "",
             bookingDate: "",
+            bookingDateMode: "",
+            bookingDateFrom: "",
+            bookingDateTo: "",
             tourDate: "",
+            tourDateMode: "",
+            tourDateFrom: "",
+            tourDateTo: "",
             travelLocation: "",
             packageCost: "",
             finalPackageCost: "",
             bookingStatus: "",
             verify: "",
             paymentStatus: "",
-            finished: "",
-            dateNotDecided: "",
+            finished: "false",
+            dateNotDecided: "false",
             status: "",
+            sortField: "tourDate",
+            sortOrder: "ASC",
         };
         setTempFilters(resetState);
         setFilters(resetState);
@@ -315,6 +362,31 @@ export default function AssignmentPage() {
                         badge={loading ? "..." : totalRecords}
                         contentTrailing={
                             <div className="flex flex-col gap-2 md:flex-row md:items-center">
+                                <Select
+                                    aria-label="Sort by"
+                                    className="w-full md:w-40"
+                                    selectedKey={filters.sortField}
+                                    onSelectionChange={(key) => setQuickFilters({ sortField: String(key) })}
+                                    items={[
+                                        { id: "tourDate", label: "Tour Date" },
+                                        { id: "bookingDate", label: "Booking Date" },
+                                        { id: "createdAt", label: "Created At" },
+                                    ]}
+                                >
+                                    {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
+                                </Select>
+                                <Select
+                                    aria-label="Sort order"
+                                    className="w-full md:w-32"
+                                    selectedKey={filters.sortOrder}
+                                    onSelectionChange={(key) => setQuickFilters({ sortOrder: String(key).toUpperCase() })}
+                                    items={[
+                                        { id: "ASC", label: "Ascending" },
+                                        { id: "DESC", label: "Descending" },
+                                    ]}
+                                >
+                                    {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
+                                </Select>
                                 <Select
                                     aria-label="Rows per page"
                                     className="w-full md:w-32"
@@ -340,16 +412,68 @@ export default function AssignmentPage() {
 
                     <div className="flex flex-col gap-4 border-b border-secondary bg-primary px-4 py-4 md:px-6">
                         <div className="flex flex-col gap-3 md:flex-row md:items-center justify-between">
-                            <Input
-                                placeholder="Search by customer details"
-                                value={tempFilters.clientDetails}
-                                onChange={(value) => {
-                                    setFilters((prev) => ({ ...prev, clientDetails: value }));
-                                    setTempFilters((prev) => ({ ...prev, clientDetails: value }));
-                                }}
-                                icon={SearchLg}
-                                className="w-full md:w-80"
-                            />
+                            <div className="flex flex-col gap-3 md:flex-row md:items-end w-full">
+                                <Input
+                                    placeholder="Search by customer details"
+                                    value={tempFilters.clientDetails}
+                                    onChange={(value) => {
+                                        setQuickFilters({ clientDetails: value });
+                                    }}
+                                    icon={SearchLg}
+                                    className="w-full md:w-80"
+                                />
+                                <div className="flex flex-col gap-1.5 w-full md:w-auto">
+                                    <Label>Travel Date</Label>
+                                    <div className="flex flex-col gap-2 md:flex-row md:items-center">
+                                        <Select
+                                            aria-label="Travel Date Mode"
+                                            className="w-full md:w-40"
+                                            selectedKey={tempFilters.tourDateMode || ""}
+                                            onSelectionChange={(key) =>
+                                                setQuickFilters({
+                                                    tourDateMode: String(key),
+                                                    tourDateFrom: "",
+                                                    tourDateTo: "",
+                                                })
+                                            }
+                                            items={[
+                                                { id: "", label: "Fixed date" },
+                                                { id: "range", label: "Date range" },
+                                                { id: "before", label: "Before" },
+                                                { id: "after", label: "After" },
+                                            ]}
+                                        >
+                                            {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
+                                        </Select>
+                                        {String(tempFilters.tourDateMode || "") === "range" ? (
+                                            <div className="flex gap-2 w-full md:w-auto">
+                                                <Input
+                                                    aria-label="Travel Date From"
+                                                    type="date"
+                                                    value={tempFilters.tourDateFrom}
+                                                    onChange={(value) => setQuickFilters({ tourDateFrom: value })}
+                                                    className="w-full md:w-44"
+                                                />
+                                                <Input
+                                                    aria-label="Travel Date To"
+                                                    type="date"
+                                                    value={tempFilters.tourDateTo}
+                                                    onChange={(value) => setQuickFilters({ tourDateTo: value })}
+                                                    className="w-full md:w-44"
+                                                />
+                                            </div>
+                                        ) : (
+                                            <Input
+                                                aria-label="Travel Date"
+                                                type="date"
+                                                value={tempFilters.tourDateFrom}
+                                                onChange={(value) => setQuickFilters({ tourDateFrom: value })}
+                                                className="w-full md:w-44"
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
                             <div className="flex items-center gap-2">
                                 <SlideoutMenu.Trigger>
                                     <Button color="primary" iconLeading={FilterLines} onClick={handleOpenFilters}>
@@ -467,9 +591,9 @@ export default function AssignmentPage() {
                                                             </Select>
                                                         </div>
                                                         <div className="flex flex-col gap-1.5">
-                                                            <Label>Date Not Decided</Label>
+                                                            <Label>Not Decided</Label>
                                                             <Select
-                                                                aria-label="Date Not Decided"
+                                                                aria-label="Not Decided"
                                                                 selectedKey={tempFilters.dateNotDecided || ""}
                                                                 onChange={undefined}
                                                                 onSelectionChange={(key) => setTempFilters((prev) => ({ ...prev, dateNotDecided: key === "" ? "" : String(key) }))}
@@ -510,7 +634,19 @@ export default function AssignmentPage() {
                         </div>
                         <div className="flex flex-wrap gap-2">
                             {Object.entries(filters).map(([key, value]) => {
-                                if (!value || value === "__all__") return null;
+                                if (
+                                    !value ||
+                                    value === "__all__" ||
+                                    key === "sortField" ||
+                                    key === "sortOrder" ||
+                                    key === "bookingDateMode" ||
+                                    key === "bookingDateFrom" ||
+                                    key === "bookingDateTo" ||
+                                    key === "tourDateMode" ||
+                                    key === "tourDateFrom" ||
+                                    key === "tourDateTo"
+                                )
+                                    return null;
                                 let label = key;
                                 let displayValue = value;
 
@@ -554,6 +690,34 @@ export default function AssignmentPage() {
                                     </BadgeWithButton>
                                 );
                             })}
+                            {filters.bookingDateMode || filters.bookingDateFrom || filters.bookingDateTo ? (
+                                <BadgeWithButton onButtonClick={() => handleRemoveFilter("bookingDate")}>
+                                    <span className="font-medium text-gray-500 mr-1">Booking Date:</span>
+                                    <span className="font-semibold text-brand-700">
+                                        {filters.bookingDateMode === "range"
+                                            ? `${filters.bookingDateFrom} to ${filters.bookingDateTo}`
+                                            : filters.bookingDateMode === "before"
+                                              ? `Before ${filters.bookingDateFrom}`
+                                              : filters.bookingDateMode === "after"
+                                                ? `After ${filters.bookingDateFrom}`
+                                                : filters.bookingDateFrom}
+                                    </span>
+                                </BadgeWithButton>
+                            ) : null}
+                            {filters.tourDateMode || filters.tourDateFrom || filters.tourDateTo ? (
+                                <BadgeWithButton onButtonClick={() => handleRemoveFilter("tourDate")}>
+                                    <span className="font-medium text-gray-500 mr-1">Travel Date:</span>
+                                    <span className="font-semibold text-brand-700">
+                                        {filters.tourDateMode === "range"
+                                            ? `${filters.tourDateFrom} to ${filters.tourDateTo}`
+                                            : filters.tourDateMode === "before"
+                                              ? `Before ${filters.tourDateFrom}`
+                                              : filters.tourDateMode === "after"
+                                                ? `After ${filters.tourDateFrom}`
+                                                : filters.tourDateFrom}
+                                    </span>
+                                </BadgeWithButton>
+                            ) : null}
                         </div>
                     </div>
 
@@ -582,7 +746,19 @@ export default function AssignmentPage() {
                                             </span>
                                         ) : column.id === "bookingDate" ? (
                                             <span className="text-sm text-tertiary">
-                                                {item.tourDate ? `${formatShortDate(item.tourDate)}${normalizeBoolean(item.dateNotDecided) ? " (T)" : ""}` : "-"}<br />
+                                                {item.tourDate ? (
+                                                    <div className="flex items-center gap-1.5">
+                                                        {formatShortDate(item.tourDate)}
+                                                        {normalizeBoolean(item.dateNotDecided) && (
+                                                            <span className="inline-flex items-center rounded-md bg-red-600 px-1.5 py-0.5 text-[10px] font-semibold text-white shadow-sm ring-1 ring-inset ring-red-600/20">
+                                                                TBD
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    "-"
+                                                )}
+                                                <br />
                                                 {item.bookingDate ? formatShortDate(item.bookingDate) : "-"}
                                             </span>
                                         ) : column.id === "travelLocation" ? (

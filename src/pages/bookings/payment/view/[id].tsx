@@ -16,6 +16,7 @@ import { useStoreSnackbar } from "@/store/snackbar";
 import { getAssignmentById } from "@/utils/services/assignmentService";
 import { getPackageBooking } from "@/utils/services/packagebookingService";
 import { getPaymentStore } from "@/utils/services/paymentStoreService";
+import { formatDateTimeInput } from "@/utils/formatters";
 import {
     addPayment,
     getpayment,
@@ -38,28 +39,6 @@ const formatPaymentDate = (dateStr?: string) => {
     const date = new Date(dateStr);
     if (Number.isNaN(date.getTime())) return "-";
     return `${formatShortDate(dateStr)} ${formatTime(dateStr)}`;
-};
-
-const formatDatetimeLocal = (dateStr?: string) => {
-    if (!dateStr) return "";
-    const date = new Date(dateStr);
-    if (Number.isNaN(date.getTime())) return "";
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-};
-
-const getLocalDateTime = () => {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
 const buildPaymentReceiptWhatsappMessage = (payment: any, assignment: any) => {
@@ -367,7 +346,7 @@ export default function PaymentViewPage() {
                 ...formData,
                 assignment: id,
                 packageId: assignment?.packageId,
-                paymentDate: formData.paymentDate || getLocalDateTime(),
+                paymentDate: formData.paymentDate || formatDateTimeInput(new Date()),
                 paymentType: "Cr",
             };
             const response = await addPayment(payload);
@@ -419,7 +398,7 @@ export default function PaymentViewPage() {
 
             setFormData({
                 ...resolved,
-                paymentDate: formatDatetimeLocal(resolved.paymentDate),
+                paymentDate: formatDateTimeInput(resolved.paymentDate),
                 packageServices: serviceData,
             });
         } catch (error: any) {
@@ -867,7 +846,7 @@ export default function PaymentViewPage() {
                                     const next = Boolean(value);
                                     setIsDateAuto(next);
                                     if (next) {
-                                        handleFormChange("paymentDate", getLocalDateTime());
+                                        handleFormChange("paymentDate", formatDateTimeInput(new Date()));
                                     }
                                 }}
                                 label={isDateAuto ? "Auto" : "Manual"}
@@ -876,7 +855,7 @@ export default function PaymentViewPage() {
                         <Input
                             type="datetime-local"
                             label="Payment Date"
-                            value={formatDatetimeLocal(formData.paymentDate) || (isDateAuto ? getLocalDateTime() : "")}
+                            value={formatDateTimeInput(formData.paymentDate) || (isDateAuto ? formatDateTimeInput(new Date()) : "")}
                             isDisabled={isDateAuto}
                             onChange={(value) => handleFormChange("paymentDate", value)}
                             isInvalid={Boolean(formErrors.paymentDate)}

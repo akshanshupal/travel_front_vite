@@ -98,13 +98,25 @@ import PackageTagsListPage from "@/pages/packages/packageTags";
 import PackageTagsAddPage from "@/pages/packages/packageTags/add";
 import PackageTagsEditPage from "@/pages/packages/packageTags/edit/[id]";
 import PackageTagsViewPage from "@/pages/packages/packageTags/view/[id]";
+import TemplateListPage from "@/pages/settings/template/index";
+import TemplateAddPage from "@/pages/settings/template/add";
+import TemplateEditPage from "@/pages/settings/template/edit/[id]";
+import TemplateViewPage from "@/pages/settings/template/view/[id]";
+import PackageInclusionsListPage from "@/pages/settings/package-inclusions";
+import PackageInclusionsAddPage from "@/pages/settings/package-inclusions/add";
+import PackageInclusionsEditPage from "@/pages/settings/package-inclusions/edit/[id]";
+import PackageInclusionsViewPage from "@/pages/settings/package-inclusions/view/[id]";
+import PackageExclusionsListPage from "@/pages/settings/package-exclusions";
+import PackageExclusionsAddPage from "@/pages/settings/package-exclusions/add";
+import PackageExclusionsEditPage from "@/pages/settings/package-exclusions/edit/[id]";
+import PackageExclusionsViewPage from "@/pages/settings/package-exclusions/view/[id]";
 import { Snackbar } from "@/components/application/snackbar/snackbar";
 
 const shouldIgnoreConsoleMessage = (args: unknown[]) => {
-    const first = args[0];
-    if (typeof first !== "string") return false;
-    if (first.includes("Unchecked runtime.lastError: Could not establish connection. Receiving end does not exist.")) return true;
-    if (first.includes("Could not establish connection. Receiving end does not exist.")) return true;
+    const firstMessage = args[0];
+    if (typeof firstMessage !== "string") return false;
+    if (firstMessage.includes("Unchecked runtime.lastError: Could not establish connection. Receiving end does not exist.")) return true;
+    if (firstMessage.includes("Could not establish connection. Receiving end does not exist.")) return true;
     return false;
 };
 
@@ -223,8 +235,14 @@ createRoot(document.getElementById("root")!).render(
                         <Route path="/packages/packageTags/add" element={<PackageTagsAddPage />} />
                         <Route path="/packages/packageTags/edit/:id" element={<PackageTagsEditPage />} />
                         <Route path="/packages/packageTags/view/:id" element={<PackageTagsViewPage />} />
-                        <Route path="/package-inclusions" element={<PlaceholderPage />} />
-                        <Route path="/package-exclusions" element={<PlaceholderPage />} />
+                        <Route path="/additional-data/settings/package-inclusions" element={<PackageInclusionsListPage />} />
+                        <Route path="/additional-data/settings/package-inclusions/add" element={<PackageInclusionsAddPage />} />
+                        <Route path="/additional-data/settings/package-inclusions/view/:id" element={<PackageInclusionsViewPage />} />
+                        <Route path="/additional-data/settings/package-inclusions/edit/:id" element={<PackageInclusionsEditPage />} />
+                        <Route path="/additional-data/settings/package-exclusions" element={<PackageExclusionsListPage />} />
+                        <Route path="/additional-data/settings/package-exclusions/add" element={<PackageExclusionsAddPage />} />
+                        <Route path="/additional-data/settings/package-exclusions/view/:id" element={<PackageExclusionsViewPage />} />
+                        <Route path="/additional-data/settings/package-exclusions/edit/:id" element={<PackageExclusionsEditPage />} />
                         <Route path="/settings/user" element={<SettingsUserListPage />} />
                         <Route path="/settings/user/add" element={<SettingsUserAddPage />} />
                         <Route path="/settings/user/:id" element={<SettingsUserViewPage />} />
@@ -239,8 +257,11 @@ createRoot(document.getElementById("root")!).render(
                         <Route path="/settings/role/view/:id" element={<SettingsRoleViewPage />} />
                         <Route path="/settings/role/edit/:id" element={<SettingsRoleEditPage />} />
                         <Route path="/settings/configuration_manager" element={<PlaceholderPage />} />
-                        <Route path="/template" element={<PlaceholderPage />} />
-                        <Route path="/template/template-one" element={<PlaceholderPage />} />
+                        <Route path="/additional-data/settings/template" element={<TemplateListPage />} />
+                        <Route path="/additional-data/settings/template/add" element={<TemplateAddPage />} />
+                        <Route path="/additional-data/settings/template/view/:id" element={<TemplateViewPage />} />
+                        <Route path="/additional-data/settings/template/edit/:id" element={<TemplateEditPage />} />
+                        <Route path="/additional-data/settings/template/template-one" element={<PlaceholderPage />} />
                         <Route path="/package-mail/:id" element={<PackageItineraryMailPage />} />
                         <Route path="/package-voucher/:id" element={<PackageVoucherPage />} />
                         <Route path="/payments-receipt/:id" element={<PaymentReceiptPage />} />

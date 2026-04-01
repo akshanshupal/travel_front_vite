@@ -112,7 +112,9 @@ export const fetchWithToken = async (
     retryAttempt = 0,
 ): Promise<any> => {
     try {
+        
         const { apihost, baseUrl } = resolveBaseUrl();
+        debugger
         const apihostHeader = resolveApihostHeader(apihost);
         const authToken = useStoreLogin.getState().authToken;
         if (!authToken && typeof window !== "undefined") {
@@ -176,8 +178,7 @@ export const fetchWithToken = async (
             }
             throw errorData;
         }
-        if (newUrl.includes("export-no-hotel-image")) return response;
-        
+
         const contentType = response.headers.get("content-type");
         if (contentType && contentType.includes("text/html")) {
             throw new Error("API endpoint not found (HTML response). Check proxy configuration.");
@@ -215,42 +216,38 @@ export const fetchWithOutToken = async (
 ): Promise<any> => {
     const { apihost, baseUrl } = resolveBaseUrl();
     const apihostHeader = resolveApihostHeader(apihost);
-    try {
-        const headers = {
-            ...(options.headers || {}),
-            apihost: apihostHeader,
-        } as HeadersInit;
-        const method = (options.method || "GET").toUpperCase();
-        const fetchOptions: RequestInit = { ...options, headers, method };
+    const headers = {
+        ...(options.headers || {}),
+        apihost: apihostHeader,
+    } as HeadersInit;
+    const method = (options.method || "GET").toUpperCase();
+    const fetchOptions: RequestInit = { ...options, headers, method };
 
-        const useProxy =
-            Boolean(import.meta.env.DEV) &&
-            (import.meta.env.VITE_USE_API_PROXY as string | undefined) !== "false" &&
-            url.startsWith("/api/");
-        const baseForRelative = useProxy ? apihost : baseUrl;
+    const useProxy =
+        Boolean(import.meta.env.DEV) &&
+        (import.meta.env.VITE_USE_API_PROXY as string | undefined) !== "false" &&
+        url.startsWith("/api/");
+    const baseForRelative = useProxy ? apihost : baseUrl;
 
-        if (method === "POST" || method === "PUT" || method === "DELETE") {
-            fetchOptions.body = JSON.stringify(data);
-            url = url.startsWith("http") ? url : `${baseForRelative}${url}`;
-        } else {
-            url = url.startsWith("http") ? url : `${baseForRelative}${url}`;
-            const queryString = buildQueryString(data);
-            url = queryString ? `${url}?${queryString}` : url;
-        }
-        const response = await fetch(url, fetchOptions);
-        if (!response.ok) {
-            let errorData: any;
-            try {
-                errorData = await response.json();
-            } catch {
-                errorData = { message: "Failed to parse error response as JSON." };
-            }
-            throw errorData;
-        }
-        return await response.json();
-    } catch (error: any) {
-        throw error;
+    if (method === "POST" || method === "PUT" || method === "DELETE") {
+        fetchOptions.body = JSON.stringify(data);
+        url = url.startsWith("http") ? url : `${baseForRelative}${url}`;
+    } else {
+        url = url.startsWith("http") ? url : `${baseForRelative}${url}`;
+        const queryString = buildQueryString(data);
+        url = queryString ? `${url}?${queryString}` : url;
     }
+    const response = await fetch(url, fetchOptions);
+    if (!response.ok) {
+        let errorData: any;
+        try {
+            errorData = await response.json();
+        } catch {
+            errorData = { message: "Request failed." };
+        }
+        throw errorData;
+    }
+    return await response.json();
 };
 
 export default fetchWithToken;

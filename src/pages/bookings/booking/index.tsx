@@ -111,11 +111,7 @@ export default function BookingPage() {
     const [columnModalOpen, setColumnModalOpen] = useState(false);
     const [columnModalPage, setColumnModalPage] = useState(1);
     const [draggingId, setDraggingId] = useState<string | null>(null);
-    const normalizeBoolean = (value: unknown) => {
-        if (value === true || value === "true" || value === 1 || value === "1") return true;
-        if (value === false || value === "false" || value === 0 || value === "0") return false;
-        return null;
-    };
+
     const normalizeSearchParams = (params: Record<string, string>) => {
         const next: Record<string, string> = {};
         Object.entries(params).forEach(([key, value]) => {
@@ -197,7 +193,14 @@ export default function BookingPage() {
             case "tourDate":
                 return (
                     <span className="text-sm">
-                        {formatShortDate(item.tourDate)} <br />
+                        <div className="flex items-center gap-1.5">
+                            {formatShortDate(item.tourDate)}
+                            {normalizeBoolean(item.dateNotDecided) && (
+                                <span className="inline-flex items-center rounded-md bg-red-600 px-1.5 py-0.5 text-[10px] font-semibold text-white shadow-sm ring-1 ring-inset ring-red-600/20">
+                                    TBD
+                                </span>
+                            )}
+                        </div>
                         <span className="text-xs text-gray-500">{formatShortDate(item.bookingDate)}</span>
                     </span>
 
@@ -596,6 +599,11 @@ export default function BookingPage() {
         fetchData();
     }, [page, limit, debouncedFilters]);
 
+    const normalizeBoolean = (value: unknown) => {
+        if (value === true || value === "true" || value === 1 || value === "1") return true;
+        if (value === false || value === "false" || value === 0 || value === "0") return false;
+        return null;
+    };
     const handlePageChange = (newPage: number) => {
         const params = new URLSearchParams(searchParams);
         params.set("page", String(newPage));

@@ -21,6 +21,7 @@ import { ArrowLeft, Home04, Plus, Trash01 } from "@untitledui/icons";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useListData } from "react-stately";
+import { formatDateInput } from "@/utils/formatters";
 import { parseDate } from "@internationalized/date";
 
 const FOOD_OPTIONS = [
@@ -89,22 +90,9 @@ const getUploadUrl = (response: any) => {
     return "";
 };
 
-const formatDateInput = (dateStr?: string) => {
-    if (!dateStr) return "";
-    const date = new Date(dateStr);
-    if (Number.isNaN(date.getTime())) return "";
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-};
-
 const getTodayDateString = () => {
     const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+    return now.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
 };
 
 const SectionHeader = ({ title }: { title: string }) => {

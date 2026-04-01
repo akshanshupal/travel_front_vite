@@ -22,6 +22,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useListData } from "react-stately";
 import { parseDate } from "@internationalized/date";
+import { formatDateInput } from "@/utils/formatters";
+const formatTimeInput = (timeValue?: string) => {
+    if (!timeValue || typeof timeValue !== "string") return "";
+    const match = timeValue.match(/^(\d{2}):(\d{2})/);
+    return match ? `${match[1]}:${match[2]}` : "";
+};
 
 const FOOD_OPTIONS = [
     { id: "Breakfast", label: "Breakfast" },
@@ -46,22 +52,6 @@ const getUploadUrl = (response: any) => {
     if (typeof resolved?.data === "string") return resolved.data;
     if (typeof resolved?.location === "string") return resolved.location;
     return "";
-};
-
-const formatDateInput = (dateStr?: string) => {
-    if (!dateStr) return "";
-    const date = new Date(dateStr);
-    if (Number.isNaN(date.getTime())) return "";
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-};
-
-const formatTimeInput = (timeValue?: string) => {
-    if (!timeValue || typeof timeValue !== "string") return "";
-    const match = timeValue.match(/^(\d{2}):(\d{2})/);
-    return match ? `${match[1]}:${match[2]}` : "";
 };
 
 const normalizeBool = (value: any) => value === true || value === "Yes" || value === "true";
@@ -586,7 +576,7 @@ export default function AssignmentEditPage() {
                                     <div className="flex flex-col gap-1.5">
                                         <div className="flex items-center justify-between gap-2">
                                             <Label isRequired>{form.dateNotDecided ? "Tentative Date" : "Travel Date"}</Label>
-                                            <Toggle label="Date Not Decided" isSelected={form.dateNotDecided} onChange={(value) => updateField("dateNotDecided", value)} />
+                                            <Toggle label="Not Decided" isSelected={form.dateNotDecided} onChange={(value) => updateField("dateNotDecided", value)} />
                                         </div>
                                         <DatePicker value={form.tourDate ? parseDate(form.tourDate) : null} onChange={(date) => updateField("tourDate", date ? date.toString() : "")} />
                                         {dirty.tourDate && errors.tourDate && <p className="text-sm text-error-primary">{errors.tourDate}</p>}

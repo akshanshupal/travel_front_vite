@@ -110,6 +110,9 @@ const permissionSections: PermissionSection[] = [
             { label: "User", resource: "user" },
             { label: "Mailer", resource: "mailer" },
             { label: "Role", resource: "role" },
+            { label: "Template", resource: "template" },
+            { label: "Package Inclusions", resource: "packageinclusion" },
+            { label: "Package Exclusions", resource: "packageexclusion" },
         ],
     },
     {

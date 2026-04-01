@@ -128,6 +128,16 @@ const buildBaseMenu = (): SidebarMenuItem[] => [
             { href: "/settings/user", label: "User", icon: Users01 },
             { href: "/settings/mailer", label: "Mailer", icon: Mail01 },
             { href: "/settings/role", label: "Role", icon: LayersTwo01 },
+            {
+                href: "/additional-data/settings/template",
+                label: "Additional Data",
+                icon: File02,
+                items: [
+                    { href: "/additional-data/settings/template", label: "Template", icon: File02 },
+                    { href: "/additional-data/settings/package-inclusions", label: "Package Inclusions", icon: Tag01 },
+                    { href: "/additional-data/settings/package-exclusions", label: "Package Exclusions", icon: FilterLines },
+                ],
+            },
         ],
     },
 ];
@@ -227,6 +237,16 @@ const hrefToResourceKey = (href: string) => {
         if (page === "user") return "user";
         if (page === "mailer") return "mailer";
         if (page === "role") return "role";
+        return "";
+    }
+
+    if (section === "additional-data") {
+        const subSection = parts[1] || "";
+        const subPage = parts[2] || "";
+        if (subSection !== "settings") return "";
+        if (subPage === "template") return "template";
+        if (subPage === "package-inclusions") return "packageinclusion";
+        if (subPage === "package-exclusions") return "packageexclusion";
         return "";
     }
 
