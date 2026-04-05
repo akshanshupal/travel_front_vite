@@ -31,7 +31,7 @@ export const RouteProvider = ({ children }: PropsWithChildren) => {
 
     useEffect(() => {
         // Public routes that don't require login
-        const publicRoutes = ["/package-mail", "/package-voucher", "/payments-receipt", "/hotel-images"];
+        const publicRoutes = ["/package-mail", "/package-voucher", "/payments-receipt", "/hotel-images", "/bookings/generatePayment"];
         if (publicRoutes.some(route => pathname.startsWith(route))) return;
 
         if (pathname === "/login" || pathname === "/") {

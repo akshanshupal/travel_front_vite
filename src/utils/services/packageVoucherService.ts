@@ -22,17 +22,6 @@ export const getPackageVoucherPublic = async (params: Record<string, any> = {}) 
   return response;
 };
 
-export const getPackageVoucherPublicById = async (id: string) => {
-  const response = await fetchWithOutToken(`/api/packagevoucher/${id}`);
-
-  if (response.error) {
-    console.error("Error fetching Packagevoucher public by ID:", response.error);
-    return { error: response.error, details: response?.details };
-  }
-
-  return response;
-};
-
 export const getPackageVoucherById = async (id: string) => {
   const response = await fetchWithToken(`/api/packagevoucher/${id}`);
   
