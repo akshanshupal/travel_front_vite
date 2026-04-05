@@ -114,7 +114,7 @@ export const fetchWithToken = async (
     try {
         
         const { apihost, baseUrl } = resolveBaseUrl();
-        debugger
+        
         const apihostHeader = resolveApihostHeader(apihost);
         const authToken = useStoreLogin.getState().authToken;
         if (!authToken && typeof window !== "undefined") {

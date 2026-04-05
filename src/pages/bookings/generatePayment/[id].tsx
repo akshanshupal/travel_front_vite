@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { useParams, useNavigate } from "react-router";
 import { Button } from "@/components/base/buttons/button";
 import { CustomBreadscrumbs } from "@/components/application/breadcrumbs/custom-breadcrumbs";
@@ -35,6 +35,12 @@ export default function GeneratedPymId() {
     const month = parts.find((part) => part.type === "month")?.value || "";
     const year = parts.find((part) => part.type === "year")?.value || "";
     return `${day} ${month}, ${year}`;
+  };
+
+  const formatDurationPart = (value: any, singular: string, plural: string) => {
+    const count = Number(value);
+    if (Number.isNaN(count)) return `0 ${plural}`;
+    return `${count} ${count === 1 ? singular : plural}`;
   };
 
 
@@ -157,6 +163,20 @@ export default function GeneratedPymId() {
     { label: "Generate" },
   ];
 
+  const sortedPackageBookingData = useMemo(() => {
+    const getStartTime = (value: any) => {
+      const time = new Date(value).getTime();
+      return Number.isNaN(time) ? -Infinity : time;
+    };
+    const isCab = (title: any) => /\bcab\b/i.test(String(title || "").trim());
+    return [...packageBookingData].sort((a: any, b: any) => {
+      const aIsCab = isCab(a?.title);
+      const bIsCab = isCab(b?.title);
+      if (aIsCab !== bIsCab) return aIsCab ? -1 : 1;
+      return getStartTime(b?.startDate) - getStartTime(a?.startDate);
+    });
+  }, [packageBookingData]);
+
   return (
     <DefaultLayout>
       <div className="max-w-4xl mx-auto">
@@ -207,10 +227,10 @@ export default function GeneratedPymId() {
                         <h3 className="text-lg font-bold text-gray-800 border-b pb-2 mb-3 border-gray-200">Trip Details</h3>
                         <div className="text-sm text-gray-700 space-y-1">
                             <p><span className="font-semibold w-32 inline-block">Package ID:</span> {assignmentData?.packageId}</p>
-                            <p><span className="font-semibold w-32 inline-block">Booking Date:</span> {assignmentData?.bookingDate ? new Date(assignmentData?.bookingDate).toLocaleDateString() : "-"}</p>
-                            <p><span className="font-semibold w-32 inline-block">Travel Date:</span> {assignmentData?.tourDate ? new Date(assignmentData?.tourDate).toLocaleDateString() : "-"}</p>
-                            <p><span className="font-semibold w-32 inline-block">Duration:</span> {assignmentData?.noOfPackageDays} Days / {assignmentData?.noOfPackageNights} Nights</p>
-                            <p><span className="font-semibold w-32 inline-block">Travelers:</span> {assignmentData?.noOfAdult} Adults, {assignmentData?.noOfKids} Kids</p>
+                            <p><span className="font-semibold w-32 inline-block">Booking Date:</span> {assignmentData?.bookingDate ? formatDate(assignmentData?.bookingDate): "-"}</p>
+                            <p><span className="font-semibold w-32 inline-block">Travel Date:</span> {assignmentData?.tourDate ? formatDate(assignmentData?.tourDate): "-"}</p>
+                            <p><span className="font-semibold w-32 inline-block">Duration:</span>  {formatDurationPart(assignmentData?.noOfPackageNights, "Night", "Nights")} / {formatDurationPart(assignmentData?.noOfPackageDays, "Day", "Days")}</p>
+                            <p><span className="font-semibold w-32 inline-block">Travelers:</span> {formatDurationPart(assignmentData?.noOfAdult, "Adult", "Adults")}, {formatDurationPart(assignmentData?.noOfKids, "Kid", "Kids")}</p>
                             <p><span className="font-semibold w-32 inline-block">Itinerary:</span> 
                                 <a
                                 target="_blank"
@@ -230,7 +250,7 @@ export default function GeneratedPymId() {
                     <div className="mb-8">
                         {/* <h3 className="text-lg font-bold text-gray-800 mb-3 text-primary">Booking Inclusions</h3> */}
                         <div className="space-y-4">
-                            {packageBookingData.map((item) => (
+                            {sortedPackageBookingData.map((item) => (
                                 <div key={item.id} className="border border-gray-200 rounded-lg overflow-hidden">
                                     <div className="bg-gray-50 px-4 py-2 border-b border-gray-200 font-semibold text-gray-700 flex justify-between items-center">
                                         <span className="text-gray-800">{item.title}</span>
@@ -348,6 +368,9 @@ export default function GeneratedPymId() {
                             />
                         </div>
                     )}
+                    <p className="mt-4 text-center text-xs text-gray-500">
+                        This is a digitally authenticated document and does not require a physical signature.
+                    </p>
                 </div>
             </div>
                 </div>

@@ -184,7 +184,7 @@ export default function MailConfirmation({
                 throw new Error("Invalid mail type");
             }
             const response = await mailFunctions[sendMailFnName](selectedId, { ...formData, showPreview: showPreview });
-            debugger
+            
             if (response) {
                 setShowHtmlData(response);
                 setMailScreen("preview");
