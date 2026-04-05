@@ -22,14 +22,20 @@ export default function GeneratedPymId() {
   const [mylogo, setMylogo] = useState<any[]>([]);
   const { showSnackbar } = useStoreSnackbar();
 
-  const dateTimeFormatter = new Intl.DateTimeFormat("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "2-digit",
-    hour: "numeric",
-    minute: "numeric",
-    hour12: true,
-  });
+  const formatDate = (value?: string) => {
+    if (!value) return "-";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "-";
+    const parts = new Intl.DateTimeFormat("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "2-digit",
+    }).formatToParts(date);
+    const day = parts.find((part) => part.type === "day")?.value || "";
+    const month = parts.find((part) => part.type === "month")?.value || "";
+    const year = parts.find((part) => part.type === "year")?.value || "";
+    return `${day} ${month}, ${year}`;
+  };
 
 
   useEffect(() => {
@@ -229,7 +235,7 @@ export default function GeneratedPymId() {
                                     <div className="bg-gray-50 px-4 py-2 border-b border-gray-200 font-semibold text-gray-700 flex justify-between items-center">
                                         <span className="text-gray-800">{item.title}</span>
                                         <span className="text-xs text-gray-500 font-normal">
-                                            {dateTimeFormatter.format(new Date(item.startDate))} - {dateTimeFormatter.format(new Date(item?.endDate))}
+                                            {formatDate(item.startDate)} - {formatDate(item?.endDate)}
                                         </span>
                                     </div>
                                     <div className="p-4 bg-white text-sm">
