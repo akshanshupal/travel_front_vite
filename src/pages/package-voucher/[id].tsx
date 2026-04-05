@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
-import { getPackageVoucherPublic } from "@/utils/services/packageVoucherService";
+import { getPackageVoucherPublic, getPackageVoucherPublicById } from "@/utils/services/packageVoucherService";
 import { useStoreSnackbar } from '@/store/snackbar';
 import { LoadingIndicator } from '@/components/application/loading-indicator/loading-indicator';
 
@@ -10,27 +10,45 @@ export default function ClientUrl() {
   const [isLoading, setIsLoading] = useState(false);
   const { showSnackbar } = useStoreSnackbar();
 
+  const getFirstVoucher = (payload: any) => {
+    const result = payload?.data ?? payload;
+    if (Array.isArray(result)) return result[0] || null;
+    if (result && typeof result === "object") return result;
+    return null;
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       if (!id) return;
       setIsLoading(true);
-      const params = {
-        assignmentId: id,
-        isDefault: true,
-        status: true,
-        populate: "assignmentId",
-        select_assignmentId: "packageId"
-      };
       try {
-        const response: any = await getPackageVoucherPublic(params);
-        // Next.js code used destructuring: const [response] = await ...
-        // which implies the API returns an array for this query.
-        const result = response.data || response;
-        if (Array.isArray(result) && result.length > 0) {
-          setData(result[0]);
-        } else if (!Array.isArray(result)) {
-          setData(result);
+        const defaultVoucherResponse: any = await getPackageVoucherPublic({
+          assignmentId: id,
+          isDefault: true,
+          status: true,
+          populate: "assignmentId",
+          select_assignmentId: "packageId",
+        });
+        let resolvedVoucher = getFirstVoucher(defaultVoucherResponse);
+
+        if (!resolvedVoucher?.innerHtml) {
+          const latestVoucherResponse: any = await getPackageVoucherPublic({
+            assignmentId: id,
+            status: true,
+            sortBy: "createdAt",
+            sortOrder: "DESC",
+            populate: "assignmentId",
+            select_assignmentId: "packageId",
+          });
+          resolvedVoucher = getFirstVoucher(latestVoucherResponse);
         }
+
+        if (!resolvedVoucher?.innerHtml) {
+          const voucherByIdResponse: any = await getPackageVoucherPublicById(id);
+          resolvedVoucher = getFirstVoucher(voucherByIdResponse);
+        }
+
+        setData(resolvedVoucher || {});
       }
       catch (error: any) {
         showSnackbar({ description: error.message, title: 'Invalid Input', color: 'danger' });
