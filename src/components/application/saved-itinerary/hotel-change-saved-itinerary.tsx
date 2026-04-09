@@ -140,7 +140,8 @@ export default function HotelChangeSavedItinerary({ data, onSuccess, onFailure }
 
     // Group hotels by locationHint (Site)
     const groupedHotels = hotels.reduce((acc, hotel) => {
-        const site = hotel.dayContext.split(":")[1].trim() || "Other";
+        const contextSite = String(hotel?.dayContext || "").split(":")[1];
+        const site = String(hotel?.locationHint || contextSite || hotel?.dayContext || "Other").trim() || "Other";
         if (!acc[site]) {
             acc[site] = [];
         }
