@@ -406,7 +406,7 @@ export default function BookingPage() {
     };
 
     const page = Number(searchParams.get("page") || "1");
-    const limit = Number(searchParams.get("limit") || "10");
+    const limit = Number(searchParams.get("limit") || "25");
     const [filters, setFilters] = useState({
         status: searchParams.get("status") || "",
         packageId: searchParams.get("packageId") || "",
@@ -704,9 +704,9 @@ export default function BookingPage() {
                                     selectedKey={String(limit)}
                                     onSelectionChange={(key) => handleLimitChange(String(key))}
                                     items={[
-                                        { id: "10", label: "10 / page" },
                                         { id: "25", label: "25 / page" },
                                         { id: "50", label: "50 / page" },
+                                        { id: "100", label: "100 / page" },
                                     ]}
                                 >
                                     {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
