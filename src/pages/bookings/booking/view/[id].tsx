@@ -23,7 +23,7 @@ import { DatePicker } from "@/components/application/date-picker/date-picker";
 import { DateInputWithTime } from "@/components/application/date-picker/date-input-with-time";
 import { parseDate } from "@internationalized/date";
 import { ArrowLeft, Edit01, Eye, Plus, Trash01 } from "@untitledui/icons";
-import { FaCopy, FaMapMarkerAlt, FaWhatsapp } from "react-icons/fa";
+import { FaBed, FaCalendarAlt, FaCopy, FaEye, FaMapMarkerAlt, FaStar, FaUserFriends, FaUtensils, FaWhatsapp } from "react-icons/fa";
 import { FaBuilding, FaCalendarDays, FaCar, FaGlobe, FaMoneyBillWave } from "react-icons/fa6";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
@@ -63,6 +63,15 @@ const SectionHeader = ({ title }: { title: string }) => {
     );
 };
 
+const SectionSubHeader = ({ title, icon }: { title: string; icon?: React.ReactNode }) => {
+    return (
+        <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-tertiary">
+            {icon && <span className="text-primary">{icon}</span>}
+            <span>{title}</span>
+        </div>
+    );
+};
+
 const InfoBox = ({ label, value, icon }: { label: string; value?: any; icon?: React.ReactNode }) => {
     return (
         <div className="relative rounded-lg border border-secondary bg-secondary px-3 py-2">
@@ -71,6 +80,18 @@ const InfoBox = ({ label, value, icon }: { label: string; value?: any; icon?: Re
                 {label}
             </div>
             <div className="text-sm font-semibold text-primary">{value || "N/A"}</div>
+        </div>
+    );
+};
+
+const TextPanel = ({ title, icon, value }: { title: string; icon?: React.ReactNode; value?: any }) => {
+    return (
+        <div className="rounded-lg border border-secondary bg-secondary p-3">
+            <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-tertiary">
+                {icon && <span className="text-primary">{icon}</span>}
+                <span>{title}</span>
+            </div>
+            <div className="text-xs text-tertiary">{value || "N/A"}</div>
         </div>
     );
 };
@@ -822,193 +843,309 @@ export default function BookingViewPage() {
                     </Tabs.List>
 
                     <Tabs.Panel id="bookingDetails">
-                        <div className="rounded-xl border border-secondary bg-primary">
-                            <SectionHeader title="Booking Services" />
-                            <div className="space-y-4 p-4">
+                        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                            <div className="lg:col-span-1">
+                                <div className="flex flex-col overflow-hidden rounded-xl border border-secondary bg-primary lg:h-[calc(100vh-9rem)]">
+                                    <SectionHeader title="Travel Details" />
+                                    <div className="space-y-4 overflow-y-auto bg-primary px-4 py-5 md:px-6">
+                                        <div className="grid grid-cols-1 gap-3">
+                                            <InfoBox label="Travel Location" value={assignmentData?.travelLocation} icon={<FaMapMarkerAlt />} />
+                                            <InfoBox
+                                                label="Package Duration"
+                                                value={`${assignmentData?.noOfPackageDays || 0} Days & ${assignmentData?.noOfPackageNights || 0} Nights`}
+                                                icon={<FaCalendarAlt />}
+                                            />
+                                            <InfoBox label="Package Category" value={assignmentData?.hotelCategory?.title} />
+                                            <InfoBox
+                                                label="Food"
+                                                value={Array.isArray(assignmentData?.selectedFood) ? assignmentData.selectedFood.join(", ") : assignmentData?.selectedFood || assignmentData?.food}
+                                                icon={<FaUtensils />}
+                                            />
+                                            <InfoBox label="Car Seater" value={assignmentData?.carSeater} icon={<FaCar />} />
+                                            <InfoBox label="No of Rooms" value={assignmentData?.noOfRooms} icon={<FaBed />} />
+                                        </div>
 
-                        
-                              
-                                {services.length === 0 && <div className="text-sm text-tertiary">No booking services found.</div>}
-                                {services.map((service, index) => {
-                                    const serviceId = getId(service);
-                                    const isOpen = openServiceId === serviceId;
-                                    const payments = servicePaymentsMap[serviceId] || [];
-                                    return (
-                                        <div
-                                            key={serviceId}
-                                            className={`rounded-lg border p-4 transition ${
-                                                isOpen ? "border-brand-solid bg-secondary shadow-sm" : "border-secondary bg-primary hover:border-brand-solid"
-                                            }`}
-                                        >
-                                            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                                                <div className="space-y-1">
-                                                    <div className="flex items-center gap-2 text-sm font-semibold text-primary">
-                                                        <span>
-                                                            {index + 1}. {service?.bookingsType?.title || service?.title || "Service"}
-                                                        </span>
-                                                                <Badge size="sm" color={service?.bookingStatus === "booked" ? "success" : "warning"}>
-                                                                    {service?.bookingStatus === "booked" ? "Booked" : "pending"}
-                                                                </Badge>
-                                                            
-                                                       
+                                        {Array.isArray(assignmentData?.stayInformation) && assignmentData?.stayInformation.length > 0 && (
+                                            <div>
+                                                <div className="mb-2">
+                                                    <SectionSubHeader title="Stay Information" icon={<FaBed />} />
+                                                </div>
+                                                <div className="grid grid-cols-1 gap-3">
+                                                    {assignmentData.stayInformation
+                                                        .filter((item: any) => item?.location)
+                                                        .map((item: any, index: number) => (
+                                                            <div key={index} className="rounded-lg border border-secondary bg-secondary p-3">
+                                                                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-tertiary">
+                                                                    <span className="rounded-full border border-secondary bg-primary px-2 py-0.5 text-xs font-medium text-primary">
+                                                                        {formatShortDate(item?.date) || "N/A"}
+                                                                    </span>
+                                                                    <span className="rounded-full border border-secondary bg-primary px-2 py-0.5 text-xs font-medium text-primary">
+                                                                        {item?.location || "N/A"}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {assignmentData?.stayInformation?.some((item: any) => item?.sightSeeing) ? (
+                                            <div>
+                                                <div className="mb-2">
+                                                    <SectionSubHeader title="Sight Seeing" icon={<FaEye />} />
+                                                </div>
+                                                <div className="grid grid-cols-1 gap-3">
+                                                    {assignmentData?.stayInformation?.map((item: any, index: number) => (
+                                                        <div key={index} className="rounded-lg border border-secondary bg-secondary p-3">
+                                                            <div className="text-xs font-semibold text-primary">
+                                                                Day {index + 1} : {formatShortDate(item?.date) || "N/A"}
+                                                            </div>
+                                                            <div className="mt-1 text-xs text-tertiary">{item?.sightSeeing || "N/A"}</div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            assignmentData?.siteSeeing && (
+                                                <div>
+                                                    <div className="mb-2">
+                                                        <SectionSubHeader title="Sight Seeing" icon={<FaEye />} />
                                                     </div>
-                                                    <div className="text-xs text-tertiary">
-                                                        Amount: ₹{service?.amount || 0} · Pending: ₹
-                                                        {service?.pendingAmount ?? service?.amount ?? 0} {service?.nextPaymentDate ? ". " + formatShortDate(service?.nextPaymentDate) : ""}
+                                                    <div className="rounded-lg border border-secondary bg-secondary p-3 text-xs text-tertiary">
+                                                        {assignmentData?.siteSeeing || "N/A"}
                                                     </div>
                                                 </div>
-                                                <div className="flex flex-wrap gap-2">
-                                                    <ButtonUtility
-                                                        icon={Eye}
-                                                        size="sm"
-                                                        color={isOpen ? "brand" : "secondary"}
-                                                        tooltip={isOpen ? "Hide details" : "View details"}
-                                                        onClick={() => {
-                                                            const next = isOpen ? null : serviceId;
-                                                            setOpenServiceId(next);
-                                                            if (!isOpen) {
-                                                                fetchServicePaymentsFor(serviceId);
-                                                            }
-                                                        }}
-                                                    />
-                                                    <ButtonUtility
-                                                        icon={Edit01}
-                                                        size="sm"
-                                                        color="secondary"
-                                                        tooltip="Edit service"
-                                                        onClick={() => openServiceModal(service)}
-                                                    />
-                                                    <ButtonUtility
-                                                        icon={Trash01}
-                                                        size="sm"
-                                                        color="secondary"
-                                                        tooltip="Delete service"
-                                                        onClick={() => confirmDeleteService(service)}
+                                            )
+                                        )}
+
+                                        <div className="grid grid-cols-1 gap-3">
+                                            <TextPanel title="Text for Booking Team" icon={<FaUserFriends />} value={assignmentData?.textForBookingTeam} />
+                                            <TextPanel title="Special Inclusion" icon={<FaStar />} value={assignmentData?.specialInclusion} />
+                                        </div>
+
+                                        <div className="grid grid-cols-1 gap-3">
+                                            <div className="rounded-lg border border-secondary bg-secondary p-3">
+                                                <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-tertiary">
+                                                    <FaCar /> Pickup Details
+                                                </div>
+                                                <div className="grid grid-cols-1 gap-2">
+                                                    <InfoBox label="Address" value={assignmentData?.pickUpAddress} icon={<FaMapMarkerAlt />} />
+                                                    <InfoBox
+                                                        label="Date"
+                                                        value={`${formatShortDate(assignmentData?.pickUpDate) || "N/A"} ${assignmentData?.pickUpTime || ""}`.trim()}
+                                                        icon={<FaCalendarAlt />}
                                                     />
                                                 </div>
                                             </div>
-                                            {isOpen && (
-                                                <div className="mt-4 space-y-4 border-t border-secondary pt-4">
-                                                    <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                                                        <InfoBox label="Booking Date" icon={<FaCalendarDays />} value={formatShortDate(service?.bookingDate)} />
-                                                        <InfoBox label="Service" icon={<FaCar />} value={service.bookingsType?.title || 'N/A'} />
-                                                        <InfoBox label="Amount" icon={<FaMoneyBillWave />} value={`₹${service.amount}`} />
-                                                        <InfoBox label="Start Date" icon={<FaCalendarDays />} value={service.hasStartTime ? formatShortDateTime(service?.startDate) : formatShortDate(service?.startDate)} />
-                                                        <InfoBox label="End Date" icon={<FaCalendarDays />} value={service.hasEndTime ? formatShortDateTime(service?.endDate) : formatShortDate(service?.endDate)} />
-                                                        {service.nextPaymentDate && (
-                                                            <InfoBox label="Next Payment Date" icon={<FaCalendarDays />} value={formatShortDate(service?.nextPaymentDate)} />
-                                                        )}
-                                                        {service.customParams?.additionalBookingDetails && Object.entries(service.customParams.additionalBookingDetails).map(([key, value]) => (
-                                                            <InfoBox key={key} icon={<FaGlobe />} label={key.replace(/([a-z])([A-Z])/g, '$1 $2')} value={value} />
-                                                        ))}
-                                                        <InfoBox label="Vendor" icon={<FaBuilding />} value={service?.vendor?.title || service?.vendor?.name} />
-                                                        <InfoBox label="Booking Status" value={
-                                                            <>  
-                                                            <div className="flex items-center gap-2 justify-between">
-                                                                    <span className={`text-sm capitalize`}>
-                                                                        {service?.bookingStatus || "pending"} 
-                                                                    </span>
-                                                                    <ButtonUtility
-                                                                        icon={Edit01}
-                                                                        size="sm"
-                                                                        color="success"
-                                                                        tooltip="Edit booking status"
-                                                                        className="absolute top-2 right-2"
-                                                                        onClick={() => openBookingStatusModal(service)}
-                                                                    />
-                                                            </div>
-                                                            </>
-                                                        }
-                                                        />
-                                                    </div>
+                                            <div className="rounded-lg border border-secondary bg-secondary p-3">
+                                                <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-tertiary">
+                                                    <FaCar /> Drop Details
+                                                </div>
+                                                <div className="grid grid-cols-1 gap-2">
+                                                    <InfoBox label="Address" value={assignmentData?.dropAddress} icon={<FaMapMarkerAlt />} />
+                                                    <InfoBox
+                                                        label="Date"
+                                                        value={`${formatShortDate(assignmentData?.dropDate) || "N/A"} ${assignmentData?.dropTime || ""}`.trim()}
+                                                        icon={<FaCalendarAlt />}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-                                           
-
-                                                    {service?.customParams?.additionalDetails && (
-                                                        <div className="rounded-lg border border-secondary bg-primary p-3">
-                                                            <div className="flex items-center justify-between">
-                                                                <div className="text-sm font-semibold text-primary">Additional Details</div>
-                                                                <Button size="sm" color="secondary" onClick={() => openAdditionalDetails(service)}>
-                                                                    Edit
-                                                                </Button>
-                                                            </div>
-                                                            <div className="mt-3">
-                                                                <div
-                                                                    className="text-xs text-primary"
-                                                                    dangerouslySetInnerHTML={{ __html: String(service.customParams.additionalDetails || "") }}
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                    )}
-
-                                                    <div className="flex flex-wrap gap-2 justify-end">
-                                                        {!service?.customParams?.additionalDetails && (
-                                                            <Button size="sm" color="secondary" onClick={() => openAdditionalDetails(service)}>
-                                                                Add Additional Detail
-                                                            </Button>
-                                                        )}
-                                                        {service?.bookingStatus && service?.bookingStatus !== "pending" && (
-                                                            <Button size="sm" color="primary" onClick={() => openPaymentModal(service)}>
-                                                                Add Payment
-                                                            </Button>
-                                                        )}
-                                                    </div>
-
-                                                    {payments.length > 0 && (
-                                                        <div className="rounded-xl border border-secondary bg-secondary p-4">
-                                                            <div className="mb-3 flex items-center justify-between">
-                                                                <div className="text-sm font-semibold text-primary">Payments</div>
-                                                                <Badge size="sm" color="success">
-                                                                    {payments.length}
+                            <div className="lg:col-span-2">
+                                <div className="rounded-xl border border-secondary bg-primary">
+                                    <SectionHeader title="Booking Services" />
+                                    <div className="space-y-4 p-4">
+                                        {services.length === 0 && <div className="text-sm text-tertiary">No booking services found.</div>}
+                                        {services.map((service, index) => {
+                                            const serviceId = getId(service);
+                                            const isOpen = openServiceId === serviceId;
+                                            const payments = servicePaymentsMap[serviceId] || [];
+                                            return (
+                                                <div
+                                                    key={serviceId}
+                                                    className={`rounded-lg border p-4 transition ${
+                                                        isOpen ? "border-brand-solid bg-secondary shadow-sm" : "border-secondary bg-primary hover:border-brand-solid"
+                                                    }`}
+                                                >
+                                                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                                        <div className="space-y-1">
+                                                            <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                                                                <span>
+                                                                    {index + 1}. {service?.bookingsType?.title || service?.title || "Service"}
+                                                                </span>
+                                                                <Badge size="sm" color={service?.bookingStatus === "booked" ? "success" : "warning"}>
+                                                                    {service?.bookingStatus === "booked" ? "Booked" : "pending"}
                                                                 </Badge>
                                                             </div>
-                                                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                                                                {payments.map((payment) => (
-                                                                    <div
-                                                                        key={getId(payment)}
-                                                                        className="group relative rounded-lg border border-secondary bg-primary p-4 shadow-xs transition hover:border-brand-solid"
-                                                                    >
-                                                                        <div className="space-y-1">
-                                                                            <div className="flex items-start justify-between gap-3">
-                                                                                <div className="text-xs font-semibold text-tertiary">
-                                                                                    {formatShortDateTime(payment.paymentDate)}
-                                                                                </div>
-                                                                                <div className="text-sm font-semibold text-primary">₹{payment.amount}</div>
-                                                                            </div>
-                                                                            <div className="text-xs text-tertiary">Receipt: {payment.receiptNo || "-"}</div>
-                                                                            <div className="text-xs text-tertiary">{payment?.paymentStore?.title || "Payment Mode"}</div>
-                                                                            <div className="text-xs text-tertiary">{payment?.remarks || "-"}</div>
-                                                                        </div>
-                                                                        <div className="absolute right-3 bottom-3 flex gap-2 opacity-0 transition group-hover:opacity-100">
+                                                            <div className="text-xs text-tertiary">
+                                                                Amount: ₹{service?.amount || 0} · Pending: ₹
+                                                                {service?.pendingAmount ?? service?.amount ?? 0}{" "}
+                                                                {service?.nextPaymentDate ? ". " + formatShortDate(service?.nextPaymentDate) : ""}
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            <ButtonUtility
+                                                                icon={Eye}
+                                                                size="sm"
+                                                                color={isOpen ? "brand" : "secondary"}
+                                                                tooltip={isOpen ? "Hide details" : "View details"}
+                                                                onClick={() => {
+                                                                    const next = isOpen ? null : serviceId;
+                                                                    setOpenServiceId(next);
+                                                                    if (!isOpen) {
+                                                                        fetchServicePaymentsFor(serviceId);
+                                                                    }
+                                                                }}
+                                                            />
+                                                            <ButtonUtility
+                                                                icon={Edit01}
+                                                                size="sm"
+                                                                color="secondary"
+                                                                tooltip="Edit service"
+                                                                onClick={() => openServiceModal(service)}
+                                                            />
+                                                            <ButtonUtility
+                                                                icon={Trash01}
+                                                                size="sm"
+                                                                color="secondary"
+                                                                tooltip="Delete service"
+                                                                onClick={() => confirmDeleteService(service)}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    {isOpen && (
+                                                        <div className="mt-4 space-y-4 border-t border-secondary pt-4">
+                                                            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                                                                <InfoBox label="Booking Date" icon={<FaCalendarDays />} value={formatShortDate(service?.bookingDate)} />
+                                                                <InfoBox label="Service" icon={<FaCar />} value={service.bookingsType?.title || "N/A"} />
+                                                                <InfoBox label="Amount" icon={<FaMoneyBillWave />} value={`₹${service.amount}`} />
+                                                                <InfoBox
+                                                                    label="Start Date"
+                                                                    icon={<FaCalendarDays />}
+                                                                    value={service.hasStartTime ? formatShortDateTime(service?.startDate) : formatShortDate(service?.startDate)}
+                                                                />
+                                                                <InfoBox
+                                                                    label="End Date"
+                                                                    icon={<FaCalendarDays />}
+                                                                    value={service.hasEndTime ? formatShortDateTime(service?.endDate) : formatShortDate(service?.endDate)}
+                                                                />
+                                                                {service.nextPaymentDate && (
+                                                                    <InfoBox label="Next Payment Date" icon={<FaCalendarDays />} value={formatShortDate(service?.nextPaymentDate)} />
+                                                                )}
+                                                                {service.customParams?.additionalBookingDetails &&
+                                                                    Object.entries(service.customParams.additionalBookingDetails).map(([key, value]) => (
+                                                                        <InfoBox key={key} icon={<FaGlobe />} label={key.replace(/([a-z])([A-Z])/g, "$1 $2")} value={value} />
+                                                                    ))}
+                                                                <InfoBox label="Vendor" icon={<FaBuilding />} value={service?.vendor?.title || service?.vendor?.name} />
+                                                                <InfoBox
+                                                                    label="Booking Status"
+                                                                    value={
+                                                                        <div className="flex items-center justify-between gap-2">
+                                                                            <span className="text-sm capitalize">{service?.bookingStatus || "pending"}</span>
                                                                             <ButtonUtility
                                                                                 icon={Edit01}
                                                                                 size="sm"
                                                                                 color="success"
-                                                                                tooltip="Edit Payments"
-                                                                                onClick={() => openPaymentModal(service, payment)}
-                                                                            />
-                                                                            <ButtonUtility
-                                                                                icon={Trash01}
-                                                                                size="sm"
-                                                                                color="error"
-                                                                                tooltip="Delete Payments"
-                                                                                onClick={() => confirmDeletePayment(payment)}
+                                                                                tooltip="Edit booking status"
+                                                                                className="absolute top-2 right-2"
+                                                                                onClick={() => openBookingStatusModal(service)}
                                                                             />
                                                                         </div>
-                                                                    </div>
-                                                                ))}
+                                                                    }
+                                                                />
                                                             </div>
+
+                                                            {service?.customParams?.additionalDetails && (
+                                                                <div className="rounded-lg border border-secondary bg-primary p-3">
+                                                                    <div className="flex items-center justify-between">
+                                                                        <div className="text-sm font-semibold text-primary">Additional Details</div>
+                                                                        <Button size="sm" color="secondary" onClick={() => openAdditionalDetails(service)}>
+                                                                            Edit
+                                                                        </Button>
+                                                                    </div>
+                                                                    <div className="mt-3">
+                                                                        <div
+                                                                            className="text-xs text-primary"
+                                                                            dangerouslySetInnerHTML={{ __html: String(service.customParams.additionalDetails || "") }}
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                            )}
+
+                                                            <div className="flex flex-wrap justify-end gap-2">
+                                                                {!service?.customParams?.additionalDetails && (
+                                                                    <Button size="sm" color="secondary" onClick={() => openAdditionalDetails(service)}>
+                                                                        Add Additional Detail
+                                                                    </Button>
+                                                                )}
+                                                                {service?.bookingStatus && service?.bookingStatus !== "pending" && (
+                                                                    <Button size="sm" color="primary" onClick={() => openPaymentModal(service)}>
+                                                                        Add Payment
+                                                                    </Button>
+                                                                )}
+                                                            </div>
+
+                                                            {payments.length > 0 && (
+                                                                <div className="rounded-xl border border-secondary bg-secondary p-4">
+                                                                    <div className="mb-3 flex items-center justify-between">
+                                                                        <div className="text-sm font-semibold text-primary">Payments</div>
+                                                                        <Badge size="sm" color="success">
+                                                                            {payments.length}
+                                                                        </Badge>
+                                                                    </div>
+                                                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                                                                        {payments.map((payment) => (
+                                                                            <div
+                                                                                key={getId(payment)}
+                                                                                className="group relative rounded-lg border border-secondary bg-primary p-4 shadow-xs transition hover:border-brand-solid"
+                                                                            >
+                                                                                <div className="space-y-1">
+                                                                                    <div className="flex items-start justify-between gap-3">
+                                                                                        <div className="text-xs font-semibold text-tertiary">
+                                                                                            {formatShortDateTime(payment.paymentDate)}
+                                                                                        </div>
+                                                                                        <div className="text-sm font-semibold text-primary">₹{payment.amount}</div>
+                                                                                    </div>
+                                                                                    <div className="text-xs text-tertiary">Receipt: {payment.receiptNo || "-"}</div>
+                                                                                    <div className="text-xs text-tertiary">{payment?.paymentStore?.title || "Payment Mode"}</div>
+                                                                                    <div className="text-xs text-tertiary">{payment?.remarks || "-"}</div>
+                                                                                </div>
+                                                                                <div className="absolute right-3 bottom-3 flex gap-2 opacity-0 transition group-hover:opacity-100">
+                                                                                    <ButtonUtility
+                                                                                        icon={Edit01}
+                                                                                        size="sm"
+                                                                                        color="success"
+                                                                                        tooltip="Edit Payments"
+                                                                                        onClick={() => openPaymentModal(service, payment)}
+                                                                                    />
+                                                                                    <ButtonUtility
+                                                                                        icon={Trash01}
+                                                                                        size="sm"
+                                                                                        color="error"
+                                                                                        tooltip="Delete Payments"
+                                                                                        onClick={() => confirmDeletePayment(payment)}
+                                                                                    />
+                                                                                </div>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     )}
                                                 </div>
-                                            )}
-                                        </div>
-                                    );
-                                })}
+                                            );
+                                        })}
 
-                                <Button size="sm" color="primary" iconLeading={Plus} onClick={() => openServiceModal()}>
-                                    Add Booking Service
-                                </Button>
+                                        <Button size="sm" color="primary" iconLeading={Plus} onClick={() => openServiceModal()}>
+                                            Add Booking Service
+                                        </Button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </Tabs.Panel>
