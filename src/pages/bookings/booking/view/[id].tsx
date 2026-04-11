@@ -665,40 +665,39 @@ export default function BookingViewPage() {
 
     const buildWhatsappMessage = (assignment?: any) => {
         if (!assignment) return "";
+        const joinParts = (...parts: any[]) =>
+            parts
+                .map((part) => String(part || "").trim())
+                .filter(Boolean)
+                .join(", ");
         const stayLines = asArray(assignment?.stayInformation)
             .map((item: any, index: number) => {
                 const stayDate = formatMaybeDate(item?.date);
-                const dateLabel = stayDate ? `📅 ${stayDate}` : `Day ${index + 1}`;
-                const stayText = item?.location ? `Stay: ${item?.location}` : "";
-                const sightText = item?.sightSeeing ? `Sightseeing: ${item?.sightSeeing}` : "";
+                const dateLabel = stayDate ? `🗓️ ${stayDate}` : `🗓️ Day ${index + 1}`;
+                const stayText = `* Stay: ${item?.location || "N/A"}`;
+                const sightText = `* Sightseeing: ${item?.sightSeeing || "N/A"}`;
                 return [dateLabel, stayText, sightText].filter(Boolean).join("\n");
             })
             .filter(Boolean)
-            .join("\n");
+            .join("\n\n");
 
         const pickDate = formatMaybeDate(assignment?.pickUpDate);
         const dropDate = formatMaybeDate(assignment?.dropDate);
-        
-        const pickUpLine = `📍 Pick-Up : ${assignment?.pickUpAddress || ""}, ${pickDate || ""}, ${formatTime(assignment?.pickUpTime)}`;
-        const dropLine = `📍 Drop : ${assignment?.dropAddress || ""}, ${dropDate || ""}, ${formatTime(assignment?.dropTime)}`;
+
+        const pickUpLine = `• 📍 Pick-Up: ${joinParts(assignment?.pickUpAddress, pickDate, formatTime(assignment?.pickUpTime)) || "N/A"}`;
+        const dropLine = `• 📍 Drop: ${joinParts(assignment?.dropAddress, dropDate, formatTime(assignment?.dropTime)) || "N/A"}`;
         const transportLines = [pickUpLine, dropLine].filter(Boolean).join("\n");
 
         return [
-            `🧾 Customer ID\n${assignment?.packageId || ""}`,
+            `🧾 *Customer ID*\n${assignment?.packageId || "N/A"}`,
 
-            `📞 Contact Details\n${assignment?.clientName || ""}, \n${assignment?.email || ""}`,
-            
-            `📆 Travel Date\n${formatShortDate(assignment?.tourDate) || ""}`,
-            
-            `🧳 Location\n${assignment?.travelLocation || ""}`,
-            
-            `👨‍👩‍👧 Adults & Kids : ${assignment?.noOfAdult || 0},[${assignment?.noOfKids || 0}]`,
-            
-            `🚗 Cab Seater : ${assignment?.carSeater || ""}`,
-            
-            `🏨 Travel Plan (Date-wise):\n${stayLines || "N/A"}`,
-            
-            transportLines
+            `📞 *Contact Details*\n• Name: ${assignment?.clientName || "N/A"}\n• Email: ${assignment?.email || "N/A"}`,
+
+            `🧳 *Trip Summary*\n• Travel Date: ${formatShortDate(assignment?.tourDate) || "N/A"}\n• Location: ${assignment?.travelLocation || "N/A"}\n• Adults/Kids: ${assignment?.noOfAdult || 0}/${assignment?.noOfKids || 0}\n• Cab Seater: ${assignment?.carSeater || "N/A"}`,
+
+            `*Travel Plan (Date-wise)*\n${stayLines || "N/A"}`,
+
+            `🚖 *Transfers*\n${transportLines}`
         ]
             .filter(Boolean)
             .join("\n\n");
