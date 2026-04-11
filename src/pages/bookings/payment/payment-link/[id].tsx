@@ -6,15 +6,15 @@ import {
   FaEye,
   FaPen,
   FaTrashCan,
-  FaWhatsapp
+  FaWhatsapp,
+  FaCopy
 } from "react-icons/fa6";
-import { CiMenuKebab } from "react-icons/ci";
 import { BiMailSend } from "react-icons/bi";
 
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
+import { TextArea } from "@/components/base/textarea/textarea";
 import { Select } from "@/components/base/select/select";
-import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { PaginationButtonGroup } from "@/components/application/pagination/pagination";
 import Tmodal from "@/components/utils/Tmodal";
@@ -60,6 +60,10 @@ export default function PaymentLink() {
   // Modals
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isMailModalOpen, setIsMailModalOpen] = useState(false);
+  const [isWhatsappModalOpen, setIsWhatsappModalOpen] = useState(false);
+  const [whatsappPhone, setWhatsappPhone] = useState("");
+  const [whatsappPhoneError, setWhatsappPhoneError] = useState("");
+  const [whatsappMessage, setWhatsappMessage] = useState("");
 
   const [filters, setFilters] = useState({
     createdAt: searchParams.get("createdAt") || "",
@@ -241,27 +245,119 @@ export default function PaymentLink() {
     setIsDeleteModalOpen(false);
   };
 
-  const sendWhatsAppMessage = async (item: any) => {
+  const buildVoucherWhatsappMessage = (clientName?: string, voucherLink?: string) => {
+    return [
+      `Hello ${clientName || "Traveler"},`,
+      "",
+      "🧾 *YOUR PACKAGE VOUCHER*",
+      "",
+      "Thank you for booking with *Tripzipper*.",
+      "",
+      "We are excited to share your package booking voucher with you.",
+      "Click below to view your complete booking details and get ready for your trip.",
+      "",
+      "🔗 *Click here to View Package Voucher*",
+      `${voucherLink || "N/A"}`,
+      "",
+      "☎️ *Need Help?*",
+      "If you need any help, feel free to reply to this message.",
+      "",
+      "✨ Have a wonderful trip!",
+    ].join("\n");
+  };
+
+  const getPublicVoucherLink = (assignmentId: string) => {
+    const path = `/package-voucher/${assignmentId}`;
+    if (typeof window === "undefined") return `https://admin.tripzipper.co.in${path}`;
+    const host = window.location.hostname;
+    if (host === "localhost" || host === "127.0.0.1") {
+      return `https://admin.tripzipper.co.in${path}`;
+    }
+    return `${window.location.origin}${path}`;
+  };
+
+  const validateWhatsappPhone = (value: string) => {
+    const raw = String(value || "").trim();
+    if (!raw) return "WhatsApp number is required";
+    const digits = raw.replace(/\D/g, "");
+    if (digits.length < 10 || digits.length > 15) return "Enter a valid mobile number";
+    return "";
+  };
+
+  const openWhatsAppModal = async (item: any) => {
     if (!item || !item.assignmentId) return;
     try {
       const assignmentId = typeof item.assignmentId === 'object' ? (item.assignmentId._id || item.assignmentId.id) : item.assignmentId;
       const response: any = await getAssignmentById(assignmentId);
       if (response) {
-        const phoneNumber = response?.mobile;
-        const clientName = response?.clientName;
-        const voucherLink = `${window.location.origin}/package-voucher/${id}`;
-        const message = `Hello, ${clientName}, 
-                         Thank you for choosing us! 🎉  
-                         Here is your exclusive voucher:  ${voucherLink} 
-                         If you have any questions, feel free to reach out.  
-                         Enjoy your experience!`;
-
-        const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
-        window.open(whatsappUrl, "_blank");
+        const resolved = response?.data ?? response;
+        const clientName = resolved?.clientName;
+        const voucherLink = getPublicVoucherLink(assignmentId);
+        setWhatsappPhone(String(resolved?.mobile || ""));
+        setWhatsappPhoneError("");
+        setWhatsappMessage(buildVoucherWhatsappMessage(clientName, voucherLink));
+        setIsWhatsappModalOpen(true);
       }
     } catch (error) {
       console.error(error);
     }
+  };
+
+  const sendWhatsAppMessage = () => {
+    const validationMessage = validateWhatsappPhone(whatsappPhone);
+    if (validationMessage) {
+      setWhatsappPhoneError(validationMessage);
+      showSnackbar({
+        description: validationMessage,
+        title: "Cannot Send WhatsApp",
+        color: "danger",
+      });
+      return;
+    }
+    const phoneNumber = String(whatsappPhone || "").replace(/\D/g, "");
+    setWhatsappPhoneError("");
+    if (!whatsappMessage.trim()) {
+      showSnackbar({
+        description: "WhatsApp message is empty",
+        title: "Cannot Send WhatsApp",
+        color: "danger",
+      });
+      return;
+    }
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(whatsappMessage)}`;
+    window.open(whatsappUrl, "_blank");
+    setIsWhatsappModalOpen(false);
+  };
+
+  const copyWhatsAppMessage = async () => {
+    try {
+      const message = String(whatsappMessage || "").trim();
+      if (!String(message || "").trim()) {
+        showSnackbar({
+          description: "WhatsApp message is empty",
+          title: "Cannot Copy Message",
+          color: "danger",
+        });
+        return;
+      }
+      await navigator.clipboard.writeText(message);
+      showSnackbar({
+        description: "WhatsApp message copied",
+        title: "Copied",
+        color: "success",
+      });
+    } catch (error: any) {
+      showSnackbar({
+        description: error?.message || "Failed to copy WhatsApp message",
+        title: "Copy Failed",
+        color: "danger",
+      });
+    }
+  };
+
+  const handleOpenMailModal = async (item: any) => {
+    await getAssignmentData(item);
+    setIsMailModalOpen(true);
   };
 
   return (
@@ -285,46 +381,6 @@ export default function PaymentLink() {
               >
                 Generate Voucher
               </Button>
-            </div>
-            <div>
-              <Dropdown.Root>
-                <Button size="sm" color="secondary" className="px-2">
-                  <CiMenuKebab />
-                </Button>
-                <Dropdown.Popover>
-                  <Dropdown.Menu>
-                      <Dropdown.Item
-                        icon={BiMailSend}
-                        onAction={() => {
-                            const defaultAssignment = Array.isArray(data)
-                            ? data.find(item => item.isDefault === true)
-                            : (data as any).isDefault ? data : null;
-                            
-                            if (defaultAssignment) {
-                                getAssignmentData(defaultAssignment);
-                                setIsMailModalOpen(true);
-                            }
-                        }}
-                      >
-                        Send Mail
-                      </Dropdown.Item>
-                      <Dropdown.Item
-                        icon={FaWhatsapp}
-                        onAction={() => {
-                            const defaultAssignment = Array.isArray(data)
-                            ? data.find(item => item.isDefault === true)
-                            : (data as any).isDefault ? data : null;
-                            
-                            if (defaultAssignment) {
-                                sendWhatsAppMessage(defaultAssignment);
-                            }
-                        }}
-                      >
-                        Send Whatsapp
-                      </Dropdown.Item>
-                  </Dropdown.Menu>
-                </Dropdown.Popover>
-              </Dropdown.Root>
             </div>
           </div>
 
@@ -433,6 +489,24 @@ export default function PaymentLink() {
                             </Table.Cell>
                             <Table.Cell data-column="actions" className="whitespace-nowrap px-4 py-3">
                                 <div className="flex items-center gap-2">
+                                    {Boolean(item.isDefault && item.status) && (
+                                        <>
+                                            <ButtonUtility
+                                                icon={BiMailSend}
+                                                size="sm"
+                                                color="brand"
+                                                tooltip="Send Voucher Mail"
+                                                onClick={() => handleOpenMailModal(item)}
+                                            />
+                                            <ButtonUtility
+                                                icon={FaWhatsapp}
+                                                size="sm"
+                                                color="success"
+                                                tooltip="Send Voucher on WhatsApp"
+                                                onClick={() => openWhatsAppModal(item)}
+                                            />
+                                        </>
+                                    )}
                                     <Link to={`/bookings/payment/payment-link/view/${item.id}`} className="text-gray-500 hover:text-primary">
                                         <ButtonUtility icon={FaEye} size="sm" color="secondary" tooltip="View" />
                                     </Link>
@@ -486,6 +560,49 @@ export default function PaymentLink() {
                     modalClose={() => setIsMailModalOpen(false)}
                     sendMailFnName="sendVoucherMail"
                  />
+            }
+          />
+
+          <Tmodal
+            isOpen={isWhatsappModalOpen}
+            size="lg"
+            onClose={() => setIsWhatsappModalOpen(false)}
+            header="Send WhatsApp"
+            footerActions={
+              <div className="flex items-center gap-2">
+                <Button color="secondary" iconLeading={FaCopy} onClick={copyWhatsAppMessage}>
+                  Copy Message
+                </Button>
+                <Button color="primary" onClick={sendWhatsAppMessage}>
+                  Send
+                </Button>
+              </div>
+            }
+            content={
+              <div className="space-y-4">
+                <Input
+                  label="WhatsApp Number"
+                  value={whatsappPhone}
+                  onChange={(value) => {
+                    setWhatsappPhone(value);
+                    if (whatsappPhoneError) {
+                      setWhatsappPhoneError(validateWhatsappPhone(value));
+                    }
+                  }}
+                  placeholder="Enter mobile number"
+                  isInvalid={!!whatsappPhoneError}
+                  hint={whatsappPhoneError}
+                />
+                <div className="text-xs text-tertiary">
+                  Default number is prefilled from customer mobile. You can edit before sending.
+                </div>
+                <TextArea
+                  label="Message Preview"
+                  value={whatsappMessage}
+                  onChange={(value) => setWhatsappMessage(String(value))}
+                  rows={8}
+                />
+              </div>
             }
           />
         </div>

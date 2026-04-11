@@ -158,7 +158,9 @@ export default function BookingViewPage() {
     const [bookingStatusService, setBookingStatusService] = useState<any>(null);
 
     const [whatsappPreviewOpen, setWhatsappPreviewOpen] = useState(false);
-    const [whatsappPreviewData, setWhatsappPreviewData] = useState<any>(null);
+    const [whatsappPhone, setWhatsappPhone] = useState("");
+    const [whatsappPhoneError, setWhatsappPhoneError] = useState("");
+    const [whatsappMessage, setWhatsappMessage] = useState("");
 
     const bookingStatusOptions = [
         { id: "pending", label: "Pending" },
@@ -705,18 +707,34 @@ export default function BookingViewPage() {
             .join("\n\n");
     };
 
-    const sendWhatsApp = (assignment?: any) => {
-        const numberRaw = String(assignment?.mobile || "").trim();
-        const number = numberRaw.replace(/\D/g, "");
-        if (!number) {
+    const validateWhatsappPhone = (value: string) => {
+        const raw = String(value || "").trim();
+        if (!raw) return "WhatsApp number is required";
+        const digits = raw.replace(/\D/g, "");
+        if (digits.length < 10 || digits.length > 15) return "Enter a valid mobile number";
+        return "";
+    };
+
+    const openWhatsappSendModal = (assignment?: any) => {
+        if (!assignment) return;
+        setWhatsappPhone(String(assignment?.mobile || ""));
+        setWhatsappPhoneError("");
+        setWhatsappMessage(buildWhatsappMessage(assignment));
+        setWhatsappPreviewOpen(true);
+    };
+
+    const sendWhatsApp = () => {
+        const phoneError = validateWhatsappPhone(whatsappPhone);
+        setWhatsappPhoneError(phoneError);
+        if (phoneError) {
             showSnackbar({
-                title: "Error",
-                description: "Mobile number not available",
+                title: "Invalid Number",
+                description: phoneError,
                 color: "danger",
             });
             return;
         }
-        const message = buildWhatsappMessage(assignment);
+        const message = String(whatsappMessage || "").trim();
         if (!message) {
             showSnackbar({
                 title: "Error",
@@ -725,17 +743,13 @@ export default function BookingViewPage() {
             });
             return;
         }
+        const number = whatsappPhone.replace(/\D/g, "");
         const encodedMessage = encodeURIComponent(message);
         window.open(`https://api.whatsapp.com/send?phone=${number}&text=${encodedMessage}`, "_blank");
     };
 
-    const openWhatsappPreview = (assignment?: any) => {
-        setWhatsappPreviewData(assignment || null);
-        setWhatsappPreviewOpen(true);
-    };
-
     const copyWhatsappMessage = async () => {
-        const message = buildWhatsappMessage(whatsappPreviewData);
+        const message = String(whatsappMessage || "").trim();
         if (!message) {
             showSnackbar({
                 title: "Error",
@@ -819,14 +833,7 @@ export default function BookingViewPage() {
                                             size="sm"
                                             color="success"
                                             tooltip="Send WhatsApp"
-                                            onClick={() => sendWhatsApp(assignmentData)}
-                                        />
-                                        <ButtonUtility
-                                            icon={Eye}
-                                            size="sm"
-                                            color="secondary"
-                                            tooltip="View message"
-                                            onClick={() => openWhatsappPreview(assignmentData)}
+                                            onClick={() => openWhatsappSendModal(assignmentData)}
                                         />
                                     </div>
                                 </div>
@@ -1493,63 +1500,36 @@ export default function BookingViewPage() {
             <Tmodal
                 isOpen={whatsappPreviewOpen}
                 onClose={() => setWhatsappPreviewOpen(false)}
-                header="Copy Whatsapp Message"
+                size="lg"
+                header="Send WhatsApp"
                 footerActions={
-                    <Button size="sm" color="secondary" iconLeading={FaCopy} onClick={copyWhatsappMessage}>
-                        Copy
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <Button size="sm" color="secondary" iconLeading={FaCopy} onClick={copyWhatsappMessage}>
+                            Copy Message
+                        </Button>
+                        <Button size="sm" color="primary" iconLeading={FaWhatsapp} onClick={sendWhatsApp}>
+                            Send WhatsApp
+                        </Button>
+                    </div>
                 }
                 content={
                     <div className="space-y-4">
-                        <div className="rounded-xl border border-secondary bg-secondary p-4 space-y-4">
-                            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                                <InfoBox label="Customer ID" value={whatsappPreviewData?.packageId} />
-                                <InfoBox label="Customer Name" value={whatsappPreviewData?.clientName} />
-                                <InfoBox label="Contact Detail" value={`${whatsappPreviewData?.mobile || ""}${whatsappPreviewData?.email ? `, ${whatsappPreviewData?.email}` : ""}`} />
-                                <InfoBox label="Travel Date" value={formatShortDate(whatsappPreviewData?.tourDate)} />
-                                <InfoBox label="Location" value={whatsappPreviewData?.travelLocation} />
-                                <InfoBox label="Adults & Kids" value={`${whatsappPreviewData?.noOfAdult || 0}, [${whatsappPreviewData?.noOfKids || 0}]`} />
-                                <InfoBox label="Cab Seater" value={whatsappPreviewData?.carSeater} />
-                            </div>
-                            <div className="space-y-3">
-                                <div className="flex items-center gap-2 text-sm font-semibold text-primary">
-                                    <FaMapMarkerAlt className="text-brand-solid" />
-                                    Travel Plan (Date-wise)
-                                </div>
-                                <div className="grid grid-cols-1 gap-3">
-                                    {asArray(whatsappPreviewData?.stayInformation).length === 0 && (
-                                        <div className="rounded-lg border border-secondary bg-primary p-3 text-xs text-tertiary">No travel plan available.</div>
-                                    )}
-                                    {asArray(whatsappPreviewData?.stayInformation).map((item: any, index: number) => (
-                                        <div key={index} className="rounded-lg border border-secondary bg-primary p-3">
-                                            <div className="space-y-2">
-                                                <div className="flex items-center gap-2 justify-between">
-                                                    <div className="text-xs font-semibold text-primary">
-                                                        {item?.date ? formatMaybeDate(item.date) : `Day ${index + 1}`}
-                                                    </div>
-                                                    <div className="text-xs text-tertiary">
-                                                        <span className="font-semibold text-primary">Stay:</span> {item?.location || "N/A"}
-                                                    </div>
-                                                </div>
-                                                <div className="text-xs text-tertiary">
-                                                    <span className="font-semibold text-primary">Sightseeing:</span> {item?.sightSeeing || "N/A"}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                                <InfoBox
-                                    label="Pick-Up"
-                                    value={`${whatsappPreviewData?.pickUpAddress || ""}, ${formatMaybeDate(whatsappPreviewData?.pickUpDate) || ""}, ${formatTime(whatsappPreviewData?.pickUpTime) || ""}`}
-                                />
-                                <InfoBox
-                                    label="Drop"
-                                    value={`${whatsappPreviewData?.dropAddress || ""}, ${formatMaybeDate(whatsappPreviewData?.dropDate) || ""}, ${formatTime(whatsappPreviewData?.dropTime) || ""}`}
-                                />
-                            </div>
-                        </div>
+                        <Input
+                            label="WhatsApp Number"
+                            value={whatsappPhone}
+                            onChange={(value) => {
+                                setWhatsappPhone(value);
+                                if (whatsappPhoneError) setWhatsappPhoneError(validateWhatsappPhone(value));
+                            }}
+                            isInvalid={!!whatsappPhoneError}
+                            hint={whatsappPhoneError || "Default is customer mobile. You can edit before sending."}
+                        />
+                        <TextArea
+                            label="Message Preview"
+                            value={whatsappMessage}
+                            onChange={(value) => setWhatsappMessage(String(value))}
+                            rows={8}
+                        />
                     </div>
                 }
             />

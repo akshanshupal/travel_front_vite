@@ -2,6 +2,7 @@ import { Badge, BadgeWithButton } from "@/components/base/badges/badges";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { CloseButton } from "@/components/base/buttons/close-button";
 import { Input } from "@/components/base/input/input";
+import { TextArea } from "@/components/base/textarea/textarea";
 import { Select } from "@/components/base/select/select";
 import { StickyTable, Table, TableCard } from "@/components/application/table/table";
 import { PaginationButtonGroup } from "@/components/application/pagination/pagination";
@@ -89,6 +90,10 @@ export default function SavedItineraryListPage() {
     const [isOpen, setIsOpen] = useState(false);
     const [selectedId, setSelectedId] = useState("");
     const [selectedEmail, setSelectedEmail] = useState("");
+    const [isWhatsappModalOpen, setIsWhatsappModalOpen] = useState(false);
+    const [whatsappPhone, setWhatsappPhone] = useState("");
+    const [whatsappPhoneError, setWhatsappPhoneError] = useState("");
+    const [whatsappMessage, setWhatsappMessage] = useState("");
 
     useEffect(() => {
         if (!isAgent || !agentId) return;
@@ -228,9 +233,45 @@ export default function SavedItineraryListPage() {
         setPage(1);
     };
 
-    const handleSendWhatsapp = (item: any) => {
+    const getPublicQuotationLink = (itineraryId: string) => {
+        const path = `/package-mail/${itineraryId}`;
+        if (typeof window === "undefined") return `https://admin.tripzipper.co.in${path}`;
+        const host = window.location.hostname;
+        if (host === "localhost" || host === "127.0.0.1") {
+            return `https://admin.tripzipper.co.in${path}`;
+        }
+        return `${window.location.origin}${path}`;
+    };
+
+    const buildQuotationWhatsappMessage = (clientName?: string, quotationUrl?: string) => {
+        const resolvedName = String(clientName || "Traveler").trim();
+        return [
+            `Hello ${resolvedName},`,
+            "",
+            "🌟 *Your Personalized Trip Quotation is Ready!*",
+            "",
+            "Thank you for showing interest in planning your trip with *Tripzipper*.",
+            "We have prepared a tailored quotation for your journey.",
+            "",
+            "🔗 *View Your Quotation*",
+            `${quotationUrl || "N/A"}`,
+            "",
+            "If you would like any changes anything in the itinerary, just reply here — we will customize it for you.",
+            "",
+            "🤝 We look forward to helping you plan a wonderful trip!",
+        ].join("\n");
+    };
+
+    const validateWhatsappPhone = (value: string) => {
+        const raw = String(value || "").trim();
+        if (!raw) return "WhatsApp number is required";
+        const digits = raw.replace(/\D/g, "");
+        if (digits.length < 10 || digits.length > 15) return "Enter a valid mobile number";
+        return "";
+    };
+
+    const openWhatsappModal = (item: any) => {
         const itineraryId = String(item?.id || item?._id || "");
-        const mobile = String(item?.mobile || "").trim();
         const clientName = String(item?.clientName || "").trim();
 
         if (!itineraryId) {
@@ -242,20 +283,64 @@ export default function SavedItineraryListPage() {
             return;
         }
 
-        if (!mobile) {
+        const quotationUrl = getPublicQuotationLink(itineraryId);
+        setSelectedId(itineraryId);
+        setWhatsappPhone(String(item?.mobile || ""));
+        setWhatsappPhoneError("");
+        setWhatsappMessage(buildQuotationWhatsappMessage(clientName, quotationUrl));
+        setIsWhatsappModalOpen(true);
+    };
+
+    const handleSendWhatsapp = () => {
+        const validationMessage = validateWhatsappPhone(whatsappPhone);
+        if (validationMessage) {
+            setWhatsappPhoneError(validationMessage);
             showSnackbar({
-                title: "Error",
-                description: "Client mobile number not found.",
+                title: "Cannot Send WhatsApp",
+                description: validationMessage,
                 color: "danger",
             });
             return;
         }
-
-        const quotationUrl = `${window.location.origin}/package-mail/${itineraryId}`;
-        const message = `Hello${clientName ? ` ${clientName}` : ""},\n\nThis is your quotation for your trip:\n${quotationUrl}`;
-
-        const whatsappUrl = `https://wa.me/${mobile}?text=${encodeURIComponent(message)}`;
+        const phoneNumber = String(whatsappPhone || "").replace(/\D/g, "");
+        const message = String(whatsappMessage || "").trim();
+        if (!message) {
+            showSnackbar({
+                title: "Cannot Send WhatsApp",
+                description: "WhatsApp message is empty",
+                color: "danger",
+            });
+            return;
+        }
+        const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
         window.open(whatsappUrl, "_blank");
+        setIsWhatsappModalOpen(false);
+    };
+
+    const handleCopyWhatsappMessage = async () => {
+        const message = String(whatsappMessage || "").trim();
+        if (!message) {
+            showSnackbar({
+                title: "Cannot Copy Message",
+                description: "WhatsApp message is empty",
+                color: "danger",
+            });
+            return;
+        }
+        try {
+            await navigator.clipboard.writeText(message);
+            showSnackbar({
+                title: "Copied",
+                description: "WhatsApp message copied",
+                color: "success",
+            });
+        } catch (error: any) {
+            showSnackbar({
+                title: "Copy Failed",
+                description: error?.message || "Failed to copy message",
+                color: "danger",
+            });
+        }
     };
 
     const formatDate = (dateStr: string) => {
@@ -570,7 +655,7 @@ export default function SavedItineraryListPage() {
                                                                     </Dropdown.Item>
                                                                     <Dropdown.Item
                                                                         icon={FaWhatsapp}
-                                                                        onAction={() => handleSendWhatsapp(item)}
+                                                                        onAction={() => openWhatsappModal(item)}
                                                                     >
                                                                         WhatsApp
                                                                     </Dropdown.Item>
@@ -620,6 +705,55 @@ export default function SavedItineraryListPage() {
                                     sendMailFnName="sendItineraryMail"
                                     showPreview={true}
                                 />
+                            </div>
+                        </Dialog>
+                    </Modal>
+                )}
+            </ModalOverlay>
+
+            <ModalOverlay isOpen={isWhatsappModalOpen} onOpenChange={setIsWhatsappModalOpen}>
+                {() => (
+                    <Modal className="max-w-2xl">
+                        <Dialog>
+                            <div className="relative w-full rounded-xl border border-secondary bg-primary p-6 shadow-lg">
+                                <CloseButton
+                                    onPress={() => setIsWhatsappModalOpen(false)}
+                                    className="absolute right-4 top-4"
+                                    size="sm"
+                                />
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-semibold text-primary">Send Quotation on WhatsApp</h3>
+                                    <Input
+                                        label="WhatsApp Number"
+                                        value={whatsappPhone}
+                                        onChange={(value) => {
+                                            setWhatsappPhone(value);
+                                            if (whatsappPhoneError) {
+                                                setWhatsappPhoneError(validateWhatsappPhone(value));
+                                            }
+                                        }}
+                                        isInvalid={!!whatsappPhoneError}
+                                        hint={whatsappPhoneError || "Default is client mobile. You can add or edit before sending."}
+                                        placeholder="Enter WhatsApp number"
+                                    />
+                                    <TextArea
+                                        label="Message Preview"
+                                        value={whatsappMessage}
+                                        onChange={(value) => setWhatsappMessage(String(value))}
+                                        rows={8}
+                                    />
+                                    <div className="flex justify-end gap-3">
+                                        <Button color="secondary" onClick={() => setIsWhatsappModalOpen(false)}>
+                                            Cancel
+                                        </Button>
+                                        <Button color="secondary" onClick={handleCopyWhatsappMessage}>
+                                            Copy Message
+                                        </Button>
+                                        <Button color="primary" onClick={handleSendWhatsapp}>
+                                            Send WhatsApp
+                                        </Button>
+                                    </div>
+                                </div>
                             </div>
                         </Dialog>
                     </Modal>
