@@ -36,10 +36,10 @@ import { DefaultLayout } from "@/layouts/DefaultLayout";
 const columns = [
     { id: "index", name: "S. No.", isRowHeader: true, widthRatio: 5, minWidth: 50 },
     { id: "packageId", name: "Package ID", widthRatio: 20, minWidth: 120 },
-    { id: "createdAt", name: "Created Date", widthRatio: 25, minWidth: 140 },
-    { id: "isDefault", name: "Is Default", widthRatio: 20, minWidth: 100 },
-    { id: "status", name: "Status", widthRatio: 15, minWidth: 80 },
-    { id: "actions", name: "Actions", widthRatio: 15, minWidth: 100 },
+    { id: "createdAt", name: "Created Date", widthRatio: 30, minWidth: 220 },
+    { id: "isDefault", name: "Is Default", widthRatio: 15, minWidth: 120 },
+    { id: "status", name: "Status", widthRatio: 10, minWidth: 100 },
+    { id: "actions", name: "Actions", widthRatio: 20, minWidth: 140 },
 ] as { id: string; name: string; isRowHeader?: boolean; className?: string; widthRatio?: number; minWidth?: number }[];
 
 export default function PaymentLink() {
@@ -181,15 +181,24 @@ export default function PaymentLink() {
     fetchData();
   }, [page, limit, debouncedFilters, id, showSnackbar]);
 
-  const dateTimeFormatter = new Intl.DateTimeFormat("en-GB", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true,
-  });
+  const formatCreatedAt = (value?: string) => {
+    if (!value) return "-";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "-";
+    const datePart = new Intl.DateTimeFormat("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "2-digit",
+    }).format(date);
+    const timePart = new Intl.DateTimeFormat("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    })
+      .format(date)
+      .toLowerCase();
+    return `${datePart}, ${timePart}`;
+  };
 
   const getAssignmentData = async (item: any) => {
     if (!item || !item.assignmentId) return;
@@ -391,59 +400,61 @@ export default function PaymentLink() {
                 </div>
             </div>
 
-            <StickyTable ariaLabel="Package Voucher List" columns={columns} items={data}>
-                {(item) => (
-                    <Table.Row key={item.id}>
-                        <Table.Cell data-column="index" className="whitespace-nowrap px-4 py-3">
-                            {(page - 1) * limit + data.indexOf(item) + 1}
-                        </Table.Cell>
-                        <Table.Cell data-column="packageId" className="whitespace-nowrap px-4 py-3">
-                            {item.assignmentId?.packageId || "-"}
-                        </Table.Cell>
-                        <Table.Cell data-column="createdAt" className="whitespace-nowrap px-4 py-3">
-                            <div className="cursor-pointer hover:underline line-clamp-3">
-                            {item.createdAt ? dateTimeFormatter.format(new Date(item.createdAt)) : "-"}
-                            </div>
-                        </Table.Cell>
-                        <Table.Cell data-column="isDefault" className="whitespace-nowrap px-4 py-3">
-                            <Button
-                                size="sm"
-                                color={statusColorMap[String(item.isDefault)] as any || "secondary"}
-                                disabled={item.isDefault}
-                                onClick={() => handleDefaultChange(item)}
-                                className="h-6 w-20 text-xs"
-                            >
-                                {item.isDefault ? "Active" : "Set Default"}
-                            </Button>
-                        </Table.Cell>
-                        <Table.Cell data-column="status" className="whitespace-nowrap px-4 py-3">
-                            <Badge size="sm" color={item.status ? "success" : "error"}>
-                                 {item.status ? "Active" : "Inactive"}
-                            </Badge>
-                        </Table.Cell>
-                        <Table.Cell data-column="actions" className="whitespace-nowrap px-4 py-3">
-                            <div className="flex items-center gap-2">
-                                <Link to={`/bookings/payment/payment-link/view/${item.id}`} className="text-gray-500 hover:text-primary">
-                                    <ButtonUtility icon={FaEye} size="sm" color="secondary" tooltip="View" />
-                                </Link>
-                                <Link to={`/bookings/payment/payment-link/edit/${item.id}`} className="text-gray-500 hover:text-primary">
-                                    <ButtonUtility icon={FaPen} size="sm" color="secondary" tooltip="Edit" />
-                                </Link>
-                                <ButtonUtility
-                                    icon={FaTrashCan}
+            <div className="w-full max-w-full">
+                <StickyTable ariaLabel="Package Voucher List" columns={columns} items={data} availableWidth={availableWidth}>
+                    {(item) => (
+                        <Table.Row key={item.id}>
+                            <Table.Cell data-column="index" className="whitespace-nowrap px-4 py-3">
+                                {(page - 1) * limit + data.indexOf(item) + 1}
+                            </Table.Cell>
+                            <Table.Cell data-column="packageId" className="whitespace-nowrap px-4 py-3">
+                                {item.assignmentId?.packageId || "-"}
+                            </Table.Cell>
+                            <Table.Cell data-column="createdAt" className="px-4 py-3">
+                                <div className="text-sm text-tertiary">
+                                {formatCreatedAt(item.createdAt)}
+                                </div>
+                            </Table.Cell>
+                            <Table.Cell data-column="isDefault" className="whitespace-nowrap px-4 py-3">
+                                <Button
                                     size="sm"
-                                    color="error"
-                                    tooltip="Delete"
-                                    onClick={() => {
-                                        setSelectedId(item.id);
-                                        setIsDeleteModalOpen(true);
-                                    }}
-                                />
-                            </div>
-                        </Table.Cell>
-                    </Table.Row>
-                )}
-            </StickyTable>
+                                    color={statusColorMap[String(item.isDefault)] as any || "secondary"}
+                                    disabled={item.isDefault}
+                                    onClick={() => handleDefaultChange(item)}
+                                    className="h-6 w-20 text-xs"
+                                >
+                                    {item.isDefault ? "Active" : "Set Default"}
+                                </Button>
+                            </Table.Cell>
+                            <Table.Cell data-column="status" className="whitespace-nowrap px-4 py-3">
+                                <Badge size="sm" color={item.status ? "success" : "error"}>
+                                     {item.status ? "Active" : "Inactive"}
+                                </Badge>
+                            </Table.Cell>
+                            <Table.Cell data-column="actions" className="whitespace-nowrap px-4 py-3">
+                                <div className="flex items-center gap-2">
+                                    <Link to={`/bookings/payment/payment-link/view/${item.id}`} className="text-gray-500 hover:text-primary">
+                                        <ButtonUtility icon={FaEye} size="sm" color="secondary" tooltip="View" />
+                                    </Link>
+                                    <Link to={`/bookings/payment/payment-link/edit/${item.id}`} className="text-gray-500 hover:text-primary">
+                                        <ButtonUtility icon={FaPen} size="sm" color="secondary" tooltip="Edit" />
+                                    </Link>
+                                    <ButtonUtility
+                                        icon={FaTrashCan}
+                                        size="sm"
+                                        color="error"
+                                        tooltip="Delete"
+                                        onClick={() => {
+                                            setSelectedId(item.id);
+                                            setIsDeleteModalOpen(true);
+                                        }}
+                                    />
+                                </div>
+                            </Table.Cell>
+                        </Table.Row>
+                    )}
+                </StickyTable>
+            </div>
 
             <PaginationButtonGroup
                 page={page}
