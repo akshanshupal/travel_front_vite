@@ -5,6 +5,8 @@ import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { Input } from "@/components/base/input/input";
 import { TextArea } from "@/components/base/textarea/textarea";
 import { Select } from "@/components/base/select/select";
+import { ComboBox } from "@/components/base/select/combobox";
+import { SelectItem } from "@/components/base/select/select-item";
 import { Tabs } from "@/components/application/tabs/tabs";
 import { Modal, ModalOverlay, Dialog } from "@/components/application/modals/modal";
 import { CloseButton } from "@/components/base/buttons/close-button";
@@ -1214,14 +1216,15 @@ export default function BookingViewPage() {
                                             isInvalid={!!serviceErrors.bookingDate}
                                             hint={serviceErrors.bookingDate}
                                         />
-                                        <Select
+                                        <ComboBox
                                             label="Service"
+                                            placeholder="Search service"
                                             selectedKey={serviceForm.bookingsType || ""}
-                                            onSelectionChange={(key) => setServiceForm((prev: any) => ({ ...prev, bookingsType: String(key) }))}
+                                            onSelectionChange={(key) => setServiceForm((prev: any) => ({ ...prev, bookingsType: key ? String(key) : "" }))}
                                             items={resolvedBookingTypes.map((item) => ({ id: getId(item), label: item.title }))}
                                         >
-                                            {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
-                                        </Select>
+                                            {(item) => <SelectItem id={item.id}>{item.label}</SelectItem>}
+                                        </ComboBox>
                                         <Input
                                             label="Amount"
                                             type="number"
@@ -1246,14 +1249,15 @@ export default function BookingViewPage() {
                                             handleChange={handleServiceFormChange}
                                             errors={serviceErrors}
                                         />
-                                        <Select
+                                        <ComboBox
                                             label="Vendor"
+                                            placeholder="Search vendor"
                                             selectedKey={serviceForm.vendor || ""}
-                                            onSelectionChange={(key) => setServiceForm((prev: any) => ({ ...prev, vendor: String(key) }))}
+                                            onSelectionChange={(key) => setServiceForm((prev: any) => ({ ...prev, vendor: key ? String(key) : "" }))}
                                             items={filteredVendors.map((item) => ({ id: getId(item), label: item.title || item.name }))}
                                         >
-                                            {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
-                                        </Select>
+                                            {(item) => <SelectItem id={item.id}>{item.label}</SelectItem>}
+                                        </ComboBox>
                                     </div>
                                     {selectedBookingType?.customParams?.additionalBookingDetails?.length > 0 && (
                                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
