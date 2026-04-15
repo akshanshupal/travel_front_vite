@@ -132,6 +132,24 @@ console.warn = (...args: unknown[]) => {
     originalConsoleWarn(...args);
 };
 
+const installNumberInputWheelGuard = () => {
+    const appWindow = window as Window & { __numberInputWheelGuardInstalled?: boolean };
+    if (appWindow.__numberInputWheelGuardInstalled) return;
+
+    const handleWheelOnNumberInput = (event: WheelEvent) => {
+        const target = event.target;
+        if (!(target instanceof HTMLInputElement)) return;
+        if (target.type !== "number") return;
+        if (document.activeElement !== target) return;
+        event.preventDefault();
+    };
+
+    document.addEventListener("wheel", handleWheelOnNumberInput, { passive: false, capture: true });
+    appWindow.__numberInputWheelGuardInstalled = true;
+};
+
+installNumberInputWheelGuard();
+
 createRoot(document.getElementById("root")!).render(
     <StrictMode>
         <ThemeProvider>
