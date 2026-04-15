@@ -195,6 +195,8 @@ export default function SettingsMailerEditPage() {
 </div>`,
                 dynamicFields: [
                     "packageId",
+                    "assignmentId",
+                    "packageVoucherLink",
                     "paymentVoucherId",
                     "title",
                     "bookingDate",
