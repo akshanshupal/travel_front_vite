@@ -32,6 +32,7 @@ const FIELD_TYPES = [
     { id: "time", label: "Time" },
     { id: "email", label: "Email" },
     { id: "number", label: "Number" },
+    { id: "file", label: "File" },
 ];
 
 const createField = (): CustomField => ({

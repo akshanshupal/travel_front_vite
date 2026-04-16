@@ -43,6 +43,26 @@ const getUploadUrl = (response: any) => {
     return "";
 };
 
+const isFileFieldType = (type?: string) => String(type || "").toLowerCase() === "file";
+
+const uploadCustomFileFields = async (
+    values: Record<string, any>,
+    fieldDefinitions: any[],
+) => {
+    const nextValues = { ...(values || {}) };
+    for (const field of asArray(fieldDefinitions)) {
+        const fieldKey = String(field?.key || "").trim();
+        if (!fieldKey || !isFileFieldType(field?.type)) continue;
+        const currentValue = nextValues[fieldKey];
+        if (!(currentValue instanceof File)) continue;
+        const fd = new FormData();
+        fd.append("fmFile", currentValue, currentValue.name);
+        const uploaded = await fetchWithToken("/api/file/upload", fd as any, { method: "POST" });
+        nextValues[fieldKey] = getUploadUrl(uploaded);
+    }
+    return nextValues;
+};
+
 const formatShortDateTime = (value?: string) => {
     if (!value) return "-";
     const date = new Date(value);
@@ -338,6 +358,10 @@ export default function BookingViewPage() {
         try {
             const bookingTypeItem = resolvedBookingTypes.find((item) => getId(item) === getId(serviceForm.bookingsType));
             const vendorItem = resolvedVendors.find((item) => getId(item) === getId(serviceForm.vendor));
+            const uploadedAdditionalBookingDetails = await uploadCustomFileFields(
+                serviceForm?.customParams?.additionalBookingDetails || {},
+                bookingTypeItem?.customParams?.additionalBookingDetails || [],
+            );
             const payload: any = {
                 ...serviceForm,
                 title: bookingTypeItem?.title || "",
@@ -346,7 +370,7 @@ export default function BookingViewPage() {
                 vendor: getId(serviceForm.vendor),
                 packageId: assignmentData?.packageId,
                 customParams: {
-                    additionalBookingDetails: serviceForm?.customParams?.additionalBookingDetails || {},
+                    additionalBookingDetails: uploadedAdditionalBookingDetails,
                 },
             };
             if (!editingService) {
@@ -564,13 +588,17 @@ export default function BookingViewPage() {
         if (!additionalDetailsService) return;
         setSaving(true);
         try {
+            const uploadedAdditionalDetails = await uploadCustomFileFields(
+                additionalDetailsService?.customParams?.additionalDetails || {},
+                additionalDetailsService?.bookingsType?.customParams?.additionalDetails || [],
+            );
             const payload = {
                 ...additionalDetailsService,
                 assignment: getId(additionalDetailsService?.assignment ?? assignmentData),
                 bookingsType: getId(additionalDetailsService?.bookingsType),
                 vendor: getId(additionalDetailsService?.vendor),
                 customParams: {
-                    additionalDetails: additionalDetailsService?.customParams?.additionalDetails || {},
+                    additionalDetails: uploadedAdditionalDetails,
                     additionalBookingDetails: additionalDetailsService?.customParams?.additionalBookingDetails || {},
                 },
             };
@@ -1269,10 +1297,10 @@ export default function BookingViewPage() {
                                     {selectedBookingType?.customParams?.additionalBookingDetails?.length > 0 && (
                                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                             {selectedBookingType.customParams.additionalBookingDetails.map((field: any) => {
-                                                console.log(field);
                                                 const fieldKey = field.key;
                                                 const fieldLabel = field.value;
                                                 const fieldType = field.type || "Text";
+                                                const normalizedFieldType = String(fieldType).toLowerCase();
                                                 const fieldValue = serviceForm?.customParams?.additionalBookingDetails?.[fieldKey] || "";
 
                                                 const handleChange = (value: any) =>
@@ -1287,7 +1315,7 @@ export default function BookingViewPage() {
                                                         },
                                                     }));
 
-                                                if (fieldType === "textarea") {
+                                                if (normalizedFieldType === "textarea") {
                                                     return (
                                                         <div key={fieldKey} className="md:col-span-2">
                                                             <TextArea
@@ -1299,7 +1327,7 @@ export default function BookingViewPage() {
                                                     );
                                                 }
 
-                                                if (fieldType === "textEditor") {
+                                                if (normalizedFieldType === "texteditor") {
                                                     return (
                                                         <div key={fieldKey} className="flex flex-col gap-1.5 md:col-span-2">
                                                             <div className="text-sm font-medium text-primary">{fieldLabel}</div>
@@ -1307,7 +1335,7 @@ export default function BookingViewPage() {
                                                         </div>
                                                     );
                                                 }
-                                                if (fieldType === "date" || fieldType === "Date") {
+                                                if (normalizedFieldType === "date") {
                                                     return (
                                                         <div key={fieldKey} className="flex flex-col gap-1.5">
                                                             <div className="text-sm font-medium text-primary">{fieldLabel}</div>
@@ -1319,7 +1347,7 @@ export default function BookingViewPage() {
                                                     );
                                                 }
 
-                                                if (fieldType === "time" || fieldType === "Time") {
+                                                if (normalizedFieldType === "time") {
                                                     return (
                                                         <div key={fieldKey} className="flex flex-col gap-1.5">
                                                             <div className="text-sm font-medium text-primary">{fieldLabel}</div>
@@ -1332,10 +1360,40 @@ export default function BookingViewPage() {
                                                     );
                                                 }
 
+                                                if (normalizedFieldType === "file") {
+                                                    return (
+                                                        <div key={fieldKey} className="flex flex-col gap-1.5 md:col-span-2">
+                                                            <div className="text-sm font-medium text-primary">{fieldLabel}</div>
+                                                            {typeof fieldValue === "string" && fieldValue ? (
+                                                                <div className="flex items-center justify-between gap-2 rounded-lg border border-secondary bg-secondary p-2 text-xs text-tertiary">
+                                                                    <a href={fieldValue} target="_blank" rel="noreferrer" className="truncate text-brand-700 hover:underline">
+                                                                        {fieldValue}
+                                                                    </a>
+                                                                    <Button
+                                                                        size="sm"
+                                                                        color="secondary-destructive"
+                                                                        onClick={() => handleChange("")}
+                                                                    >
+                                                                        Remove
+                                                                    </Button>
+                                                                </div>
+                                                            ) : null}
+                                                            <input
+                                                                type="file"
+                                                                className="w-full rounded-lg border border-secondary bg-primary p-2 text-sm text-tertiary"
+                                                                onChange={(event) => {
+                                                                    const file = event.target.files?.[0];
+                                                                    if (file) handleChange(file);
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    );
+                                                }
+
                                                 // Validation for Email
                                                 let isInvalid = false;
                                                 let hint = "";
-                                                if (fieldType === "email" && fieldValue) {
+                                                if (normalizedFieldType === "email" && fieldValue) {
                                                     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                                                     if (!emailRegex.test(fieldValue)) {
                                                         isInvalid = true;
@@ -1354,13 +1412,13 @@ export default function BookingViewPage() {
                                                     <Input
                                                         key={fieldKey}
                                                         label={fieldLabel}
-                                                        type={fieldType.toLowerCase()}
+                                                        type={normalizedFieldType}
                                                         value={fieldValue}
-                                                        onChange={fieldType === "number" ? handleNumberChange : handleChange}
+                                                        onChange={normalizedFieldType === "number" ? handleNumberChange : handleChange}
                                                         isInvalid={isInvalid}
                                                         hint={hint}
                                                         onKeyDown={(e) => {
-                                                            if (fieldType === "number") {
+                                                            if (normalizedFieldType === "number") {
                                                                 const allowedKeys = [
                                                                     "Backspace", "Delete", "Tab", "Enter", "Escape", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"
                                                                 ];
@@ -1545,7 +1603,7 @@ export default function BookingViewPage() {
                                     <div className="space-y-4">
                                         {additionalDetailsService?.bookingsType?.customParams?.additionalDetails?.map((field: any) => (
                                             <div key={field.key}>
-                                                {field.type === "textEditor" ? (
+                                                {String(field?.type || "").toLowerCase() === "texteditor" ? (
                                                     <RichTextEditor
                                                         value={additionalDetailsService?.customParams?.additionalDetails?.[field.key] || ""}
                                                         onChange={(value) =>
@@ -1561,6 +1619,59 @@ export default function BookingViewPage() {
                                                             }))
                                                         }
                                                     />
+                                                ) : String(field?.type || "").toLowerCase() === "file" ? (
+                                                    <div className="space-y-2">
+                                                        <div className="text-sm font-medium text-primary">{field.value}</div>
+                                                        {typeof additionalDetailsService?.customParams?.additionalDetails?.[field.key] === "string" &&
+                                                        additionalDetailsService?.customParams?.additionalDetails?.[field.key] ? (
+                                                            <div className="flex items-center justify-between gap-2 rounded-lg border border-secondary bg-secondary p-2 text-xs text-tertiary">
+                                                                <a
+                                                                    href={additionalDetailsService?.customParams?.additionalDetails?.[field.key]}
+                                                                    target="_blank"
+                                                                    rel="noreferrer"
+                                                                    className="truncate text-brand-700 hover:underline"
+                                                                >
+                                                                    {additionalDetailsService?.customParams?.additionalDetails?.[field.key]}
+                                                                </a>
+                                                                <Button
+                                                                    size="sm"
+                                                                    color="secondary-destructive"
+                                                                    onClick={() =>
+                                                                        setAdditionalDetailsService((prev: any) => ({
+                                                                            ...prev,
+                                                                            customParams: {
+                                                                                ...prev.customParams,
+                                                                                additionalDetails: {
+                                                                                    ...(prev.customParams?.additionalDetails || {}),
+                                                                                    [field.key]: "",
+                                                                                },
+                                                                            },
+                                                                        }))
+                                                                    }
+                                                                >
+                                                                    Remove
+                                                                </Button>
+                                                            </div>
+                                                        ) : null}
+                                                        <input
+                                                            type="file"
+                                                            className="w-full rounded-lg border border-secondary bg-primary p-2 text-sm text-tertiary"
+                                                            onChange={(event) => {
+                                                                const file = event.target.files?.[0];
+                                                                if (!file) return;
+                                                                setAdditionalDetailsService((prev: any) => ({
+                                                                    ...prev,
+                                                                    customParams: {
+                                                                        ...prev.customParams,
+                                                                        additionalDetails: {
+                                                                            ...(prev.customParams?.additionalDetails || {}),
+                                                                            [field.key]: file,
+                                                                        },
+                                                                    },
+                                                                }));
+                                                            }}
+                                                        />
+                                                    </div>
                                                 ) : (
                                                     <Input
                                                         label={field.value}

@@ -43,6 +43,12 @@ export default function GeneratedPymId() {
     return `${count} ${count === 1 ? singular : plural}`;
   };
 
+  const getCustomFieldType = (item: any, group: "additionalBookingDetails" | "additionalDetails", key: string) => {
+    const definitions = Array.isArray(item?.bookingsType?.customParams?.[group]) ? item.bookingsType.customParams[group] : [];
+    const match = definitions.find((field: any) => String(field?.key || "").trim() === String(key || "").trim());
+    return String(match?.type || "").toLowerCase();
+  };
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,6 +56,7 @@ export default function GeneratedPymId() {
       const params = {
         assignment: id,
         bookingStatus: "booked",
+        populate: "bookingsType",
       };
       try {
         const response: any = await getPackageBooking(params);
@@ -267,7 +274,15 @@ export default function GeneratedPymId() {
                                                         {(key as string).replace(/([A-Z])/g, " $1").trim().replace(/^./, (str) => str.toUpperCase())}
                                                     </span>
                                                     <div className="text-gray-800 w-2/3">
-                                                        {typeof value === 'string' && /<\/?[a-z][\s\S]*>/i.test(value) ? (
+                                                        {getCustomFieldType(item, "additionalBookingDetails", key) === "file" ? (
+                                                            typeof value === "string" && value ? (
+                                                                <a href={value} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
+                                                                    Download
+                                                                </a>
+                                                            ) : (
+                                                                "-"
+                                                            )
+                                                        ) : typeof value === 'string' && /<\/?[a-z][\s\S]*>/i.test(value) ? (
                                                             <div className="prose prose-sm max-w-none !text-sm !text-gray-800 [&_*]:!text-gray-800" dangerouslySetInnerHTML={{ __html: value }} />
                                                         ) : (
                                                             value as React.ReactNode
@@ -282,7 +297,15 @@ export default function GeneratedPymId() {
                                                         {(key as string).replace(/([A-Z])/g, " $1").trim().replace(/^./, (str) => str.toUpperCase())}
                                                     </span>
                                                     <div className="text-gray-800 w-2/3">
-                                                        {/<\/?[a-z][\s\S]*>/i.test(value as string) ? (
+                                                        {getCustomFieldType(item, "additionalDetails", key) === "file" ? (
+                                                            typeof value === "string" && value ? (
+                                                                <a href={value} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
+                                                                    Download
+                                                                </a>
+                                                            ) : (
+                                                                "-"
+                                                            )
+                                                        ) : /<\/?[a-z][\s\S]*>/i.test(value as string) ? (
                                                             <div className="prose prose-sm max-w-none !text-sm !text-gray-800 [&_*]:!text-gray-800" dangerouslySetInnerHTML={{ __html: replaceClientName(value as string) }} />
                                                         ) : (
                                                             value as React.ReactNode
