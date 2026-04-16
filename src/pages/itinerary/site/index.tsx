@@ -11,10 +11,11 @@ import { fetchWithToken } from "@/utils/fetchApi";
 import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import { Plus, Trash01, Edit01, RefreshCw01, FilterLines, SearchLg } from "@untitledui/icons";
+import { Plus, Trash01, Edit01, RefreshCw01, FilterLines, SearchLg, Copy01 } from "@untitledui/icons";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Label } from "@/components/base/input/label";
 import { BadgeWithButton } from "@/components/base/badges/badges";
+import { useStoreSnackbar } from "@/store/snackbar";
 
 type SiteItem = {
     id: string;
@@ -52,6 +53,7 @@ export default function ItinerarySiteListPage() {
     const navigate = useNavigate();
     const { pathname, search } = useLocation();
     const initial = parseSearch(search);
+    const { showSnackbar } = useStoreSnackbar();
 
     const [page, setPage] = useState(initial.page);
     const [limit, setLimit] = useState(initial.limit);
@@ -68,6 +70,11 @@ export default function ItinerarySiteListPage() {
 
     const [deleteTarget, setDeleteTarget] = useState<{ id: string; title?: string } | null>(null);
     const deletingRef = useRef(false);
+    const [duplicateTarget, setDuplicateTarget] = useState<SiteItem | null>(null);
+    const [duplicateForm, setDuplicateForm] = useState({ title: "", alias: "" });
+    const [duplicateError, setDuplicateError] = useState<{ title?: string; alias?: string }>({});
+    const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
+    const [refreshTick, setRefreshTick] = useState(0);
 
     const totalPages = Math.max(1, Math.ceil((totalRecords || 0) / limit));
     const indexById = useMemo(() => new Map(items.map((item, index) => [item.id, (page - 1) * limit + index + 1])), [items, limit, page]);
@@ -169,7 +176,7 @@ export default function ItinerarySiteListPage() {
             }
         };
         run();
-    }, [debouncedFilters.status, debouncedFilters.title, debouncedFilters.area, limit, page]);
+    }, [debouncedFilters.status, debouncedFilters.title, debouncedFilters.area, limit, page, refreshTick]);
 
     const handleOpenFilters = () => {
         setTempFilters(filters);
@@ -209,6 +216,70 @@ export default function ItinerarySiteListPage() {
         } finally {
             deletingRef.current = false;
         }
+    };
+
+    const handleDuplicate = async (item: SiteItem, nextTitle: string, nextAlias: string) => {
+        const siteId = getId(item);
+        if (!siteId || duplicatingId) return;
+        setDuplicatingId(siteId);
+        try {
+            const detailRes = await fetchWithToken(`/api/site/${siteId}`);
+            const source = ((detailRes as any)?.data ?? detailRes) as any;
+
+            const payload: Record<string, unknown> = { ...source };
+            delete payload.id;
+            delete payload._id;
+            delete payload.createdAt;
+            delete payload.updatedAt;
+            delete payload.deletedAt;
+            delete payload.deletedBy;
+            delete payload.isDeleted;
+            delete payload.sqlId;
+
+            payload.title = nextTitle;
+            payload.alias = nextAlias;
+            payload.area = getId(source?.area || item?.area);
+
+            await fetchWithToken("/api/site", payload, { method: "POST" });
+            showSnackbar({
+                title: "Success",
+                description: "Site duplicated successfully",
+                color: "success",
+            });
+            setDuplicateTarget(null);
+            setRefreshTick((prev) => prev + 1);
+        } catch (error: any) {
+            showSnackbar({
+                title: "Duplicate Failed",
+                description: error?.error?.message || error?.message || "Failed to duplicate site",
+                color: "danger",
+            });
+        } finally {
+            setDuplicatingId(null);
+        }
+    };
+
+    const openDuplicateModal = (item: SiteItem) => {
+        const baseTitle = String(item?.title ?? "").trim();
+        const baseAlias = String(item?.alias ?? "").trim();
+        setDuplicateForm({
+            title: `${baseTitle || "site"}_duplicate`,
+            alias: `${baseAlias || "site"}_duplicate`,
+        });
+        setDuplicateError({});
+        setDuplicateTarget(item);
+    };
+
+    const handleConfirmDuplicate = async () => {
+        if (!duplicateTarget) return;
+        const title = String(duplicateForm.title || "").trim();
+        const alias = String(duplicateForm.alias || "").trim();
+        const errors: { title?: string; alias?: string } = {};
+        if (!title) errors.title = "Title is required";
+        if (!alias) errors.alias = "Alias is required";
+        setDuplicateError(errors);
+        if (errors.title || errors.alias) return;
+        await handleDuplicate(duplicateTarget, title, alias);
     };
 
     const columns = [
@@ -415,6 +486,14 @@ export default function ItinerarySiteListPage() {
                                                 ) : (
                                                     <div className="flex w-full items-center justify-end gap-1.5">
                                                         <ButtonUtility
+                                                            tooltip="Duplicate"
+                                                            tooltipPlacement="bottom"
+                                                            icon={Copy01}
+                                                            onClick={() => openDuplicateModal(item)}
+                                                            color="brand"
+                                                            isDisabled={Boolean(duplicatingId)}
+                                                        />
+                                                        <ButtonUtility
                                                             tooltip="Edit"
                                                             tooltipPlacement="bottom"
                                                             icon={Edit01}
@@ -446,6 +525,63 @@ export default function ItinerarySiteListPage() {
                     />
                 </TableCard.Root>
             </div>
+
+            <ModalOverlay
+                isOpen={Boolean(duplicateTarget)}
+                isDismissable
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setDuplicateTarget(null);
+                        setDuplicateError({});
+                    }
+                }}
+            >
+                {({ state }) => (
+                    <Modal className="max-w-lg">
+                        <Dialog>
+                            <div className="relative w-full rounded-xl bg-primary p-5 ring-1 ring-secondary">
+                                <CloseButton onPress={() => state.close()} className="absolute right-4 top-4" size="sm" />
+                                <div className="space-y-1">
+                                    <h2 className="text-lg font-semibold text-primary">Duplicate site</h2>
+                                    <p className="text-sm text-tertiary">
+                                        {duplicateTarget?.title ? `Create duplicate of "${duplicateTarget.title}"?` : "Create duplicate for this site?"}
+                                    </p>
+                                </div>
+                                <div className="mt-5 space-y-4">
+                                    <Input
+                                        label="Title"
+                                        value={duplicateForm.title}
+                                        onChange={(value) => {
+                                            setDuplicateForm((prev) => ({ ...prev, title: String(value) }));
+                                            if (duplicateError.title) setDuplicateError((prev) => ({ ...prev, title: "" }));
+                                        }}
+                                        isInvalid={Boolean(duplicateError.title)}
+                                        hint={duplicateError.title}
+                                    />
+                                    <Input
+                                        label="Alias"
+                                        value={duplicateForm.alias}
+                                        onChange={(value) => {
+                                            setDuplicateForm((prev) => ({ ...prev, alias: String(value) }));
+                                            if (duplicateError.alias) setDuplicateError((prev) => ({ ...prev, alias: "" }));
+                                        }}
+                                        isInvalid={Boolean(duplicateError.alias)}
+                                        hint={duplicateError.alias}
+                                    />
+                                </div>
+                                <div className="mt-5 flex justify-end gap-2">
+                                    <Button color="secondary" onClick={() => state.close()}>
+                                        Cancel
+                                    </Button>
+                                    <Button color="primary" onClick={handleConfirmDuplicate} isDisabled={Boolean(duplicatingId)}>
+                                        Confirm Duplicate
+                                    </Button>
+                                </div>
+                            </div>
+                        </Dialog>
+                    </Modal>
+                )}
+            </ModalOverlay>
 
             <ModalOverlay
                 isOpen={Boolean(deleteTarget)}

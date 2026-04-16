@@ -11,10 +11,11 @@ import { fetchWithToken } from "@/utils/fetchApi";
 import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import { Plus, Trash01, Edit01, RefreshCw01, FilterLines, SearchLg } from "@untitledui/icons";
+import { Plus, Trash01, Edit01, RefreshCw01, FilterLines, SearchLg, Copy01 } from "@untitledui/icons";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { BadgeWithButton } from "@/components/base/badges/badges";
 import { Label } from "@/components/base/input/label";
+import { useStoreSnackbar } from "@/store/snackbar";
 
 type AreaItem = {
     id: string;
@@ -46,6 +47,7 @@ export default function ItineraryAreaListPage() {
     const navigate = useNavigate();
     const { pathname, search } = useLocation();
     const initial = parseSearch(search);
+    const { showSnackbar } = useStoreSnackbar();
 
     const [page, setPage] = useState(initial.page);
     const [limit, setLimit] = useState(initial.limit);
@@ -60,6 +62,11 @@ export default function ItineraryAreaListPage() {
 
     const [deleteTarget, setDeleteTarget] = useState<{ id: string; title?: string } | null>(null);
     const deletingRef = useRef(false);
+    const [duplicateTarget, setDuplicateTarget] = useState<AreaItem | null>(null);
+    const [duplicateForm, setDuplicateForm] = useState({ title: "", alias: "" });
+    const [duplicateError, setDuplicateError] = useState<{ title?: string; alias?: string }>({});
+    const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
+    const [refreshTick, setRefreshTick] = useState(0);
     const availableWidth = useAvailableTableWidth();
 
     const totalPages = Math.max(1, Math.ceil((totalRecords || 0) / limit));
@@ -132,7 +139,7 @@ export default function ItineraryAreaListPage() {
             }
         };
         run();
-    }, [debouncedFilters.status, debouncedFilters.title, limit, page]);
+    }, [debouncedFilters.status, debouncedFilters.title, limit, page, refreshTick]);
 
     const handleOpenFilters = () => {
         setTempFilters(filters);
@@ -172,6 +179,69 @@ export default function ItineraryAreaListPage() {
         } finally {
             deletingRef.current = false;
         }
+    };
+
+    const handleDuplicate = async (item: AreaItem, nextTitle: string, nextAlias: string) => {
+        const areaId = getId(item);
+        if (!areaId || duplicatingId) return;
+        setDuplicatingId(areaId);
+        try {
+            const detailRes = await fetchWithToken(`/api/area/${areaId}`);
+            const source = ((detailRes as any)?.data ?? detailRes) as any;
+            const payload: Record<string, unknown> = { ...source };
+
+            delete payload.id;
+            delete payload._id;
+            delete payload.createdAt;
+            delete payload.updatedAt;
+            delete payload.deletedAt;
+            delete payload.deletedBy;
+            delete payload.isDeleted;
+            delete payload.sqlId;
+
+            payload.title = nextTitle;
+            payload.alias = nextAlias;
+
+            await fetchWithToken("/api/area", payload, { method: "POST" });
+            showSnackbar({
+                title: "Success",
+                description: "Area duplicated successfully",
+                color: "success",
+            });
+            setDuplicateTarget(null);
+            setRefreshTick((prev) => prev + 1);
+        } catch (error: any) {
+            showSnackbar({
+                title: "Duplicate Failed",
+                description: error?.error?.message || error?.message || "Failed to duplicate area",
+                color: "danger",
+            });
+        } finally {
+            setDuplicatingId(null);
+        }
+    };
+
+    const openDuplicateModal = (item: AreaItem) => {
+        const baseTitle = String(item?.title ?? "").trim();
+        const baseAlias = String(item?.alias ?? "").trim();
+        setDuplicateForm({
+            title: `${baseTitle || "area"}_duplicate`,
+            alias: `${baseAlias || "area"}_duplicate`,
+        });
+        setDuplicateError({});
+        setDuplicateTarget(item);
+    };
+
+    const handleConfirmDuplicate = async () => {
+        if (!duplicateTarget) return;
+        const title = String(duplicateForm.title || "").trim();
+        const alias = String(duplicateForm.alias || "").trim();
+        const errors: { title?: string; alias?: string } = {};
+        if (!title) errors.title = "Title is required";
+        if (!alias) errors.alias = "Alias is required";
+        setDuplicateError(errors);
+        if (errors.title || errors.alias) return;
+        await handleDuplicate(duplicateTarget, title, alias);
     };
 
     const columns = [
@@ -361,6 +431,14 @@ export default function ItineraryAreaListPage() {
                                             ) : (
                                                 <div className="flex w-full items-center justify-end gap-1.5">
                                                     <ButtonUtility
+                                                        tooltip="Duplicate"
+                                                        tooltipPlacement="bottom"
+                                                        icon={Copy01}
+                                                        onClick={() => openDuplicateModal(item)}
+                                                        color="brand"
+                                                        isDisabled={Boolean(duplicatingId)}
+                                                    />
+                                                    <ButtonUtility
                                                         tooltip="Edit"
                                                         tooltipPlacement="bottom"
                                                         icon={Edit01}
@@ -391,6 +469,63 @@ export default function ItineraryAreaListPage() {
                     />
                 </TableCard.Root>
             </div>
+
+            <ModalOverlay
+                isOpen={Boolean(duplicateTarget)}
+                isDismissable
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setDuplicateTarget(null);
+                        setDuplicateError({});
+                    }
+                }}
+            >
+                {({ state }) => (
+                    <Modal className="max-w-lg">
+                        <Dialog>
+                            <div className="relative w-full rounded-xl bg-primary p-5 ring-1 ring-secondary">
+                                <CloseButton onPress={() => state.close()} className="absolute right-4 top-4" size="sm" />
+                                <div className="space-y-1">
+                                    <h2 className="text-lg font-semibold text-primary">Duplicate area</h2>
+                                    <p className="text-sm text-tertiary">
+                                        {duplicateTarget?.title ? `Create duplicate of "${duplicateTarget.title}"?` : "Create duplicate for this area?"}
+                                    </p>
+                                </div>
+                                <div className="mt-5 space-y-4">
+                                    <Input
+                                        label="Title"
+                                        value={duplicateForm.title}
+                                        onChange={(value) => {
+                                            setDuplicateForm((prev) => ({ ...prev, title: String(value) }));
+                                            if (duplicateError.title) setDuplicateError((prev) => ({ ...prev, title: "" }));
+                                        }}
+                                        isInvalid={Boolean(duplicateError.title)}
+                                        hint={duplicateError.title}
+                                    />
+                                    <Input
+                                        label="Alias"
+                                        value={duplicateForm.alias}
+                                        onChange={(value) => {
+                                            setDuplicateForm((prev) => ({ ...prev, alias: String(value) }));
+                                            if (duplicateError.alias) setDuplicateError((prev) => ({ ...prev, alias: "" }));
+                                        }}
+                                        isInvalid={Boolean(duplicateError.alias)}
+                                        hint={duplicateError.alias}
+                                    />
+                                </div>
+                                <div className="mt-5 flex justify-end gap-2">
+                                    <Button color="secondary" onClick={() => state.close()}>
+                                        Cancel
+                                    </Button>
+                                    <Button color="primary" onClick={handleConfirmDuplicate} isDisabled={Boolean(duplicatingId)}>
+                                        Confirm Duplicate
+                                    </Button>
+                                </div>
+                            </div>
+                        </Dialog>
+                    </Modal>
+                )}
+            </ModalOverlay>
 
             <ModalOverlay
                 isOpen={Boolean(deleteTarget)}
