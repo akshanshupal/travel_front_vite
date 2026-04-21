@@ -10,6 +10,13 @@ import { getPackageVoucherById, updatePackageVoucherById } from "@/utils/service
 import { useStoreSnackbar } from "@/store/snackbar";
 import { DefaultLayout } from "@/layouts/DefaultLayout";
 
+type BookingCard = {
+  id: string;
+  title: string;
+  dateRange: string;
+  html: string;
+};
+
 export default function PaymentLinkEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -24,6 +31,82 @@ export default function PaymentLinkEdit() {
   const [isLoading, setIsLoading] = useState(true);
   const [dirtyFields, setDirtyFields] = useState<Record<string, boolean>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [bookingCards, setBookingCards] = useState<BookingCard[]>([]);
+  const [draggingBookingId, setDraggingBookingId] = useState<string>("");
+  const [dragOverBookingId, setDragOverBookingId] = useState<string>("");
+
+  const parseBookingCardsFromHtml = (html: string): BookingCard[] => {
+    if (!html) return [];
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+
+    let cardsContainer: Element | null = null;
+    const hintParagraphs = Array.from(doc.querySelectorAll("p"));
+    const dragHint = hintParagraphs.find((p) =>
+      String(p.textContent || "").toLowerCase().includes("drag and drop a booking card")
+    );
+    if (dragHint?.nextElementSibling && dragHint.nextElementSibling.classList.contains("space-y-4")) {
+      cardsContainer = dragHint.nextElementSibling;
+    }
+    if (!cardsContainer) {
+      cardsContainer =
+        Array.from(doc.querySelectorAll("div.space-y-4")).find((node) =>
+          Array.from(node.children).some((child) =>
+            child.className.includes("rounded-lg") || child.className.includes("border")
+          )
+        ) || null;
+    }
+    if (!cardsContainer) return [];
+
+    const cards = Array.from(cardsContainer.children).filter((node) => node.tagName.toLowerCase() === "div");
+    return cards.map((card, index) => {
+      const titleNode = card.querySelector(".bg-gray-50 .text-gray-800");
+      const dateNode = card.querySelector(".bg-gray-50 .text-xs");
+      const title = String(titleNode?.textContent || "").replace("⋮⋮", "").trim() || `Booking ${index + 1}`;
+      const dateRange = String(dateNode?.textContent || "").trim();
+      return {
+        id: String(card.getAttribute("data-booking-id") || `${index}`),
+        title,
+        dateRange,
+        html: card.outerHTML,
+      };
+    });
+  };
+
+  const reorderCardsInHtml = (html: string, cards: BookingCard[]) => {
+    if (!html || !cards.length) return html;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+
+    let cardsContainer: Element | null = null;
+    const hintParagraphs = Array.from(doc.querySelectorAll("p"));
+    const dragHint = hintParagraphs.find((p) =>
+      String(p.textContent || "").toLowerCase().includes("drag and drop a booking card")
+    );
+    if (dragHint?.nextElementSibling && dragHint.nextElementSibling.classList.contains("space-y-4")) {
+      cardsContainer = dragHint.nextElementSibling;
+    }
+    if (!cardsContainer) {
+      cardsContainer =
+        Array.from(doc.querySelectorAll("div.space-y-4")).find((node) =>
+          Array.from(node.children).some((child) =>
+            child.className.includes("rounded-lg") || child.className.includes("border")
+          )
+        ) || null;
+    }
+    if (!cardsContainer) return html;
+
+    cardsContainer.innerHTML = "";
+    cards.forEach((card, index) => {
+      const cardDoc = parser.parseFromString(card.html, "text/html");
+      const cardElement = cardDoc.body.firstElementChild;
+      if (cardElement) {
+        cardElement.setAttribute("data-booking-id", String(card.id || index));
+        cardsContainer?.appendChild(cardElement);
+      }
+    });
+    return doc.body.innerHTML;
+  };
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -95,6 +178,37 @@ export default function PaymentLinkEdit() {
     });
   };
 
+  useEffect(() => {
+    const cards = parseBookingCardsFromHtml(formData.innerHtml);
+    setBookingCards(cards);
+  }, [formData.innerHtml]);
+
+  const handleBookingDrop = (targetBookingId: string) => {
+    const sourceId = String(draggingBookingId || "");
+    const targetId = String(targetBookingId || "");
+    if (!sourceId || !targetId || sourceId === targetId) {
+      setDraggingBookingId("");
+      setDragOverBookingId("");
+      return;
+    }
+
+    const list = [...bookingCards];
+    const sourceIndex = list.findIndex((card) => card.id === sourceId);
+    const targetIndex = list.findIndex((card) => card.id === targetId);
+    if (sourceIndex < 0 || targetIndex < 0) {
+      setDraggingBookingId("");
+      setDragOverBookingId("");
+      return;
+    }
+    const [moved] = list.splice(sourceIndex, 1);
+    list.splice(targetIndex, 0, moved);
+    setBookingCards(list);
+    const updatedHtml = reorderCardsInHtml(formData.innerHtml, list);
+    handleChange("innerHtml", updatedHtml);
+    setDraggingBookingId("");
+    setDragOverBookingId("");
+  };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setDirtyFields({
@@ -162,6 +276,37 @@ export default function PaymentLinkEdit() {
             <div className="pt-4 flex flex-col gap-4">
                 
                 <div className="">
+                    {bookingCards.length > 1 && (
+                      <div className="mb-4 border border-gray-200 rounded-lg p-4">
+                        <p className="text-sm font-semibold text-gray-800">Reorder Booking Cards</p>
+                        <p className="text-xs text-gray-500 mb-3">Drag and drop cards to change voucher order.</p>
+                        <div className="space-y-2">
+                          {bookingCards.map((card) => (
+                            <div
+                              key={card.id}
+                              className={`border rounded-md px-3 py-2 bg-white flex justify-between items-center ${dragOverBookingId === card.id ? "border-blue-400 ring-1 ring-blue-200" : "border-gray-200"}`}
+                              draggable
+                              onDragStart={() => setDraggingBookingId(card.id)}
+                              onDragOver={(event) => {
+                                event.preventDefault();
+                                setDragOverBookingId(card.id);
+                              }}
+                              onDrop={() => handleBookingDrop(card.id)}
+                              onDragEnd={() => {
+                                setDraggingBookingId("");
+                                setDragOverBookingId("");
+                              }}
+                            >
+                              <span className="text-sm text-gray-800 flex items-center gap-2">
+                                <span className="cursor-grab text-gray-400 select-none">⋮⋮</span>
+                                {card.title}
+                              </span>
+                              <span className="text-xs text-gray-500">{card.dateRange || "-"}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     <CustomEditor 
                         value={formData.innerHtml} 
                         onContentChange={(value) => handleChange('innerHtml', value)} 

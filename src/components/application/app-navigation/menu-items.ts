@@ -114,10 +114,21 @@ const buildBaseMenu = (): SidebarMenuItem[] => [
         label: "Lead Management",
         icon: UsersMinus,
         items: [
+            { href: "/lead-management/leads", label: "Leads", icon: UsersMinus },
             { href: "/lead-management/pipeline", label: "Pipeline", icon: FilterLines },
             { href: "/lead-management/campaign", label: "Campaign", icon: Announcement01 },
             { href: "/lead-management/settings", label: "Settings", icon: Settings01 },
-            { href: "/lead-management/settings/contact-properties", label: "Custom Contact Properties", icon: User01 },
+            { href: "/lead-management/settings/contact-properties", label: "Contact Properties", icon: User01 },
+        ],
+    },
+    {
+        href: "/photography/client",
+        label: "Photography",
+        icon: File02,
+        items: [
+            { href: "/photography/client", label: "Client", icon: Users01 },
+            { href: "/photography/estimate", label: "Estimate", icon: File02 },
+            { href: "/photography/template", label: "Template", icon: LayersTwo01 },
         ],
     },
     {

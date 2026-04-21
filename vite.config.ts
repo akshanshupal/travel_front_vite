@@ -16,6 +16,9 @@ export default defineConfig(({ mode }) => {
             proxyTarget = undefined;
         }
     }
+    if (!proxyTarget) {
+        proxyTarget = "http://localhost:1333";
+    }
 
     return {
         plugins: [react(), tailwindcss()],

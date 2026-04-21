@@ -20,6 +20,9 @@ export default function GeneratedPymId() {
   const [paymentData, setPaymentData] = useState<any[]>([]);
   const [paymentStoreValue, setPaymentStoreValue] = useState<any[]>([]);
   const [mylogo, setMylogo] = useState<any[]>([]);
+  const [bookingOrderIds, setBookingOrderIds] = useState<string[]>([]);
+  const [draggingBookingId, setDraggingBookingId] = useState<string>("");
+  const [dragOverBookingId, setDragOverBookingId] = useState<string>("");
   const { showSnackbar } = useStoreSnackbar();
 
   const formatDate = (value?: string) => {
@@ -180,9 +183,62 @@ export default function GeneratedPymId() {
       const aIsCab = isCab(a?.title);
       const bIsCab = isCab(b?.title);
       if (aIsCab !== bIsCab) return aIsCab ? -1 : 1;
-      return getStartTime(b?.startDate) - getStartTime(a?.startDate);
+      return getStartTime(a?.startDate) - getStartTime(b?.startDate);
     });
   }, [packageBookingData]);
+
+  useEffect(() => {
+    const nextIds = sortedPackageBookingData
+      .map((item: any) => String(item?.id || ""))
+      .filter(Boolean);
+    setBookingOrderIds((prev) => {
+      const prevSet = new Set(prev);
+      const nextSet = new Set(nextIds);
+      const sameLength = prev.length === nextIds.length;
+      const sameValues = sameLength && prev.every((id) => nextSet.has(id));
+      if (sameValues) return prev;
+      return nextIds;
+    });
+  }, [sortedPackageBookingData]);
+
+  const orderedPackageBookingData = useMemo(() => {
+    if (!bookingOrderIds.length) return sortedPackageBookingData;
+    const map = new Map(
+      sortedPackageBookingData.map((item: any) => [String(item?.id || ""), item])
+    );
+    const ordered = bookingOrderIds
+      .map((id) => map.get(String(id)))
+      .filter(Boolean) as any[];
+    const remaining = sortedPackageBookingData.filter(
+      (item: any) => !bookingOrderIds.includes(String(item?.id || ""))
+    );
+    return [...ordered, ...remaining];
+  }, [sortedPackageBookingData, bookingOrderIds]);
+
+  const handleBookingDragStart = (bookingId: string) => {
+    setDraggingBookingId(String(bookingId || ""));
+  };
+
+  const handleBookingDrop = (targetBookingId: string) => {
+    const sourceId = String(draggingBookingId || "");
+    const targetId = String(targetBookingId || "");
+    if (!sourceId || !targetId || sourceId === targetId) {
+      setDraggingBookingId("");
+      setDragOverBookingId("");
+      return;
+    }
+    setBookingOrderIds((prev) => {
+      const list = prev.length ? [...prev] : orderedPackageBookingData.map((item: any) => String(item?.id || ""));
+      const sourceIndex = list.indexOf(sourceId);
+      const targetIndex = list.indexOf(targetId);
+      if (sourceIndex < 0 || targetIndex < 0) return prev;
+      const [moved] = list.splice(sourceIndex, 1);
+      list.splice(targetIndex, 0, moved);
+      return list;
+    });
+    setDraggingBookingId("");
+    setDragOverBookingId("");
+  };
 
   return (
     <DefaultLayout>
@@ -253,14 +309,32 @@ export default function GeneratedPymId() {
                 </div>
 
                 {/* Package Items */}
-                {packageBookingData.length > 0 && (
+                {orderedPackageBookingData.length > 0 && (
                     <div className="mb-8">
                         {/* <h3 className="text-lg font-bold text-gray-800 mb-3 text-primary">Booking Inclusions</h3> */}
+                        <p className="mb-2 text-xs text-gray-500">Drag and drop a booking card to move it up or down.</p>
                         <div className="space-y-4">
-                            {sortedPackageBookingData.map((item) => (
-                                <div key={item.id} className="border border-gray-200 rounded-lg overflow-hidden">
+                            {orderedPackageBookingData.map((item) => (
+                                <div
+                                  key={item.id}
+                                  className={`border rounded-lg overflow-hidden ${dragOverBookingId === String(item?.id || "") ? "border-blue-400 ring-1 ring-blue-200" : "border-gray-200"}`}
+                                  draggable
+                                  onDragStart={() => handleBookingDragStart(String(item?.id || ""))}
+                                  onDragOver={(event) => {
+                                    event.preventDefault();
+                                    setDragOverBookingId(String(item?.id || ""));
+                                  }}
+                                  onDrop={() => handleBookingDrop(String(item?.id || ""))}
+                                  onDragEnd={() => {
+                                    setDraggingBookingId("");
+                                    setDragOverBookingId("");
+                                  }}
+                                >
                                     <div className="bg-gray-50 px-4 py-2 border-b border-gray-200 font-semibold text-gray-700 flex justify-between items-center">
-                                        <span className="text-gray-800">{item.title}</span>
+                                        <span className="text-gray-800 flex items-center gap-2">
+                                          <span className="cursor-grab text-gray-400 select-none">⋮⋮</span>
+                                          {item.title}
+                                        </span>
                                         <span className="text-xs text-gray-500 font-normal">
                                             {formatDate(item.startDate)} - {formatDate(item?.endDate)}
                                         </span>

@@ -111,6 +111,34 @@ import PackageExclusionsAddPage from "@/pages/settings/package-exclusions/add";
 import PackageExclusionsEditPage from "@/pages/settings/package-exclusions/edit/[id]";
 import PackageExclusionsViewPage from "@/pages/settings/package-exclusions/view/[id]";
 import { Snackbar } from "@/components/application/snackbar/snackbar";
+import LeadsIndexPage from "@/pages/lead-management/leads/index";
+import LeadsAddPage from "@/pages/lead-management/leads/add";
+import LeadsEditPage from "@/pages/lead-management/leads/edit/[id]";
+import LeadsViewPage from "@/pages/lead-management/leads/view/[id]";
+import CampaignIndexPage from "@/pages/lead-management/campaign/index";
+import CampaignAddPage from "@/pages/lead-management/campaign/add";
+import CampaignEditPage from "@/pages/lead-management/campaign/edit/[id]";
+import CampaignViewPage from "@/pages/lead-management/campaign/view/[id]";
+import PipelineIndexPage from "@/pages/lead-management/pipeline/index";
+import PipelineAddPage from "@/pages/lead-management/pipeline/add";
+import PipelineViewPage from "@/pages/lead-management/pipeline/view/[id]";
+import PipelineEditPage from "@/pages/lead-management/pipeline/edit/[id]";
+import LeadSettingsPage from "@/pages/lead-management/settings/index";
+import ContactPropertiesPage from "@/pages/lead-management/settings/contact-properties/index";
+import ContactPropertiesAddPage from "@/pages/lead-management/settings/contact-properties/add";
+import ContactPropertiesEditPage from "@/pages/lead-management/settings/contact-properties/edit/[id]";
+import PhotographyClientPage from "@/pages/photography/client";
+import PhotographyClientAddPage from "@/pages/photography/client/add";
+import PhotographyClientEditPage from "@/pages/photography/client/edit/[id]";
+import PhotographyClientViewPage from "@/pages/photography/client/view/[id]";
+import PhotographyEstimatePage from "@/pages/photography/estimate";
+import PhotographyEstimateAddPage from "@/pages/photography/estimate/add";
+import PhotographyEstimateEditPage from "@/pages/photography/estimate/edit/[id]";
+import PhotographyEstimateViewPage from "@/pages/photography/estimate/view/[id]";
+import PhotographyTemplatePage from "@/pages/photography/template";
+import PhotographyTemplateAddPage from "@/pages/photography/template/add";
+import PhotographyTemplateEditPage from "@/pages/photography/template/edit/[id]";
+import PhotographyTemplateViewPage from "@/pages/photography/template/view/[id]";
 
 const shouldIgnoreConsoleMessage = (args: unknown[]) => {
     const firstMessage = args[0];
@@ -230,13 +258,34 @@ createRoot(document.getElementById("root")!).render(
                         <Route path="/itinerary/saved-itinerary" element={<SavedItineraryListPage />} />
                         <Route path="/itinerary/saved-itinerary/edit/:id" element={<EditSavedItineraryPage />} />
                         <Route path="/package-mail/:id" element={<PackageItineraryMailPage />} />
-                        <Route path="/lead-management/leads" element={<PlaceholderPage />} />
-                        <Route path="/lead-management/leads/view/:id" element={<PlaceholderPage />} />
-                        <Route path="/lead-management/pipeline" element={<PlaceholderPage />} />
-                        <Route path="/lead-management/pipeline/view/:id" element={<PlaceholderPage />} />
-                        <Route path="/lead-management/campaign" element={<PlaceholderPage />} />
-                        <Route path="/lead-management/campaign/view/:id" element={<PlaceholderPage />} />
-                        <Route path="/lead-management/settings" element={<PlaceholderPage />} />
+                        <Route path="/lead-management/leads" element={<LeadsIndexPage />} />
+                        <Route path="/lead-management/leads/add" element={<LeadsAddPage />} />
+                        <Route path="/lead-management/leads/edit/:id" element={<LeadsEditPage />} />
+                        <Route path="/lead-management/leads/view/:id" element={<LeadsViewPage />} />
+                        <Route path="/lead-management/campaign" element={<CampaignIndexPage />} />
+                        <Route path="/lead-management/campaign/add" element={<CampaignAddPage />} />
+                        <Route path="/lead-management/campaign/edit/:id" element={<CampaignEditPage />} />
+                        <Route path="/lead-management/campaign/view/:id" element={<CampaignViewPage />} />
+                        <Route path="/lead-management/pipeline" element={<PipelineIndexPage />} />
+                        <Route path="/lead-management/pipeline/add" element={<PipelineAddPage />} />
+                        <Route path="/lead-management/pipeline/view/:id" element={<PipelineViewPage />} />
+                        <Route path="/lead-management/pipeline/edit/:id" element={<PipelineEditPage />} />
+                        <Route path="/lead-management/settings" element={<LeadSettingsPage />} />
+                        <Route path="/lead-management/settings/contact-properties" element={<ContactPropertiesPage />} />
+                        <Route path="/lead-management/settings/contact-properties/add" element={<ContactPropertiesAddPage />} />
+                        <Route path="/lead-management/settings/contact-properties/edit/:id" element={<ContactPropertiesEditPage />} />
+                        <Route path="/photography/client" element={<PhotographyClientPage />} />
+                        <Route path="/photography/client/add" element={<PhotographyClientAddPage />} />
+                        <Route path="/photography/client/edit/:id" element={<PhotographyClientEditPage />} />
+                        <Route path="/photography/client/view/:id" element={<PhotographyClientViewPage />} />
+                        <Route path="/photography/estimate" element={<PhotographyEstimatePage />} />
+                        <Route path="/photography/estimate/add" element={<PhotographyEstimateAddPage />} />
+                        <Route path="/photography/estimate/edit/:id" element={<PhotographyEstimateEditPage />} />
+                        <Route path="/photography/estimate/view/:id" element={<PhotographyEstimateViewPage />} />
+                        <Route path="/photography/template" element={<PhotographyTemplatePage />} />
+                        <Route path="/photography/template/add" element={<PhotographyTemplateAddPage />} />
+                        <Route path="/photography/template/edit/:id" element={<PhotographyTemplateEditPage />} />
+                        <Route path="/photography/template/view/:id" element={<PhotographyTemplateViewPage />} />
                         <Route path="/packages/list" element={<PackageListPage />} />
                         <Route path="/packages/list/add" element={<PackageAddPage />} />
                         <Route path="/packages/list/edit/:id" element={<PackageEditPage />} />

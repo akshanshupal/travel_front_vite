@@ -17,6 +17,8 @@
         "input-otp": "^1.4.2",
         "jodit": "^4.6.2",
         "jodit-react": "^5.3.21",
+        "jspdf": "^4.2.1",
+        "jspdf-autotable": "^5.0.7",
         "lightgallery": "^2.9.0",
         "motion": "^12.23.26",
         "qr-code-styling": "^1.9.2",
