@@ -192,7 +192,6 @@ export default function GeneratedPymId() {
       .map((item: any) => String(item?.id || ""))
       .filter(Boolean);
     setBookingOrderIds((prev) => {
-      const prevSet = new Set(prev);
       const nextSet = new Set(nextIds);
       const sameLength = prev.length === nextIds.length;
       const sameValues = sameLength && prev.every((id) => nextSet.has(id));
