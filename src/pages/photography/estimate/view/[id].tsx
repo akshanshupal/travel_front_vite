@@ -11,6 +11,7 @@ const formatDate = (value: string) => {
     if (Number.isNaN(d.getTime())) return value;
     return `${d.getDate().toString().padStart(2, "0")}-${d.toLocaleString("en-US", { month: "short" })}-${d.getFullYear()}`;
 };
+const looksLikeHtml = (value: string) => /<\/?[a-z][\s\S]*>/i.test(value);
 
 export default function PhotographyEstimateViewPage() {
     const navigate = useNavigate();
@@ -69,7 +70,13 @@ export default function PhotographyEstimateViewPage() {
                                 </div>
                                 <ul className="list-disc pl-5 text-sm text-tertiary">
                                     {(item.deliverables || []).map((entry: string, row: number) => (
-                                        <li key={row}>{entry}</li>
+                                        <li key={row}>
+                                            {looksLikeHtml(entry) ? (
+                                                <div dangerouslySetInnerHTML={{ __html: entry }} />
+                                            ) : (
+                                                entry
+                                            )}
+                                        </li>
                                     ))}
                                 </ul>
                                 <div className="text-sm text-primary">Package Cost: {item.packageCost}</div>

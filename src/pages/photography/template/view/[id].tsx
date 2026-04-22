@@ -30,9 +30,11 @@ export default function PhotographyTemplateViewPage() {
                     </div>
                     <div>
                         <div className="text-xs text-tertiary">Deliverables</div>
-                        <ul className="list-disc pl-5 text-sm text-primary">
+                        <ul className="list-disc space-y-2 pl-5 text-sm text-primary">
                             {(template?.deliverables || []).map((item: string, index: number) => (
-                                <li key={index}>{item}</li>
+                                <li key={index}>
+                                    <div dangerouslySetInnerHTML={{ __html: item }} />
+                                </li>
                             ))}
                         </ul>
                     </div>

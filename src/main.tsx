@@ -139,6 +139,9 @@ import PhotographyTemplatePage from "@/pages/photography/template";
 import PhotographyTemplateAddPage from "@/pages/photography/template/add";
 import PhotographyTemplateEditPage from "@/pages/photography/template/edit/[id]";
 import PhotographyTemplateViewPage from "@/pages/photography/template/view/[id]";
+import PhotographyDeliverablePage from "@/pages/photography/deliverable";
+import PhotographyDeliverableAddPage from "@/pages/photography/deliverable/add";
+import PhotographyDeliverableEditPage from "@/pages/photography/deliverable/edit/[id]";
 
 const shouldIgnoreConsoleMessage = (args: unknown[]) => {
     const firstMessage = args[0];
@@ -286,6 +289,9 @@ createRoot(document.getElementById("root")!).render(
                         <Route path="/photography/template/add" element={<PhotographyTemplateAddPage />} />
                         <Route path="/photography/template/edit/:id" element={<PhotographyTemplateEditPage />} />
                         <Route path="/photography/template/view/:id" element={<PhotographyTemplateViewPage />} />
+                        <Route path="/photography/deliverable" element={<PhotographyDeliverablePage />} />
+                        <Route path="/photography/deliverable/add" element={<PhotographyDeliverableAddPage />} />
+                        <Route path="/photography/deliverable/edit/:id" element={<PhotographyDeliverableEditPage />} />
                         <Route path="/packages/list" element={<PackageListPage />} />
                         <Route path="/packages/list/add" element={<PackageAddPage />} />
                         <Route path="/packages/list/edit/:id" element={<PackageEditPage />} />

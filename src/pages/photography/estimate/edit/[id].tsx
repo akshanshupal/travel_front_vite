@@ -4,12 +4,13 @@ import { DefaultLayout } from "@/layouts/DefaultLayout";
 import { TableCard } from "@/components/application/table/table";
 import { Input } from "@/components/base/input/input";
 import { Select } from "@/components/base/select/select";
-import { TextArea } from "@/components/base/textarea/textarea";
 import { Button } from "@/components/base/buttons/button";
 import { useStoreSnackbar } from "@/store/snackbar";
 import { getPhotographyClients } from "@/utils/services/photographyClientService";
 import { getPhotographyEstimateById, updatePhotographyEstimateById } from "@/utils/services/photographyEstimateService";
 import { loadPhotographyTemplates } from "@/pages/photography/shared/templates";
+import { DeliverablesDnd, type DeliverableCollectionItem } from "@/pages/photography/shared/deliverables-dnd";
+import { createPhotographyDeliverable, getPhotographyDeliverables } from "@/utils/services/photographyDeliverableService";
 
 type EstimateItem = {
     mainEventName: string;
@@ -33,6 +34,7 @@ export default function PhotographyEstimateEditPage() {
     const [estimateDate, setEstimateDate] = useState("");
     const [validUntil, setValidUntil] = useState("");
     const [items, setItems] = useState<EstimateItem[]>([]);
+    const [collection, setCollection] = useState<DeliverableCollectionItem[]>([]);
 
     const grandTotal = useMemo(() => items.reduce((sum, item) => sum + Number(item.packageCost || 0), 0), [items]);
 
@@ -54,7 +56,11 @@ export default function PhotographyEstimateEditPage() {
                     (estimate?.items || []).map((item: any) => ({
                         mainEventName: String(item?.mainEventName || ""),
                         timing: String(item?.timing || ""),
-                        deliverables: Array.isArray(item?.deliverables) ? item.deliverables : [],
+                        deliverables: Array.isArray(item?.deliverables)
+                            ? item.deliverables
+                            : item?.deliverables
+                              ? [String(item.deliverables)]
+                              : [],
                         packageCost: Number(item?.packageCost || 0),
                     })),
                 );
@@ -68,6 +74,49 @@ export default function PhotographyEstimateEditPage() {
         setTemplates(loadPhotographyTemplates());
     }, [id, showSnackbar]);
 
+    useEffect(() => {
+        const fetchCollection = async () => {
+            try {
+                const response: any = await getPhotographyDeliverables({ limit: "all" });
+                const resolved = response?.data ?? response;
+                const list = Array.isArray(resolved?.data) ? resolved.data : Array.isArray(resolved) ? resolved : [];
+                setCollection(
+                    list.map((item: any) => ({
+                        id: String(item.id),
+                        title: String(item.title || ""),
+                        content: String(item.content || ""),
+                    })),
+                );
+            } catch {
+                setCollection([]);
+            }
+        };
+        fetchCollection();
+    }, []);
+
+    const handleCreateCollectionItem = async (title: string, content: string) => {
+        try {
+            await createPhotographyDeliverable({ title, content });
+            const response: any = await getPhotographyDeliverables({ limit: "all" });
+            const resolved = response?.data ?? response;
+            const list = Array.isArray(resolved?.data) ? resolved.data : Array.isArray(resolved) ? resolved : [];
+            setCollection(
+                list.map((item: any) => ({
+                    id: String(item.id),
+                    title: String(item.title || ""),
+                    content: String(item.content || ""),
+                })),
+            );
+            showSnackbar({ title: "Success", description: "Deliverable added to collection", color: "success" });
+        } catch (error: any) {
+            showSnackbar({
+                title: "Error",
+                description: error?.error?.message || error?.message || "Failed to add deliverable to collection",
+                color: "danger",
+            });
+        }
+    };
+
     const applyTemplate = (templateId: string) => {
         setSelectedTemplate(templateId);
         const template = templates.find((item) => item.id === templateId);
@@ -77,7 +126,7 @@ export default function PhotographyEstimateEditPage() {
             {
                 mainEventName: template.mainEventName,
                 timing: template.timing,
-                deliverables: template.deliverables,
+                deliverables: Array.isArray(template.deliverables) ? template.deliverables : [],
                 packageCost: template.packageCost,
             },
         ]);
@@ -154,17 +203,15 @@ export default function PhotographyEstimateEditPage() {
                                 onChange={(value) => updateItem(index, { mainEventName: value })}
                             />
                             <Input label="Timing" value={item.timing} onChange={(value) => updateItem(index, { timing: value })} />
-                            <TextArea
-                                label="Deliverables (one per line)"
-                                rows={5}
-                                value={item.deliverables.join("\n")}
-                                onChange={(value) =>
-                                    updateItem(index, {
-                                        deliverables: String(value).split("\n").map((entry) => entry.trim()).filter(Boolean),
-                                    })
-                                }
-                                className="md:col-span-2"
-                            />
+                            <div className="md:col-span-2">
+                                <DeliverablesDnd
+                                    collection={collection}
+                                    deliverables={item.deliverables || []}
+                                    onChange={(deliverables) => updateItem(index, { deliverables })}
+                                    onCreateCollectionItem={index === 0 ? handleCreateCollectionItem : undefined}
+                                    title="Quotation Deliverables"
+                                />
+                            </div>
                             <Input
                                 label="Package Cost (INR)"
                                 type="number"

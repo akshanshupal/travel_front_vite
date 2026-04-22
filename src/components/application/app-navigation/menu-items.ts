@@ -129,6 +129,7 @@ const buildBaseMenu = (): SidebarMenuItem[] => [
             { href: "/photography/client", label: "Client", icon: Users01 },
             { href: "/photography/estimate", label: "Estimate", icon: File02 },
             { href: "/photography/template", label: "Template", icon: LayersTwo01 },
+            { href: "/photography/deliverable", label: "Deliverables", icon: Tag01 },
         ],
     },
     {

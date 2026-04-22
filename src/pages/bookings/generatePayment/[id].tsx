@@ -78,6 +78,7 @@ export default function GeneratedPymId() {
         assignment: id,
         paymentType: "Cr",
         populate: "paymentStore",
+        limit: 100
       };
       try {
         const response: any = await getpayment(params);
@@ -429,7 +430,11 @@ export default function GeneratedPymId() {
                             </tbody>
                             <tfoot className="bg-gray-50 font-bold text-gray-800">
                                 <tr>
-                                    <td colSpan={2} className="px-4 py-3 text-right">Sub Total:</td>
+                                    <td colSpan={2} className="px-4 py-3 text-right">Payment Received:</td>
+                                    <td className="px-4 py-3 text-right">₹ {paymentData.reduce((total, item) => total + parseFloat(item.amount || 0), 0)}</td>
+                                </tr>
+                                <tr>
+                                    <td colSpan={2} className="px-4 py-3 text-right">Package Cost:</td>
                                     <td className="px-4 py-3 text-right">₹ {assignmentData.packageCost}</td>
                                 </tr>
                                 <tr>
@@ -437,7 +442,7 @@ export default function GeneratedPymId() {
                                     <td className="px-4 py-3 text-right">₹ {(assignmentData.packageCost * parseFloat(assignmentData.taxes || 0)) / 100}</td>
                                 </tr>
                                 <tr className="bg-blue-50 text-blue-800 text-base">
-                                    <td colSpan={2} className="px-4 py-3 text-right">Total Amount:</td>
+                                    <td colSpan={2} className="px-4 py-3 text-right">Total Package Cost:</td>
                                     <td className="px-4 py-3 text-right">₹ {assignmentData.packageCost + (assignmentData.packageCost * parseFloat(assignmentData.taxes || 0) / 100)}</td>
                                 </tr>
                                 <tr className="bg-red-50 text-red-600 text-base border-t border-red-100">
