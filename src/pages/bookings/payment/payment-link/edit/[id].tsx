@@ -219,7 +219,11 @@ export default function PaymentLinkEdit() {
       return;
     }
     try {
-      const updatedFormData = { ...formData };
+      const updatedFormData = {
+        ...formData,
+        isDefault: formData.isDefault === "true",
+        status: formData.status === "true",
+      };
       
       const response = await updatePackageVoucherById(id, updatedFormData);
       if (response) {

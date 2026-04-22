@@ -16,23 +16,7 @@ const getClientBaseURL = () => {
     return "";
 };
 
-const resolveApihostHeader = (apihost: string) => {
-    const override = import.meta.env.VITE_APIHOST_HEADER_OVERRIDE as string | undefined;
-    if (override) return override;
 
-    if (import.meta.env.DEV) {
-        try {
-            const u = new URL(apihost);
-            if (u.port === "5173" || u.port === "5174") {
-                return `${u.protocol}//localhost:3000`;
-            }
-        } catch {
-            return apihost;
-        }
-    }
-
-    return apihost;
-};
 
 const resolveBaseUrl = () => {
     const apihost = getClientBaseURL();
@@ -67,6 +51,7 @@ const resolveBaseUrl = () => {
         } catch {
         }
     }
+    
     return { apihost, baseUrl: mapped || apihost || "" };
 };
 
@@ -115,7 +100,7 @@ export const fetchWithToken = async (
         
         const { apihost, baseUrl } = resolveBaseUrl();
         
-        const apihostHeader = resolveApihostHeader(apihost);
+        
         const authToken = useStoreLogin.getState().authToken;
         if (!authToken && typeof window !== "undefined") {
             window.location.href = "/login";
@@ -124,19 +109,12 @@ export const fetchWithToken = async (
 
         const headers = new Headers(options.headers || {});
         headers.set("token", authToken || "");
-        headers.set("apihost", apihostHeader);
+        headers.set("apihost", apihost);
 
         const method = (options.method || "GET").toUpperCase();
         const fetchOptions: RequestInit = { ...options, headers, method };
         const requestData = withAccessLookupContext(data, method);
         const isFormDataRequest = typeof FormData !== "undefined" && requestData instanceof FormData;
-
-        const useProxy =
-            Boolean(import.meta.env.DEV) &&
-            (import.meta.env.VITE_USE_API_PROXY as string | undefined) !== "false" &&
-            url.startsWith("/api/");
-        const baseForRelative = useProxy ? apihost : baseUrl;
-
         let newUrl: string;
         if (method === "POST" || method === "PUT" || method === "DELETE") {
             if (fetchOptions.body == null) {
@@ -147,9 +125,9 @@ export const fetchWithToken = async (
                     fetchOptions.body = JSON.stringify(requestData);
                 }
             }
-            newUrl = url.startsWith("http") ? url : `${baseForRelative}${url}`;
+            newUrl = url.startsWith("http") ? url : `${baseUrl}${url}`;
         } else {
-            newUrl = url.startsWith("http") ? url : `${baseForRelative}${url}`;
+            newUrl = url.startsWith("http") ? url : `${baseUrl}${url}`;
             const queryString = buildQueryString(requestData);
             newUrl = queryString ? `${newUrl}?${queryString}` : newUrl;
         }
@@ -215,25 +193,18 @@ export const fetchWithOutToken = async (
     options: RequestInit = {},
 ): Promise<any> => {
     const { apihost, baseUrl } = resolveBaseUrl();
-    const apihostHeader = resolveApihostHeader(apihost);
     const headers = {
         ...(options.headers || {}),
-        apihost: apihostHeader,
+        apihost: apihost,
     } as HeadersInit;
     const method = (options.method || "GET").toUpperCase();
     const fetchOptions: RequestInit = { ...options, headers, method };
 
-    const useProxy =
-        Boolean(import.meta.env.DEV) &&
-        (import.meta.env.VITE_USE_API_PROXY as string | undefined) !== "false" &&
-        url.startsWith("/api/");
-    const baseForRelative = useProxy ? apihost : baseUrl;
-
     if (method === "POST" || method === "PUT" || method === "DELETE") {
         fetchOptions.body = JSON.stringify(data);
-        url = url.startsWith("http") ? url : `${baseForRelative}${url}`;
+        url = url.startsWith("http") ? url : `${baseUrl}${url}`;
     } else {
-        url = url.startsWith("http") ? url : `${baseForRelative}${url}`;
+        url = url.startsWith("http") ? url : `${baseUrl}${url}`;
         const queryString = buildQueryString(data);
         url = queryString ? `${url}?${queryString}` : url;
     }

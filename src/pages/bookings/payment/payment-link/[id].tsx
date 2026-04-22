@@ -125,11 +125,14 @@ export default function PaymentLink() {
     );
 
     try {
-      const response = await updatePackageVoucherById(selectedItem.id, { isDefault: !selectedItem.isDefault });
+      const response: any = await updatePackageVoucherById(selectedItem.id, { isDefault: true });
+      if (response?.error) {
+        throw new Error(response.error?.message || "Failed to update default voucher");
+      }
       
       setData((prevData) =>
         prevData.map((item) =>
-            item.id === selectedItem.id ? { ...item, ...response.data, isDefault: !selectedItem.isDefault } : { ...item, isDefault: false }
+            item.id === selectedItem.id ? { ...item, ...response, isDefault: true } : { ...item, isDefault: false }
         )
       );
       
