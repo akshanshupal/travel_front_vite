@@ -25,7 +25,7 @@ export default function PhotographyPaymentPage() {
     const [loadError, setLoadError] = useState<string | null>(null);
     const [allBookings, setAllBookings] = useState<any[]>([]);
     const [page, setPage] = useState(1);
-    const [limit, setLimit] = useState(10);
+    const [limit] = useState(10);
     const [refreshTick, setRefreshTick] = useState(0);
     const [search, setSearch] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
