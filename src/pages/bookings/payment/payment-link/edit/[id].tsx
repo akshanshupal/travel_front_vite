@@ -55,23 +55,23 @@ export default function PaymentLinkEdit() {
         tempDiv.style.position = "absolute";
         tempDiv.style.left = "-9999px";
         document.body.appendChild(tempDiv);
-        
+
         // Remove drag handle icons
         const dragHandles = tempDiv.querySelectorAll('.cursor-grab');
         dragHandles.forEach(el => el.remove());
-        
+
         // Remove empty lines and trim whitespace from ends
         detailsText = tempDiv.innerText.replace(/\n\s*\n/g, '\n').trim();
         document.body.removeChild(tempDiv);
       } catch (e) {
-         detailsText = `${card.title}\n${card.dateRange}`;
+        detailsText = `${card.title}\n${card.dateRange}`;
       }
     }
 
     return [
       `Hello ${clientName || "Traveler"},`,
       "",
-      `🧾 *SERVICE DETAILS*`,
+      `🧾 *BOOKING DETAILS*`,
       "",
       detailsText,
       "",
@@ -253,10 +253,10 @@ export default function PaymentLinkEdit() {
           let htmlContent = response.innerHtml || "";
           // Ensure table has text color class for visibility
           if (htmlContent.includes('className="w-full text-sm text-left"')) {
-             htmlContent = htmlContent.replace(
-               'className="w-full text-sm text-left"', 
-               'className="w-full text-sm text-left text-gray-800"'
-             );
+            htmlContent = htmlContent.replace(
+              'className="w-full text-sm text-left"',
+              'className="w-full text-sm text-left text-gray-800"'
+            );
           }
 
           setFormData({
@@ -287,7 +287,7 @@ export default function PaymentLinkEdit() {
       ...prev,
       [key]: value,
     }));
-    
+
     setDirtyFields((prev) => ({
       ...prev,
       [key]: true,
@@ -352,30 +352,30 @@ export default function PaymentLinkEdit() {
         isDefault: formData.isDefault === "true",
         status: formData.status === "true",
       };
-      
+
       const response = await updatePackageVoucherById(id, updatedFormData);
       if (response) {
         showSnackbar({
-            description: "Payment link Edited successfully", 
-            title: 'Success', 
-            color: 'success'
+          description: "Payment link Edited successfully",
+          title: 'Success',
+          color: 'success'
         });
         const assignmentId = typeof response.assignmentId === 'object' ? (response.assignmentId._id || response.assignmentId.id) : response.assignmentId;
         navigate(`/bookings/payment/payment-link/${assignmentId}`);
       }
     } catch (error) {
       showSnackbar({
-          description: "Payment link already exist", 
-          title: 'Error', 
-          color: 'danger'
-        });
+        description: "Payment link already exist",
+        title: 'Error',
+        color: 'danger'
+      });
       console.log(error);
     }
   };
-  
+
   const getAssignmentId = (assignmentId: any) => {
-      if (!assignmentId) return "";
-      return typeof assignmentId === 'object' ? (assignmentId._id || assignmentId.id) : assignmentId;
+    if (!assignmentId) return "";
+    return typeof assignmentId === 'object' ? (assignmentId._id || assignmentId.id) : assignmentId;
   };
 
   const breadcrumbsList = [
@@ -387,11 +387,11 @@ export default function PaymentLinkEdit() {
 
   if (isLoading) {
     return (
-        <DefaultLayout>
-             <div className="flex justify-center items-center h-full">
-                <LoadingIndicator />
-            </div>
-        </DefaultLayout>
+      <DefaultLayout>
+        <div className="flex justify-center items-center h-full">
+          <LoadingIndicator />
+        </div>
+      </DefaultLayout>
     );
   }
 
@@ -399,105 +399,105 @@ export default function PaymentLinkEdit() {
     <DefaultLayout>
       <div className="max-w-4xl mx-auto">
         <div className="mb-4">
-            <CustomBreadscrumbs list={breadcrumbsList} />
+          <CustomBreadscrumbs list={breadcrumbsList} />
         </div>
-        
+
         <div className="bg-white shadow-lg rounded-lg overflow-hidden p-8">
-            <h5 className="text-lg font-semibold mb-4 text-gray-900">Edit Payment Link Detail</h5>
-            <form onSubmit={handleSubmit}>
+          <h5 className="text-lg font-semibold mb-4 text-gray-900">Edit Payment Link Detail</h5>
+          <form onSubmit={handleSubmit}>
             <div className="pt-4 flex flex-col gap-4">
-                
-                <div className="">
-                    {bookingCards.length > 1 && (
-                      <div className="mb-4 border border-gray-200 rounded-lg p-4">
-                        <p className="text-sm font-semibold text-gray-800">Reorder Booking Cards</p>
-                        <p className="text-xs text-gray-500 mb-3">Drag and drop cards to change voucher order.</p>
-                        <div className="space-y-2">
-                          {bookingCards.map((card) => (
-                            <div
-                              key={card.id}
-                              className={`border rounded-md px-3 py-2 bg-white flex justify-between items-center ${dragOverBookingId === card.id ? "border-blue-400 ring-1 ring-blue-200" : "border-gray-200"}`}
-                              draggable
-                              onDragStart={() => setDraggingBookingId(card.id)}
-                              onDragOver={(event) => {
-                                event.preventDefault();
-                                setDragOverBookingId(card.id);
+
+              <div className="">
+                {bookingCards.length > 1 && (
+                  <div className="mb-4 border border-gray-200 rounded-lg p-4">
+                    <p className="text-sm font-semibold text-gray-800">Reorder Booking Cards</p>
+                    <p className="text-xs text-gray-500 mb-3">Drag and drop cards to change voucher order.</p>
+                    <div className="space-y-2">
+                      {bookingCards.map((card) => (
+                        <div
+                          key={card.id}
+                          className={`border rounded-md px-3 py-2 bg-white flex justify-between items-center ${dragOverBookingId === card.id ? "border-blue-400 ring-1 ring-blue-200" : "border-gray-200"}`}
+                          draggable
+                          onDragStart={() => setDraggingBookingId(card.id)}
+                          onDragOver={(event) => {
+                            event.preventDefault();
+                            setDragOverBookingId(card.id);
+                          }}
+                          onDrop={() => handleBookingDrop(card.id)}
+                          onDragEnd={() => {
+                            setDraggingBookingId("");
+                            setDragOverBookingId("");
+                          }}
+                        >
+                          <span className="text-sm text-gray-800 flex items-center gap-2">
+                            <span className="cursor-grab text-gray-400 select-none">⋮⋮</span>
+                            {card.title}
+                          </span>
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs text-gray-500">{card.dateRange || "-"}</span>
+                            <ButtonUtility
+                              icon={FaWhatsapp}
+                              size="sm"
+                              color="success"
+                              tooltip="Send Details on WhatsApp"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openWhatsAppModal(card);
                               }}
-                              onDrop={() => handleBookingDrop(card.id)}
-                              onDragEnd={() => {
-                                setDraggingBookingId("");
-                                setDragOverBookingId("");
-                              }}
-                            >
-                              <span className="text-sm text-gray-800 flex items-center gap-2">
-                                <span className="cursor-grab text-gray-400 select-none">⋮⋮</span>
-                                {card.title}
-                              </span>
-                              <div className="flex items-center gap-3">
-                                <span className="text-xs text-gray-500">{card.dateRange || "-"}</span>
-                                <ButtonUtility
-                                  icon={FaWhatsapp}
-                                  size="sm"
-                                  color="success"
-                                  tooltip="Send Details on WhatsApp"
-                                  onClick={(e: any) => {
-                                    e.stopPropagation();
-                                    openWhatsAppModal(card);
-                                  }}
-                                />
-                              </div>
-                            </div>
-                          ))}
+                            />
+                          </div>
                         </div>
-                      </div>
-                    )}
-                    <CustomEditor 
-                        value={formData.innerHtml} 
-                        onContentChange={(value) => handleChange('innerHtml', value)} 
-                    />
-                    {dirtyFields.innerHtml && errors.innerHtml && (
-                        <p className="text-xs text-error mt-1">{errors.innerHtml}</p>
-                    )}
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="pt-4">
-                        <Label className="mb-1.5 text-gray-900">Default*</Label>
-                        <Select
-                            className="w-full"
-                            selectedKey={formData.isDefault}
-                            onSelectionChange={(key) => handleChange("isDefault", String(key))}
-                            items={[
-                                { id: "true", label: "Active" },
-                                { id: "false", label: "Inactive" },
-                            ]}
-                        >
-                            {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
-                        </Select>
+                      ))}
                     </div>
-                    <div className="pt-4">
-                         <Label className="mb-1.5 text-gray-900">Status*</Label>
-                         <Select
-                            className="w-full"
-                            selectedKey={formData.status}
-                            onSelectionChange={(key) => handleChange("status", String(key))}
-                            items={[
-                                { id: "true", label: "Active" },
-                                { id: "false", label: "Inactive" },
-                            ]}
-                        >
-                            {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
-                        </Select>
-                    </div>
-                </div> 
-            
-                <div className="pt-4 border-t mt-4">
-                    <Button color="primary" size="sm" type="submit">
-                        Submit
-                    </Button>
+                  </div>
+                )}
+                <CustomEditor
+                  value={formData.innerHtml}
+                  onContentChange={(value) => handleChange('innerHtml', value)}
+                />
+                {dirtyFields.innerHtml && errors.innerHtml && (
+                  <p className="text-xs text-error mt-1">{errors.innerHtml}</p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="pt-4">
+                  <Label className="mb-1.5 text-gray-900">Default*</Label>
+                  <Select
+                    className="w-full"
+                    selectedKey={formData.isDefault}
+                    onSelectionChange={(key) => handleChange("isDefault", String(key))}
+                    items={[
+                      { id: "true", label: "Active" },
+                      { id: "false", label: "Inactive" },
+                    ]}
+                  >
+                    {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
+                  </Select>
                 </div>
+                <div className="pt-4">
+                  <Label className="mb-1.5 text-gray-900">Status*</Label>
+                  <Select
+                    className="w-full"
+                    selectedKey={formData.status}
+                    onSelectionChange={(key) => handleChange("status", String(key))}
+                    items={[
+                      { id: "true", label: "Active" },
+                      { id: "false", label: "Inactive" },
+                    ]}
+                  >
+                    {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
+                  </Select>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t mt-4">
+                <Button color="primary" size="sm" type="submit">
+                  Submit
+                </Button>
+              </div>
             </div>
-            </form>
+          </form>
         </div>
       </div>
 
