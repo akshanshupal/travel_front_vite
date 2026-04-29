@@ -9,26 +9,25 @@ import { getPhotographyTemplateById, updatePhotographyTemplateById } from "@/pag
 import { DeliverablesDnd, type DeliverableCollectionItem } from "@/pages/photography/shared/deliverables-dnd";
 import { getPhotographyDeliverables } from "@/utils/services/photographyDeliverableService";
 
-const to12Hour = (value: string) => {
+const to12HourFrom24 = (value: string) => {
     if (!value) return "";
-    const [h, m] = value.split(":").map((part) => Number(part));
-    if (Number.isNaN(h) || Number.isNaN(m)) return value;
+    const match = String(value).match(/^([01]?\d|2[0-3]):([0-5]\d)$/);
+    if (!match) return "";
+    const h = Number(match[1]);
+    const m = Number(match[2]);
     const suffix = h >= 12 ? "PM" : "AM";
     const hour = h % 12 || 12;
     return `${hour}:${String(m).padStart(2, "0")} ${suffix}`;
 };
 
-const to24Hour = (value: string) => {
+const normalize12Hour = (value: string) => {
     const text = String(value || "").trim().toUpperCase();
     const match = text.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)$/);
     if (!match) return "";
     const rawHour = Number(match[1]);
     const minute = Number(match[2] || 0);
     if (Number.isNaN(rawHour) || Number.isNaN(minute) || rawHour < 1 || rawHour > 12 || minute < 0 || minute > 59) return "";
-    const suffix = match[3];
-    let hour = rawHour % 12;
-    if (suffix === "PM") hour += 12;
-    return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+    return `${rawHour}:${String(minute).padStart(2, "0")} ${match[3]}`;
 };
 
 const parseTimingRange = (value: string) => {
@@ -37,8 +36,14 @@ const parseTimingRange = (value: string) => {
         .map((item) => item.trim())
         .filter(Boolean);
     if (parts.length !== 2) return { start: "", end: "" };
-    const start = parts[0].includes("AM") || parts[0].includes("PM") || parts[0].includes("am") || parts[0].includes("pm") ? to24Hour(parts[0]) : parts[0];
-    const end = parts[1].includes("AM") || parts[1].includes("PM") || parts[1].includes("am") || parts[1].includes("pm") ? to24Hour(parts[1]) : parts[1];
+    const resolvePart = (part: string) => {
+        const normalized = normalize12Hour(part);
+        if (normalized) return normalized;
+        const from24 = to12HourFrom24(part);
+        return from24 || "";
+    };
+    const start = resolvePart(parts[0]);
+    const end = resolvePart(parts[1]);
     return { start, end };
 };
 
@@ -67,7 +72,6 @@ export default function PhotographyTemplateEditPage() {
                 list.map((item: any) => ({
                     id: String(item.id),
                     title: String(item.title || ""),
-                    content: String(item.content || ""),
                 })),
             );
         } catch {
@@ -106,7 +110,13 @@ export default function PhotographyTemplateEditPage() {
             showSnackbar({ title: "Validation Error", description: "Please select both start and end time", color: "danger" });
             return;
         }
-        const timing = startTime && endTime ? `${to12Hour(startTime)} to ${to12Hour(endTime)}` : "";
+        const normalizedStart = startTime ? normalize12Hour(startTime) : "";
+        const normalizedEnd = endTime ? normalize12Hour(endTime) : "";
+        if ((startTime && !normalizedStart) || (endTime && !normalizedEnd)) {
+            showSnackbar({ title: "Validation Error", description: "Please enter time in AM/PM format (e.g. 8:00 PM)", color: "danger" });
+            return;
+        }
+        const timing = normalizedStart && normalizedEnd ? `${normalizedStart} to ${normalizedEnd}` : "";
         updatePhotographyTemplateById(id, {
             name: form.name.trim(),
             mainEventName: form.mainEventName.trim(),
@@ -120,6 +130,7 @@ export default function PhotographyTemplateEditPage() {
 
     return (
         <DefaultLayout>
+            
             <TableCard.Root>
                 <TableCard.Header title="Edit Photography Template" />
                 <div className="space-y-3 bg-primary px-4 py-5 md:px-6">
@@ -130,10 +141,15 @@ export default function PhotographyTemplateEditPage() {
                         onChange={(value) => setForm((prev) => ({ ...prev, mainEventName: value }))}
                     />
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                        <Input label="Timing From" type="time" value={startTime} onChange={(value) => setStartTime(value)} />
-                        <Input label="Timing To" type="time" value={endTime} onChange={(value) => setEndTime(value)} />
+                        <Input label="Timing From (AM/PM)" value={startTime} onChange={(value) => setStartTime(value)} placeholder="e.g. 8:00 PM" />
+                        <Input label="Timing To (AM/PM)" value={endTime} onChange={(value) => setEndTime(value)} placeholder="e.g. 2:00 AM" />
                     </div>
-                    <Input label="Timing Range" value={startTime && endTime ? `${to12Hour(startTime)} to ${to12Hour(endTime)}` : ""} onChange={() => undefined} isDisabled />
+                    <Input
+                        label="Timing Range"
+                        value={normalize12Hour(startTime) && normalize12Hour(endTime) ? `${normalize12Hour(startTime)} to ${normalize12Hour(endTime)}` : ""}
+                        onChange={() => undefined}
+                        isDisabled
+                    />
                     <DeliverablesDnd
                         collection={collection}
                         deliverables={form.deliverables}

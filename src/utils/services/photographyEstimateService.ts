@@ -15,3 +15,7 @@ export const getPhotographyEstimateById = async (id: string) => {
 export const updatePhotographyEstimateById = async (id: string, payload: Record<string, unknown>) => {
     return await fetchWithToken(`/api/photography-estimate/${id}`, payload, { method: "PUT" });
 };
+
+export const convertPhotographyEstimate = async (id: string, payload: Record<string, unknown>) => {
+    return await fetchWithToken(`/api/photography-booking/convert/${id}`, payload, { method: "POST" });
+};

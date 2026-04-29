@@ -10,13 +10,14 @@ import { DeliverablesDnd, type DeliverableCollectionItem } from "@/pages/photogr
 import { getPhotographyDeliverables } from "@/utils/services/photographyDeliverableService";
 
 const randomId = () => `custom-${Date.now()}`;
-const to12Hour = (value: string) => {
-    if (!value) return "";
-    const [h, m] = value.split(":").map((part) => Number(part));
-    if (Number.isNaN(h) || Number.isNaN(m)) return value;
-    const suffix = h >= 12 ? "PM" : "AM";
-    const hour = h % 12 || 12;
-    return `${hour}:${String(m).padStart(2, "0")} ${suffix}`;
+const normalize12Hour = (value: string) => {
+    const text = String(value || "").trim().toUpperCase();
+    const match = text.match(/^(\d{1,2})(?::(\d{1,2}))?\s*(AM|PM)$/);
+    if (!match) return "";
+    const hour = Number(match[1]);
+    const minute = Number(match[2] ?? 0);
+    if (Number.isNaN(hour) || Number.isNaN(minute) || hour < 1 || hour > 12 || minute < 0 || minute > 59) return "";
+    return `${hour}:${String(minute).padStart(2, "0")} ${match[3]}`;
 };
 
 export default function PhotographyTemplateAddPage() {
@@ -41,7 +42,6 @@ export default function PhotographyTemplateAddPage() {
                 list.map((item: any) => ({
                     id: String(item.id),
                     title: String(item.title || ""),
-                    content: String(item.content || ""),
                 })),
             );
         } catch {
@@ -62,7 +62,13 @@ export default function PhotographyTemplateAddPage() {
             showSnackbar({ title: "Validation Error", description: "Please select both start and end time", color: "danger" });
             return;
         }
-        const timing = startTime && endTime ? `${to12Hour(startTime)} to ${to12Hour(endTime)}` : "";
+        const normalizedStart = startTime ? normalize12Hour(startTime) : "";
+        const normalizedEnd = endTime ? normalize12Hour(endTime) : "";
+        if ((startTime && !normalizedStart) || (endTime && !normalizedEnd)) {
+            showSnackbar({ title: "Validation Error", description: "Please enter time in AM/PM format (e.g. 8:00 PM)", color: "danger" });
+            return;
+        }
+        const timing = normalizedStart && normalizedEnd ? `${normalizedStart} to ${normalizedEnd}` : "";
         addPhotographyTemplate({
             id: randomId(),
             name: form.name.trim(),
@@ -87,10 +93,15 @@ export default function PhotographyTemplateAddPage() {
                         onChange={(value) => setForm((prev) => ({ ...prev, mainEventName: value }))}
                     />
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                        <Input label="Timing From" type="time" value={startTime} onChange={(value) => setStartTime(value)} />
-                        <Input label="Timing To" type="time" value={endTime} onChange={(value) => setEndTime(value)} />
+                        <Input label="Timing From (AM/PM)" value={startTime} onChange={(value) => setStartTime(value)} placeholder="e.g. 8:00 PM" />
+                        <Input label="Timing To (AM/PM)" value={endTime} onChange={(value) => setEndTime(value)} placeholder="e.g. 2:00 AM" />
                     </div>
-                    <Input label="Timing Range" value={startTime && endTime ? `${to12Hour(startTime)} to ${to12Hour(endTime)}` : ""} onChange={() => undefined} isDisabled />
+                    <Input
+                        label="Timing Range"
+                        value={normalize12Hour(startTime) && normalize12Hour(endTime) ? `${normalize12Hour(startTime)} to ${normalize12Hour(endTime)}` : ""}
+                        onChange={() => undefined}
+                        isDisabled
+                    />
                     <DeliverablesDnd
                         collection={collection}
                         deliverables={form.deliverables}

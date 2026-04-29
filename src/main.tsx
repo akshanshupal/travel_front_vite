@@ -140,8 +140,16 @@ import PhotographyTemplateAddPage from "@/pages/photography/template/add";
 import PhotographyTemplateEditPage from "@/pages/photography/template/edit/[id]";
 import PhotographyTemplateViewPage from "@/pages/photography/template/view/[id]";
 import PhotographyDeliverablePage from "@/pages/photography/deliverable";
-import PhotographyDeliverableAddPage from "@/pages/photography/deliverable/add";
-import PhotographyDeliverableEditPage from "@/pages/photography/deliverable/edit/[id]";
+import PhotographyBookingPage from "@/pages/photography/booking";
+import PhotographyBookingViewPage from "@/pages/photography/booking/view/[id]";
+import PhotographyPaymentPage from "@/pages/photography/payment";
+import PhotographyPaymentViewPage from "@/pages/photography/payment/view/[id]";
+import PhotographyPaymentReceiptPage from "@/pages/photography/payments-receipt/[id]";
+import PhotographyPaymentStorePage from "@/pages/photography/paymentStore";
+import PhotographyPaymentStoreAddPage from "@/pages/photography/paymentStore/add";
+import PhotographyPaymentStoreEditPage from "@/pages/photography/paymentStore/edit/[id]";
+import PhotographyPaymentStoreViewPage from "@/pages/photography/paymentStore/view/[id]";
+import PhotographyBookingAddPage from "@/pages/photography-bookings/add";
 
 const shouldIgnoreConsoleMessage = (args: unknown[]) => {
     const firstMessage = args[0];
@@ -290,8 +298,18 @@ createRoot(document.getElementById("root")!).render(
                         <Route path="/photography/template/edit/:id" element={<PhotographyTemplateEditPage />} />
                         <Route path="/photography/template/view/:id" element={<PhotographyTemplateViewPage />} />
                         <Route path="/photography/deliverable" element={<PhotographyDeliverablePage />} />
-                        <Route path="/photography/deliverable/add" element={<PhotographyDeliverableAddPage />} />
-                        <Route path="/photography/deliverable/edit/:id" element={<PhotographyDeliverableEditPage />} />
+                        <Route path="/photography/booking" element={<PhotographyBookingPage />} />
+                        <Route path="/photography/bookings" element={<PhotographyBookingPage />} />
+                        <Route path="/photography/booking/view/:id" element={<PhotographyBookingViewPage />} />
+                        <Route path="/photography/payments" element={<PhotographyPaymentPage />} />
+                        <Route path="/photography/payments/view/:id" element={<PhotographyPaymentViewPage />} />
+                        <Route path="/photography/payments-receipt/:id" element={<PhotographyPaymentReceiptPage />} />
+                        <Route path="/photography/paymentStore" element={<PhotographyPaymentStorePage />} />
+                        <Route path="/photography/paymentStore/add" element={<PhotographyPaymentStoreAddPage />} />
+                        <Route path="/photography/paymentStore/add/:id" element={<PhotographyPaymentStoreEditPage />} />
+                        <Route path="/photography/paymentStore/view/:id" element={<PhotographyPaymentStoreViewPage />} />
+                        <Route path="/photography/paymentStore/edit/:id" element={<PhotographyPaymentStoreEditPage />} />
+                        <Route path="/photography/bookings/add" element={<PhotographyBookingAddPage />} />
                         <Route path="/packages/list" element={<PackageListPage />} />
                         <Route path="/packages/list/add" element={<PackageAddPage />} />
                         <Route path="/packages/list/edit/:id" element={<PackageEditPage />} />

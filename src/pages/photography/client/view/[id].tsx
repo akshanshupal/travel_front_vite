@@ -40,6 +40,14 @@ export default function PhotographyClientViewPage() {
                         <div className="text-sm text-primary">{loading ? "Loading..." : client?.phone || "-"}</div>
                     </div>
                     <div>
+                        <div className="text-xs text-tertiary">WhatsApp Number</div>
+                        <div className="text-sm text-primary">{loading ? "Loading..." : client?.whatsappNumber || "-"}</div>
+                    </div>
+                    <div>
+                        <div className="text-xs text-tertiary">Email</div>
+                        <div className="text-sm text-primary">{loading ? "Loading..." : client?.email || "-"}</div>
+                    </div>
+                    <div>
                         <div className="text-xs text-tertiary">Address</div>
                         <div className="text-sm text-primary">{loading ? "Loading..." : client?.address || "-"}</div>
                     </div>

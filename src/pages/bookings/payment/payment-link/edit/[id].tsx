@@ -6,6 +6,12 @@ import { Label } from "@/components/base/input/label";
 import { LoadingIndicator } from "@/components/application/loading-indicator/loading-indicator";
 import { CustomBreadscrumbs } from "@/components/application/breadcrumbs/custom-breadcrumbs";
 import CustomEditor from "@/components/utils/CustomEditor";
+import { FaWhatsapp, FaCopy } from "react-icons/fa6";
+import { Input } from "@/components/base/input/input";
+import { TextArea } from "@/components/base/textarea/textarea";
+import Tmodal from "@/components/utils/Tmodal";
+import { ButtonUtility } from "@/components/base/buttons/button-utility";
+import { getAssignmentById } from "@/utils/services/assignmentService";
 import { getPackageVoucherById, updatePackageVoucherById } from "@/utils/services/packageVoucherService";
 import { useStoreSnackbar } from "@/store/snackbar";
 import { DefaultLayout } from "@/layouts/DefaultLayout";
@@ -34,6 +40,128 @@ export default function PaymentLinkEdit() {
   const [bookingCards, setBookingCards] = useState<BookingCard[]>([]);
   const [draggingBookingId, setDraggingBookingId] = useState<string>("");
   const [dragOverBookingId, setDragOverBookingId] = useState<string>("");
+
+  const [isWhatsappModalOpen, setIsWhatsappModalOpen] = useState(false);
+  const [whatsappPhone, setWhatsappPhone] = useState("");
+  const [whatsappPhoneError, setWhatsappPhoneError] = useState("");
+  const [whatsappMessage, setWhatsappMessage] = useState("");
+
+  const buildVoucherWhatsappMessage = (clientName?: string, card?: BookingCard) => {
+    let detailsText = "";
+    if (card && card.html) {
+      try {
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = card.html;
+        tempDiv.style.position = "absolute";
+        tempDiv.style.left = "-9999px";
+        document.body.appendChild(tempDiv);
+        
+        // Remove drag handle icons
+        const dragHandles = tempDiv.querySelectorAll('.cursor-grab');
+        dragHandles.forEach(el => el.remove());
+        
+        // Remove empty lines and trim whitespace from ends
+        detailsText = tempDiv.innerText.replace(/\n\s*\n/g, '\n').trim();
+        document.body.removeChild(tempDiv);
+      } catch (e) {
+         detailsText = `${card.title}\n${card.dateRange}`;
+      }
+    }
+
+    return [
+      `Hello ${clientName || "Traveler"},`,
+      "",
+      `🧾 *SERVICE DETAILS*`,
+      "",
+      detailsText,
+      "",
+      "☎️ *Need Help?*",
+      "If you need any help, feel free to reply to this message.",
+    ].join("\n");
+  };
+
+  const validateWhatsappPhone = (value: string) => {
+    const raw = String(value || "").trim();
+    if (!raw) return "WhatsApp number is required";
+    const digits = raw.replace(/\D/g, "");
+    if (digits.length < 10 || digits.length > 15) return "Enter a valid mobile number";
+    return "";
+  };
+
+  const openWhatsAppModal = async (card: BookingCard) => {
+    if (!formData.assignmentId) return;
+    try {
+      const assignmentId = typeof formData.assignmentId === 'object' ? (formData.assignmentId as any)._id || (formData.assignmentId as any).id : formData.assignmentId;
+      const response: any = await getAssignmentById(assignmentId);
+      if (response) {
+        const resolved = response?.data ?? response;
+        const clientName = resolved?.clientName;
+        setWhatsappPhone(String(resolved?.mobile || ""));
+        setWhatsappPhoneError("");
+        setWhatsappMessage(buildVoucherWhatsappMessage(clientName, card));
+        setIsWhatsappModalOpen(true);
+      }
+    } catch (error) {
+      console.error(error);
+      showSnackbar({
+        description: "Failed to fetch client details for WhatsApp",
+        title: "Error",
+        color: "danger",
+      });
+    }
+  };
+
+  const sendWhatsAppMessage = () => {
+    const validationMessage = validateWhatsappPhone(whatsappPhone);
+    if (validationMessage) {
+      setWhatsappPhoneError(validationMessage);
+      showSnackbar({
+        description: validationMessage,
+        title: "Cannot Send WhatsApp",
+        color: "danger",
+      });
+      return;
+    }
+    const phoneNumber = String(whatsappPhone || "").replace(/\D/g, "");
+    setWhatsappPhoneError("");
+    if (!whatsappMessage.trim()) {
+      showSnackbar({
+        description: "WhatsApp message is empty",
+        title: "Cannot Send WhatsApp",
+        color: "danger",
+      });
+      return;
+    }
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(whatsappMessage)}`;
+    window.open(whatsappUrl, "_blank");
+    setIsWhatsappModalOpen(false);
+  };
+
+  const copyWhatsAppMessage = async () => {
+    try {
+      const message = String(whatsappMessage || "").trim();
+      if (!String(message || "").trim()) {
+        showSnackbar({
+          description: "WhatsApp message is empty",
+          title: "Cannot Copy Message",
+          color: "danger",
+        });
+        return;
+      }
+      await navigator.clipboard.writeText(message);
+      showSnackbar({
+        description: "WhatsApp message copied",
+        title: "Copied",
+        color: "success",
+      });
+    } catch (error: any) {
+      showSnackbar({
+        description: error?.message || "Failed to copy WhatsApp message",
+        title: "Copy Failed",
+        color: "danger",
+      });
+    }
+  };
 
   const parseBookingCardsFromHtml = (html: string): BookingCard[] => {
     if (!html) return [];
@@ -305,7 +433,19 @@ export default function PaymentLinkEdit() {
                                 <span className="cursor-grab text-gray-400 select-none">⋮⋮</span>
                                 {card.title}
                               </span>
-                              <span className="text-xs text-gray-500">{card.dateRange || "-"}</span>
+                              <div className="flex items-center gap-3">
+                                <span className="text-xs text-gray-500">{card.dateRange || "-"}</span>
+                                <ButtonUtility
+                                  icon={FaWhatsapp}
+                                  size="sm"
+                                  color="success"
+                                  tooltip="Send Details on WhatsApp"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openWhatsAppModal(card);
+                                  }}
+                                />
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -360,6 +500,49 @@ export default function PaymentLinkEdit() {
             </form>
         </div>
       </div>
+
+      <Tmodal
+        isOpen={isWhatsappModalOpen}
+        size="lg"
+        onClose={() => setIsWhatsappModalOpen(false)}
+        header="Send WhatsApp"
+        footerActions={
+          <div className="flex items-center gap-2">
+            <Button color="secondary" iconLeading={FaCopy} onClick={copyWhatsAppMessage}>
+              Copy Message
+            </Button>
+            <Button color="primary" onClick={sendWhatsAppMessage}>
+              Send
+            </Button>
+          </div>
+        }
+        content={
+          <div className="space-y-4">
+            <Input
+              label="WhatsApp Number"
+              value={whatsappPhone}
+              onChange={(value) => {
+                setWhatsappPhone(value);
+                if (whatsappPhoneError) {
+                  setWhatsappPhoneError(validateWhatsappPhone(value));
+                }
+              }}
+              placeholder="Enter mobile number"
+              isInvalid={!!whatsappPhoneError}
+              hint={whatsappPhoneError}
+            />
+            <div className="text-xs text-tertiary">
+              Default number is prefilled from customer mobile. You can edit before sending.
+            </div>
+            <TextArea
+              label="Message Preview"
+              value={whatsappMessage}
+              onChange={(value) => setWhatsappMessage(String(value))}
+              rows={8}
+            />
+          </div>
+        }
+      />
     </DefaultLayout>
   );
 }

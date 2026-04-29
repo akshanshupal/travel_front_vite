@@ -14,7 +14,7 @@ export default function PhotographyClientEditPage() {
     const { showSnackbar } = useStoreSnackbar();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [form, setForm] = useState({ name: "", phone: "", address: "" });
+    const [form, setForm] = useState({ name: "", phone: "", whatsappNumber: "", email: "", address: "" });
 
     useEffect(() => {
         const run = async () => {
@@ -26,6 +26,8 @@ export default function PhotographyClientEditPage() {
                 setForm({
                     name: String(resolved?.name || ""),
                     phone: String(resolved?.phone || ""),
+                    whatsappNumber: String(resolved?.whatsappNumber || ""),
+                    email: String(resolved?.email || ""),
                     address: String(resolved?.address || ""),
                 });
             } catch {
@@ -38,7 +40,7 @@ export default function PhotographyClientEditPage() {
     }, [id, showSnackbar]);
 
     const handleSave = async () => {
-        if (!form.name.trim() || !form.phone.trim() || !form.address.trim()) {
+        if (!form.name.trim() || !form.phone.trim() || !form.email.trim() || !form.address.trim()) {
             showSnackbar({ title: "Validation Error", description: "All fields are required", color: "danger" });
             return;
         }
@@ -47,6 +49,8 @@ export default function PhotographyClientEditPage() {
             await updatePhotographyClientById(id, {
                 name: form.name.trim(),
                 phone: form.phone.trim(),
+                whatsappNumber: form.whatsappNumber.trim(),
+                email: form.email.trim(),
                 address: form.address.trim(),
             });
             showSnackbar({ title: "Success", description: "Client updated", color: "success" });
@@ -69,6 +73,8 @@ export default function PhotographyClientEditPage() {
                 <div className="grid grid-cols-1 gap-4 bg-primary px-4 py-5 md:grid-cols-2 md:px-6">
                     <Input label="Client Name *" value={form.name} onChange={(value) => setForm((prev) => ({ ...prev, name: value }))} />
                     <Input label="Phone Number *" value={form.phone} onChange={(value) => setForm((prev) => ({ ...prev, phone: value }))} />
+                    <Input label="WhatsApp Number" value={form.whatsappNumber} onChange={(value) => setForm((prev) => ({ ...prev, whatsappNumber: value }))} />
+                    <Input label="Email *" value={form.email} onChange={(value) => setForm((prev) => ({ ...prev, email: value }))} />
                     <Input
                         label="Address (Venue/Location) *"
                         value={form.address}

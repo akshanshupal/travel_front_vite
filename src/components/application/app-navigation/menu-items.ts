@@ -128,6 +128,9 @@ const buildBaseMenu = (): SidebarMenuItem[] => [
         items: [
             { href: "/photography/client", label: "Client", icon: Users01 },
             { href: "/photography/estimate", label: "Estimate", icon: File02 },
+            { href: "/photography/bookings", label: "Bookings", icon: Calendar },
+            { href: "/photography/payments", label: "Payments", icon: CreditCard01 },
+            { href: "/photography/paymentStore", label: "Payment Store", icon: BankNote01 },
             { href: "/photography/template", label: "Template", icon: LayersTwo01 },
             { href: "/photography/deliverable", label: "Deliverables", icon: Tag01 },
         ],

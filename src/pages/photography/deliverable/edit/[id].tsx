@@ -3,9 +3,7 @@ import { useNavigate, useParams } from "react-router";
 import { DefaultLayout } from "@/layouts/DefaultLayout";
 import { TableCard } from "@/components/application/table/table";
 import { Input } from "@/components/base/input/input";
-import { Label } from "@/components/base/input/label";
 import { Button } from "@/components/base/buttons/button";
-import { RichTextEditor } from "@/components/application/rich-text-editor/rich-text-editor";
 import { useStoreSnackbar } from "@/store/snackbar";
 import { getPhotographyDeliverableById, updatePhotographyDeliverableById } from "@/utils/services/photographyDeliverableService";
 
@@ -16,7 +14,7 @@ export default function PhotographyDeliverableEditPage() {
     const { showSnackbar } = useStoreSnackbar();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [form, setForm] = useState({ title: "", content: "" });
+    const [form, setForm] = useState({ title: "" });
 
     useEffect(() => {
         const run = async () => {
@@ -27,7 +25,6 @@ export default function PhotographyDeliverableEditPage() {
                 const resolved = response?.data ?? response;
                 setForm({
                     title: String(resolved?.title || ""),
-                    content: String(resolved?.content || ""),
                 });
             } catch {
                 showSnackbar({ title: "Error", description: "Failed to load deliverable", color: "danger" });
@@ -39,15 +36,14 @@ export default function PhotographyDeliverableEditPage() {
     }, [id, showSnackbar]);
 
     const handleSave = async () => {
-        if (!form.title.trim() || !form.content.trim()) {
-            showSnackbar({ title: "Validation Error", description: "Title and content are required", color: "danger" });
+        if (!form.title.trim()) {
+            showSnackbar({ title: "Validation Error", description: "Title is required", color: "danger" });
             return;
         }
         setSaving(true);
         try {
             await updatePhotographyDeliverableById(id, {
                 title: form.title.trim(),
-                content: form.content.trim(),
             });
             showSnackbar({ title: "Success", description: "Deliverable updated", color: "success" });
             navigate("/photography/deliverable");
@@ -72,10 +68,6 @@ export default function PhotographyDeliverableEditPage() {
                         value={form.title}
                         onChange={(value) => setForm((prev) => ({ ...prev, title: value }))}
                     />
-                    <div className="space-y-2">
-                        <Label>Content *</Label>
-                        <RichTextEditor value={form.content} onChange={(value) => setForm((prev) => ({ ...prev, content: value }))} />
-                    </div>
                     <div className="flex justify-end gap-2">
                         <Button color="secondary" onClick={() => navigate("/photography/deliverable")}>
                             Back

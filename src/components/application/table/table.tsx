@@ -535,15 +535,50 @@ const StickyTable = <T extends object>({
         () => Array.from({ length: skeletonCount }).map((_, index) => ({ __skeletonId: `skeleton-${index}` }) as T),
         [skeletonCount],
     );
+    const renderSkeletonCell = (columnId?: string) => {
+        const normalizedId = String(columnId ?? "").toLowerCase();
+
+        if (normalizedId.includes("action")) {
+            return (
+                <div className="flex w-full items-center justify-end gap-1.5">
+                    <div className="h-7 w-7 rounded-md bg-secondary" />
+                    <div className="h-7 w-7 rounded-md bg-secondary" />
+                    <div className="h-7 w-7 rounded-md bg-secondary" />
+                </div>
+            );
+        }
+
+        if (normalizedId === "index" || normalizedId.includes("sno") || normalizedId.includes("serial")) {
+            return <div className="h-4 w-8 rounded bg-secondary" />;
+        }
+
+        if (
+            normalizedId.includes("status") ||
+            normalizedId.includes("verify") ||
+            normalizedId.includes("default") ||
+            normalizedId.includes("active") ||
+            normalizedId.includes("finished")
+        ) {
+            return <div className="h-5 w-20 rounded-full bg-secondary" />;
+        }
+
+        if (normalizedId.includes("date") || normalizedId.includes("time")) {
+            return <div className="h-4 w-24 rounded bg-secondary" />;
+        }
+
+        if (normalizedId.includes("cost") || normalizedId.includes("amount") || normalizedId.includes("price")) {
+            return <div className="h-4 w-20 rounded bg-secondary" />;
+        }
+
+        return <div className="h-4 w-[75%] rounded bg-secondary" />;
+    };
     const resolvedItems = resolvedLoading ? skeletonItems : items;
     const renderRows: (item: T) => ReactNode = resolvedLoading
         ? (item) => (
               <TableRow id={(item as { __skeletonId: string }).__skeletonId} columns={columns}>
                   {(column) => (
                       <TableCell className={column.id === "actions" ? "whitespace-nowrap" : "whitespace-normal break-words"}>
-                          <div className="animate-pulse">
-                              <div className="h-4 w-full rounded bg-secondary" />
-                          </div>
+                          <div className="animate-pulse">{renderSkeletonCell(column.id)}</div>
                       </TableCell>
                   )}
               </TableRow>
