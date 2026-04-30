@@ -440,7 +440,7 @@ export default function PaymentLinkEdit() {
                               size="sm"
                               color="success"
                               tooltip="Send Details on WhatsApp"
-                              onClick={(e) => {
+                              onClick={(e: any) => {
                                 e.stopPropagation();
                                 openWhatsAppModal(card);
                               }}
