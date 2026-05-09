@@ -697,10 +697,10 @@ export default function AssignmentPage() {
                                         {filters.bookingDateMode === "range"
                                             ? `${filters.bookingDateFrom} to ${filters.bookingDateTo}`
                                             : filters.bookingDateMode === "before"
-                                              ? `Before ${filters.bookingDateFrom}`
-                                              : filters.bookingDateMode === "after"
-                                                ? `After ${filters.bookingDateFrom}`
-                                                : filters.bookingDateFrom}
+                                                ? `Before ${filters.bookingDateFrom}`
+                                                : filters.bookingDateMode === "after"
+                                                    ? `After ${filters.bookingDateFrom}`
+                                                    : filters.bookingDateFrom}
                                     </span>
                                 </BadgeWithButton>
                             ) : null}
@@ -711,10 +711,10 @@ export default function AssignmentPage() {
                                         {filters.tourDateMode === "range"
                                             ? `${filters.tourDateFrom} to ${filters.tourDateTo}`
                                             : filters.tourDateMode === "before"
-                                              ? `Before ${filters.tourDateFrom}`
-                                              : filters.tourDateMode === "after"
-                                                ? `After ${filters.tourDateFrom}`
-                                                : filters.tourDateFrom}
+                                                ? `Before ${filters.tourDateFrom}`
+                                                : filters.tourDateMode === "after"
+                                                    ? `After ${filters.tourDateFrom}`
+                                                    : filters.tourDateFrom}
                                     </span>
                                 </BadgeWithButton>
                             ) : null}
@@ -742,7 +742,8 @@ export default function AssignmentPage() {
                                             <span className="text-sm text-tertiary">{item.agentName?.name || item.agentName || "-"}</span>
                                         ) : column.id === "clientDetails" ? (
                                             <span className="text-sm whitespace-pre-line text-tertiary">
-                                                {[item?.clientName || "-", item?.mobile || "", item?.email || ""].filter(Boolean).join("\n")}
+                                                {[item?.clientName || "-", item.mobile || "", item.email || ""].filter(Boolean).join("\n")}
+
                                             </span>
                                         ) : column.id === "bookingDate" ? (
                                             <span className="text-sm text-tertiary">

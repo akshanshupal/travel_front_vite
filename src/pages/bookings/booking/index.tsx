@@ -185,9 +185,9 @@ export default function BookingPage() {
             case "clientDetails":
                 return (
                     <>
-                        {item?.clientName || "-"} <br />
-                        <span className="text-xs text-gray-500">{item.mobile || ""}</span>
-                        <span className="text-xs text-gray-500">{item.email || ""}</span>
+                                            <span className="text-sm whitespace-pre-line text-tertiary">
+                                                {[item?.clientName || "-", item.mobile || "", item.email || ""].filter(Boolean).join("\n")}
+                                            </span>
                     </>
                 );
             case "tourDate":
