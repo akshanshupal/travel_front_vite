@@ -2,7 +2,9 @@ import { useStoreLogin } from "@/store/login";
 import { useStoreSnackbar } from "@/store/snackbar";
 import { getPermissionForPath } from "@/hooks/use-access";
 
-const baseUrlCollection = (() => {
+type BaseUrlCollection = Record<string, string>;
+
+const baseUrlCollection: BaseUrlCollection = (() => {
     const raw = import.meta.env.VITE_API_HOST as string | undefined;
     try {
         return raw ? (JSON.parse(raw) as Record<string, string>) : {};
@@ -11,49 +13,43 @@ const baseUrlCollection = (() => {
     }
 })();
 
-const getClientBaseURL = () => {
-    if (typeof window !== "undefined") return window.location.origin;
-    return "";
-};
+const resolvedBase = (() => {
+    const apihost = window.location.origin;
+    const direct = baseUrlCollection[apihost];
+    if (direct) return { apihost, baseUrl: direct };
 
+    try {
+        const current = new URL(apihost);
+        const port = current.port ? `:${current.port}` : "";
+        const localhostKey = `${current.protocol}//localhost${port}`;
+        const loopbackKey = `${current.protocol}//127.0.0.1${port}`;
 
+        const byLocalhost = baseUrlCollection[localhostKey];
+        if (byLocalhost) return { apihost, baseUrl: byLocalhost };
+        const byLoopback = baseUrlCollection[loopbackKey];
+        if (byLoopback) return { apihost, baseUrl: byLoopback };
 
-const resolveBaseUrl = () => {
-    const apihost = getClientBaseURL();
-    let mapped = baseUrlCollection[apihost];
-
-    if (!mapped && apihost) {
-        try {
-            const current = new URL(apihost);
-            const port = current.port ? `:${current.port}` : "";
-            const candidates = [
-                `${current.protocol}//localhost${port}`,
-                `${current.protocol}//127.0.0.1${port}`,
-            ];
-            for (const key of candidates) {
-                if (baseUrlCollection[key]) {
-                    mapped = baseUrlCollection[key];
-                    break;
+        if (current.port) {
+            const suffix = `:${current.port}`;
+            for (const key of Object.keys(baseUrlCollection)) {
+                try {
+                    const u = new URL(key);
+                    if (u.protocol === current.protocol && u.port === current.port) {
+                        return { apihost, baseUrl: baseUrlCollection[key] };
+                    }
+                } catch {
+                    if (key.endsWith(suffix)) return { apihost, baseUrl: baseUrlCollection[key] };
                 }
             }
-            if (!mapped && current.port) {
-                const suffix = `:${current.port}`;
-                const matchKey = Object.keys(baseUrlCollection).find((key) => {
-                    try {
-                        const u = new URL(key);
-                        return u.protocol === current.protocol && u.port === current.port;
-                    } catch {
-                        return key.endsWith(suffix);
-                    }
-                });
-                if (matchKey) mapped = baseUrlCollection[matchKey];
-            }
-        } catch {
         }
+    } catch {
     }
-    
-    return { apihost, baseUrl: mapped || apihost || "" };
-};
+
+    return { apihost, baseUrl: apihost };
+})();
+
+const API_HOST = resolvedBase.apihost;
+const API_BASE_URL = resolvedBase.baseUrl;
 
 const buildQueryString = (data: Record<string, unknown>) => {
     const params = new URLSearchParams();
@@ -73,7 +69,6 @@ const buildQueryString = (data: Record<string, unknown>) => {
 
 const withAccessLookupContext = (data: Record<string, unknown>, method: string) => {
     if (method !== "GET") return data;
-    if (typeof window === "undefined") return data;
 
     const pathname = String(window.location.pathname || "");
     const permission = pathname ? getPermissionForPath(pathname) : null;
@@ -97,19 +92,15 @@ export const fetchWithToken = async (
     retryAttempt = 0,
 ): Promise<any> => {
     try {
-        
-        const { apihost, baseUrl } = resolveBaseUrl();
-        
-        
         const authToken = useStoreLogin.getState().authToken;
-        if (!authToken && typeof window !== "undefined") {
+        if (!authToken) {
             window.location.href = "/login";
             return { error: "No auth token, redirecting to login." } as any;
         }
 
         const headers = new Headers(options.headers || {});
         headers.set("token", authToken || "");
-        headers.set("apihost", apihost);
+        headers.set("apihost", API_HOST);
 
         const method = (options.method || "GET").toUpperCase();
         const fetchOptions: RequestInit = { ...options, headers, method };
@@ -125,20 +116,24 @@ export const fetchWithToken = async (
                     fetchOptions.body = JSON.stringify(requestData);
                 }
             }
-            newUrl = url.startsWith("http") ? url : `${baseUrl}${url}`;
+            newUrl = url.startsWith("http") ? url : `${API_BASE_URL}${url}`;
         } else {
-            newUrl = url.startsWith("http") ? url : `${baseUrl}${url}`;
+            newUrl = url.startsWith("http") ? url : `${API_BASE_URL}${url}`;
             const queryString = buildQueryString(requestData);
             newUrl = queryString ? `${newUrl}?${queryString}` : newUrl;
         }
 
         const response = await fetch(newUrl, fetchOptions);
         if (!response.ok) {
+            if (response.status === 401) {
+                window.location.href = "/login";
+                return { error: "Unauthorized, redirecting to login." } as any;
+            }
             if (response.status === 403 && retryAttempt < 1 && !isFormDataRequest) {
                 try {
                     await useStoreLogin.getState().getNewAuthToken();
                 } catch {
-                    if (typeof window !== "undefined") window.location.href = "/login";
+                    window.location.href = "/login";
                     return { error: "Error fetching new auth token." } as any;
                 }
                 return await fetchWithToken(url, data, options, retryAttempt + 1);
@@ -192,19 +187,17 @@ export const fetchWithOutToken = async (
     data: Record<string, unknown> = {},
     options: RequestInit = {},
 ): Promise<any> => {
-    const { apihost, baseUrl } = resolveBaseUrl();
-    const headers = {
-        ...(options.headers || {}),
-        apihost: apihost,
-    } as HeadersInit;
+    const headers = new Headers(options.headers || {});
+    headers.set("apihost", API_HOST);
     const method = (options.method || "GET").toUpperCase();
     const fetchOptions: RequestInit = { ...options, headers, method };
 
     if (method === "POST" || method === "PUT" || method === "DELETE") {
-        fetchOptions.body = JSON.stringify(data);
-        url = url.startsWith("http") ? url : `${baseUrl}${url}`;
+        if (!headers.has("content-type")) headers.set("content-type", "application/json");
+        fetchOptions.body = fetchOptions.body ?? JSON.stringify(data);
+        url = url.startsWith("http") ? url : `${API_BASE_URL}${url}`;
     } else {
-        url = url.startsWith("http") ? url : `${baseUrl}${url}`;
+        url = url.startsWith("http") ? url : `${API_BASE_URL}${url}`;
         const queryString = buildQueryString(data);
         url = queryString ? `${url}?${queryString}` : url;
     }
