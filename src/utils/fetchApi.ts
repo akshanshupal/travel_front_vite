@@ -7,14 +7,16 @@ type BaseUrlCollection = Record<string, string>;
 const baseUrlCollection: BaseUrlCollection = (() => {
     const raw = import.meta.env.VITE_API_HOST as string | undefined;
     try {
-        return raw ? (JSON.parse(raw) as Record<string, string>) : {};
+        return raw ? (JSON.parse(raw) as BaseUrlCollection) : {};
     } catch {
         return {};
     }
 })();
 
+const normalizeOrigin = (origin: string) => origin.trim().replace(/\/+$/, "");
+
 const resolvedBase = (() => {
-    const apihost = window.location.origin;
+    const apihost = normalizeOrigin(window.location.origin);
     const direct = baseUrlCollection[apihost];
     if (direct) return { apihost, baseUrl: direct };
 
@@ -24,9 +26,9 @@ const resolvedBase = (() => {
         const localhostKey = `${current.protocol}//localhost${port}`;
         const loopbackKey = `${current.protocol}//127.0.0.1${port}`;
 
-        const byLocalhost = baseUrlCollection[localhostKey];
+        const byLocalhost = baseUrlCollection[normalizeOrigin(localhostKey)];
         if (byLocalhost) return { apihost, baseUrl: byLocalhost };
-        const byLoopback = baseUrlCollection[loopbackKey];
+        const byLoopback = baseUrlCollection[normalizeOrigin(loopbackKey)];
         if (byLoopback) return { apihost, baseUrl: byLoopback };
 
         if (current.port) {
