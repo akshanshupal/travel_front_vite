@@ -12,7 +12,13 @@ const getAccessContextParams = () => {
 };
 
 export const getMailTemplate = async (params = {}) => {
-  const response = await fetchWithToken("/api/mailtemplate", { ...getAccessContextParams(), ...params });
+  const response = await fetchWithToken("/api/mailtemplate", {
+    populate: "packageInclusion,packageExclusion",
+    select_packageInclusion: "id,title,alias,value",
+    select_packageExclusion: "id,title,alias,value",
+    ...getAccessContextParams(),
+    ...params,
+  });
   
   if (response.error) {
     console.error("Error fetching mailtemplate:", response.error);
@@ -33,7 +39,12 @@ export const addMailTemplate = async (formAddData: Record<string, any>) => {
 };
 
 export const getMailtemplateById = async (id: string) => {
-    const response = await fetchWithToken(`/api/mailtemplate/${id}`, getAccessContextParams());
+    const response = await fetchWithToken(`/api/mailtemplate/${id}`, {
+      populate: "packageInclusion,packageExclusion",
+      select_packageInclusion: "id,title,alias,value",
+      select_packageExclusion: "id,title,alias,value",
+      ...getAccessContextParams(),
+    });
     
     if (response.error) {
       console.error("Error fetching mailtemplate by ID:", response.error);

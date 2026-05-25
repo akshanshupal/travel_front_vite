@@ -243,7 +243,7 @@ export default function ClientItineraryEditPage() {
                             itinerary: res.itinerary ? { id: res.itinerary.id || res.itinerary._id, title: res.itinerary.title } : "",
                             hotelCategory: res.hotelCategory ? { id: res.hotelCategory.id || res.hotelCategory._id, title: res.hotelCategory.title } : "",
                             salesExecutive: res.salesExecutive ? { id: res.salesExecutive.id || res.salesExecutive._id, name: res.salesExecutive.name } : "",
-                            templateId: res.templateId ? { id: res.templateId.id || res.templateId._id, name: res.templateId.name } : "",
+                            templateId: res.templateId ? { ...res.templateId, name: res.templateId.name } : "",
                             tourDate: toAsiaKolkataDateString(res.tourDate),
                             kidsAges: res.kidsAges || [],
                             clientArea: res.clientArea || { title: "", headerContent: "", description: "", featureImg: "", hotelImg: "" },

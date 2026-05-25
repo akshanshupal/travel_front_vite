@@ -103,6 +103,28 @@ export default function TemplateViewPage() {
                                             <p className="font-medium text-primary">{template.hotlineNumber}</p>
                                         </div>
                                     </div>
+                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                        <div className="flex flex-col gap-1">
+                                            <Label className="text-tertiary">Package Inclusion</Label>
+                                            <p className="font-medium text-primary">
+                                                {template?.packageInclusion
+                                                    ? typeof template.packageInclusion === "object"
+                                                        ? template.packageInclusion?.title || template.packageInclusion?.alias || template.packageInclusion?.id || "—"
+                                                        : String(template.packageInclusion)
+                                                    : "—"}
+                                            </p>
+                                        </div>
+                                        <div className="flex flex-col gap-1">
+                                            <Label className="text-tertiary">Package Exclusion</Label>
+                                            <p className="font-medium text-primary">
+                                                {template?.packageExclusion
+                                                    ? typeof template.packageExclusion === "object"
+                                                        ? template.packageExclusion?.title || template.packageExclusion?.alias || template.packageExclusion?.id || "—"
+                                                        : String(template.packageExclusion)
+                                                    : "—"}
+                                            </p>
+                                        </div>
+                                    </div>
                                     <div className="flex flex-col gap-2">
                                         <Label className="text-tertiary">Mail IDs</Label>
                                         <div className="flex flex-wrap gap-2">

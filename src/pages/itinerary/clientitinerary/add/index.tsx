@@ -8,7 +8,7 @@ import { getSalesEx } from "@/utils/services/salesService";
 import { getHotelCategory } from "@/utils/services/hotelService";
 import { getMailTemplate } from "@/utils/services/mailtemplateService";
 import { itineraryService } from "@/utils/services/itineraryService";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { ComboBox } from "@/components/base/select/combobox";
 import { SelectItem } from "@/components/base/select/select-item";
@@ -43,6 +43,12 @@ const TAX_OPTIONS = [
     { id: "18%", label: "18%" },
     { id: "No Gst", label: "No Gst" },
 ];
+
+const extractPackageDurationFromTitle = (title: string): { nights: string; days: string } | null => {
+    const match = String(title || "").match(/(\d+)\s*[nN]\s*\/\s*(\d+)\s*[dD]\b/);
+    if (!match) return null;
+    return { nights: match[1], days: match[2] };
+};
 
 export default function ClientItineraryAddPage() {
     const navigate = useNavigate();
@@ -113,7 +119,7 @@ export default function ClientItineraryAddPage() {
                 const [hotelRes, salesRes, mailRes] = await Promise.all([
                     getHotelCategory({ limit: "all" }),
                     getSalesEx({ limit: "all" }),
-                    getMailTemplate({ limit: "all" }),
+                    getMailTemplate({ limit: "all", populate: "packageExclusion,packageInclusion" }),
                 ]);
 
                 if (hotelRes?.data) setHotelCategories(hotelRes.data);
@@ -164,9 +170,110 @@ export default function ClientItineraryAddPage() {
         fetchItinerary();
     }, [itineraryId, showSnackbar]);
 
+    const testDataEnabled = String(searchParams.get("testData") || "").toLowerCase() === "true";
+    const didAutofillRef = useRef(false);
+
+    useEffect(() => {
+        if (!testDataEnabled) return;
+        if (didAutofillRef.current) return;
+
+        didAutofillRef.current = true;
+
+        const templateId =
+            formData.templateId ||
+            (mailTemplates?.[0]?.id || mailTemplates?.[0]?._id || mailTemplates?.[0]);
+
+        const hotelCategory =
+            formData.hotelCategory ||
+            (hotelCategories?.[0]?.id || hotelCategories?.[0]?._id || hotelCategories?.[0]);
+
+        const salesExecutive =
+            (user as any)?.type === "AGENT"
+                ? formData.salesExecutive
+                : formData.salesExecutive ||
+                  (salesExecutives?.[0]?.id || salesExecutives?.[0]?._id || salesExecutives?.[0]);
+
+        setFormData((prev: any) => ({
+            ...prev,
+            clientName: prev.clientName || "Test Client",
+            email: prev.email || "test@example.com",
+            mobile: prev.mobile || "9999999999",
+            tourDate: prev.tourDate || new Date().toISOString().split("T")[0],
+            noOfAdults: prev.noOfAdults || "2",
+            noOfKids: prev.noOfKids || "1",
+            kidsAges: Array.isArray(prev.kidsAges) && prev.kidsAges.length ? prev.kidsAges : ["6"],
+            food: prev.food || "yes",
+            transport: prev.transport || "yes",
+            pickUpLocation: prev.pickUpLocation || "Airport",
+            dropLocation: prev.dropLocation || "Airport",
+            noOfPackageDays: prev.noOfPackageDays || "6",
+            noOfPackageNights: prev.noOfPackageNights || "5",
+            packageCost: prev.packageCost || "20000",
+            taxes: prev.taxes || "5%",
+            noOfRooms: prev.noOfRooms || "1",
+            hotelCategory: hotelCategory || prev.hotelCategory,
+            templateId: templateId || prev.templateId,
+            salesExecutive: salesExecutive || prev.salesExecutive,
+        }));
+
+        const foodDefaults = ["Breakfast", "Dinner"];
+        for (const id of foodDefaults) {
+            if (!selectedFoodList.getItem(id)) {
+                selectedFoodList.append({ id, label: id });
+            }
+        }
+
+        const transportDefaults = ["pickup", "drop", "sightseeing"];
+        for (const id of transportDefaults) {
+            if (!selectedTransportList.getItem(id)) {
+                const label = TRANSPORT_OPTIONS.find((o) => o.id === id)?.label || id;
+                selectedTransportList.append({ id, label });
+            }
+        }
+    }, [
+        testDataEnabled,
+        formData.templateId,
+        formData.hotelCategory,
+        formData.salesExecutive,
+        mailTemplates,
+        hotelCategories,
+        salesExecutives,
+        user,
+        selectedFoodList,
+        selectedTransportList,
+    ]);
+
+    useEffect(() => {
+        if (mailTemplates.length !== 1) return;
+        setFormData((prev: any) => {
+            if (prev.templateId) return prev;
+            return { ...prev, templateId: mailTemplates[0] };
+        });
+        setErrors((prev: any) => (prev?.templateId ? { ...prev, templateId: "" } : prev));
+    }, [mailTemplates]);
+
+    useEffect(() => {
+        const parsed = extractPackageDurationFromTitle(formData.title);
+        if (!parsed) return;
+        setFormData((prev: any) => {
+            const currentNights = String(prev.noOfPackageNights || "");
+            const currentDays = String(prev.noOfPackageDays || "");
+            if (currentNights === parsed.nights && currentDays === parsed.days) return prev;
+            return { ...prev, noOfPackageNights: parsed.nights, noOfPackageDays: parsed.days };
+        });
+    }, [formData.title]);
+
     const handleChange = (name: string, value: any) => {
         setFormData((prev: any) => {
             const newData = { ...prev, [name]: value };
+
+            if (name === "title") {
+                const parsed = extractPackageDurationFromTitle(String(value || ""));
+                if (parsed) {
+                    newData.noOfPackageNights = parsed.nights;
+                    newData.noOfPackageDays = parsed.days;
+                }
+            }
 
             if (name === "food" && value === "no") {
                 newData.selectedFood = [];
@@ -509,21 +616,33 @@ export default function ClientItineraryAddPage() {
                                     {(item) => <SelectItem id={item.id}>{item.label}</SelectItem>}
                                 </ComboBox>
                             )}
-                            <ComboBox
-                                label="Mail Template"
-                                isRequired
-                                placeholder="Select Mail Template"
-                                items={mailTemplates.map(t => ({ id: t.id || t._id, label: t.title }))}
-                                selectedKey={formData.templateId?.id || formData.templateId}
-                                onSelectionChange={(key) => {
-                                    const temp = mailTemplates.find(t => (t.id || t._id) === key);
-                                    handleChange("templateId", temp ? temp : key);
-                                }}
-                                isInvalid={!!errors.templateId}
-                                hint={errors.templateId}
-                            >
-                                {(item) => <SelectItem id={item.id}>{item.label}</SelectItem>}
-                            </ComboBox>
+                            {mailTemplates.length === 1 ? (
+                                <Input
+                                    label="Mail Template"
+                                    isRequired
+                                    value={String(mailTemplates?.[0]?.title || "")}
+                                    onChange={() => {}}
+                                    isDisabled
+                                    isInvalid={!!errors.templateId}
+                                    hint={errors.templateId}
+                                />
+                            ) : (
+                                <ComboBox
+                                    label="Mail Template"
+                                    isRequired
+                                    placeholder="Select Mail Template"
+                                    items={mailTemplates.map((t) => ({ id: t.id || t._id, label: t.title }))}
+                                    selectedKey={formData.templateId?.id || formData.templateId}
+                                    onSelectionChange={(key) => {
+                                        const temp = mailTemplates.find((t) => (t.id || t._id) === key);
+                                        handleChange("templateId", temp ? temp : key);
+                                    }}
+                                    isInvalid={!!errors.templateId}
+                                    hint={errors.templateId}
+                                >
+                                    {(item) => <SelectItem id={item.id}>{item.label}</SelectItem>}
+                                </ComboBox>
+                            )}
                             <div className="col-span-1 md:col-span-2">
                                 <Label isRequired>Food</Label>
                                 <RadioGroup value={formData.food} onChange={(val) => handleChange("food", val)} className="flex-row mt-1.5">

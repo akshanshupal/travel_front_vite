@@ -20,6 +20,20 @@ const asBool = (value: unknown) => {
     return false;
 };
 
+const normalizeValueToStringArray = (value: unknown): string[] => {
+    if (!Array.isArray(value)) return [];
+    return value
+        .map((entry) => {
+            if (typeof entry === "string") return entry.trim();
+            if (entry && typeof entry === "object" && "Items" in entry) {
+                const v = (entry as any).Items;
+                return typeof v === "string" ? v.trim() : String(v || "").trim();
+            }
+            return String(entry || "").trim();
+        })
+        .filter(Boolean);
+};
+
 export default function SettingsPackageExclusionsEditPage() {
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
@@ -56,7 +70,7 @@ export default function SettingsPackageExclusionsEditPage() {
                 setTitle(raw?.title || "");
                 setAlias(raw?.alias || "");
                 setStatus(asBool(raw?.status) ? "true" : "false");
-                const nextItems = Array.isArray(raw?.value) ? raw.value.map((entry: any) => String(entry?.Items || "")) : [];
+                const nextItems = normalizeValueToStringArray(raw?.value);
                 setItems(nextItems.length ? nextItems : [""]);
             } catch (e: any) {
                 showSnackbar({ title: "Error", description: e?.message || "Failed to load package exclusion", color: "danger" });
@@ -94,7 +108,7 @@ export default function SettingsPackageExclusionsEditPage() {
                 alias: alias.trim(),
                 status: status === "true",
                 code,
-                value: items.map((item) => ({ Items: item.trim() })),
+                value: items.map((item) => item.trim()),
             };
             const res = await updateGeneralDataById(id, payload);
             if ((res as any)?.error) throw new Error((res as any).error);

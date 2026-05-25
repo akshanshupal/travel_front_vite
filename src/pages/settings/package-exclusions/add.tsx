@@ -37,7 +37,7 @@ export default function SettingsPackageExclusionsAddPage() {
         const next: Record<string, string> = {};
         if (!title.trim()) next.title = "Title is required";
         if (!alias.trim()) next.alias = "Alias is required";
-        if (items.length === 0 || items.some((item) => !item.trim())) next.items = "All items are required";
+        if (items.length === 0) next.items = "All items are required";
         setErrors(next);
         return Object.keys(next).length === 0;
     };
@@ -59,7 +59,7 @@ export default function SettingsPackageExclusionsAddPage() {
                 alias: alias.trim(),
                 status: true,
                 code,
-                value: items.map((item) => ({ Items: item.trim() })),
+                value: items,
             };
             const res = await addGeneralData(payload);
             if ((res as any)?.error) throw new Error((res as any).error);

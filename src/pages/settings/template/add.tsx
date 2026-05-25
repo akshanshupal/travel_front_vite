@@ -7,12 +7,14 @@ import { Label } from "@/components/base/input/label";
 import { RichTextEditor } from "@/components/application/rich-text-editor/rich-text-editor";
 import { FileUploadDropZone } from "@/components/application/file-upload/file-upload-base";
 import { Badge } from "@/components/base/badges/badges";
+import { Select } from "@/components/base/select/select";
 import { useStoreSnackbar } from "@/store/snackbar";
 import { useAccess } from "@/hooks/use-access";
 import { addMailTemplate } from "@/utils/services/mailtemplateService";
+import { getGeneralData } from "@/utils/services/generalDataService";
 import { getFileUploadUrl } from "@/utils/services/fileService";
 import { ArrowLeft, Plus, Trash01, X } from "@untitledui/icons";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 
 export default function TemplateAddPage() {
@@ -23,6 +25,8 @@ export default function TemplateAddPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [currentEmail, setCurrentEmail] = useState("");
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const [packageInclusionOptions, setPackageInclusionOptions] = useState<{ id: string; label: string }[]>([]);
+    const [packageExclusionOptions, setPackageExclusionOptions] = useState<{ id: string; label: string }[]>([]);
     const formRef = useRef<HTMLFormElement>(null);
     const breadcrumbsList = useMemo(
         () => [
@@ -38,12 +42,39 @@ export default function TemplateAddPage() {
         website: "",
         hotlineNumber: "",
         mailId: [] as string[],
+        packageInclusion: "",
+        packageExclusion: "",
         logo: null as File | string | null,
         userIcon: null as File | string | null,
         emailIcon: null as File | string | null,
         paymentType: [] as { paymentTitle: string; paymentImage: File | string | null; url: string }[],
         disclaimer: "",
     });
+
+    useEffect(() => {
+        const run = async () => {
+            try {
+                const [inclusionsRes, exclusionsRes] = await Promise.all([
+                    getGeneralData({ code: "PACKAGE_INCLUSIONS", limit: "All" }),
+                    getGeneralData({ code: "PACKAGE_EXCLUSIONS", limit: "All" }),
+                ]);
+
+                const inclusions = Array.isArray((inclusionsRes as any)?.data) ? (inclusionsRes as any).data : Array.isArray(inclusionsRes) ? inclusionsRes : [];
+                const exclusions = Array.isArray((exclusionsRes as any)?.data) ? (exclusionsRes as any).data : Array.isArray(exclusionsRes) ? exclusionsRes : [];
+
+                setPackageInclusionOptions(
+                    inclusions.map((item: any) => ({ id: String(item?.id || item?._id || ""), label: String(item?.title || item?.alias || "—") })).filter((o: any) => o.id),
+                );
+                setPackageExclusionOptions(
+                    exclusions.map((item: any) => ({ id: String(item?.id || item?._id || ""), label: String(item?.title || item?.alias || "—") })).filter((o: any) => o.id),
+                );
+            } catch {
+                setPackageInclusionOptions([]);
+                setPackageExclusionOptions([]);
+            }
+        };
+        run();
+    }, []);
 
     const stripHtmlTags = (html: string) => {
         return html.replace(/<[^>]*>?/gm, '').trim();
@@ -169,6 +200,8 @@ export default function TemplateAddPage() {
                 emailIcon: emailIconUrl,
                 userIcon: userIconUrl,
                 paymentType: paymentTypeWithUrls,
+                packageInclusion: formData.packageInclusion ? formData.packageInclusion : null,
+                packageExclusion: formData.packageExclusion ? formData.packageExclusion : null,
             };
 
             const response = await addMailTemplate(finalData);
@@ -241,6 +274,25 @@ export default function TemplateAddPage() {
                                 isInvalid={!!errors.hotlineNumber}
                                 hint={errors.hotlineNumber}
                             />
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                            <Select
+                                label="Package Inclusion"
+                                selectedKey={formData.packageInclusion || "__none__"}
+                                onSelectionChange={(key) => handleChange("packageInclusion", key === "__none__" ? "" : String(key))}
+                                items={[{ id: "__none__", label: "None" }, ...packageInclusionOptions]}
+                            >
+                                {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
+                            </Select>
+                            <Select
+                                label="Package Exclusion"
+                                selectedKey={formData.packageExclusion || "__none__"}
+                                onSelectionChange={(key) => handleChange("packageExclusion", key === "__none__" ? "" : String(key))}
+                                items={[{ id: "__none__", label: "None" }, ...packageExclusionOptions]}
+                            >
+                                {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
+                            </Select>
                         </div>
 
                         <div className="flex flex-col gap-2">

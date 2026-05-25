@@ -59,7 +59,7 @@ export default function SettingsPackageInclusionsAddPage() {
                 alias: alias.trim(),
                 status: true,
                 code,
-                value: items.map((item) => ({ Items: item.trim() })),
+                value: items.map((item) => item.trim()),
             };
             const res = await addGeneralData(payload);
             if ((res as any)?.error) throw new Error((res as any).error);

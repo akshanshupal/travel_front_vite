@@ -19,6 +19,20 @@ const asBool = (value: unknown) => {
     return false;
 };
 
+const normalizeValueToStringArray = (value: unknown): string[] => {
+    if (!Array.isArray(value)) return [];
+    return value
+        .map((entry) => {
+            if (typeof entry === "string") return entry.trim();
+            if (entry && typeof entry === "object" && "Items" in entry) {
+                const v = (entry as any).Items;
+                return typeof v === "string" ? v.trim() : String(v || "").trim();
+            }
+            return String(entry || "").trim();
+        })
+        .filter(Boolean);
+};
+
 export default function SettingsPackageExclusionsViewPage() {
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
@@ -130,16 +144,16 @@ export default function SettingsPackageExclusionsViewPage() {
                         <div className="space-y-2">
                             <div className="text-sm font-medium text-primary">Items</div>
                             <div className="space-y-2">
-                                {(Array.isArray(item?.value) ? item.value : []).map((entry: any, index: number) => (
+                                {normalizeValueToStringArray(item?.value).map((value: string, index: number) => (
                                     <Input
                                         key={`item-${index}`}
                                         label={`Item ${index + 1}`}
-                                        value={String(entry?.Items || "")}
+                                        value={value}
                                         onChange={(_: string) => {}}
                                         isDisabled
                                     />
                                 ))}
-                                {(Array.isArray(item?.value) ? item.value : []).length === 0 ? <div className="text-sm text-tertiary">—</div> : null}
+                                {normalizeValueToStringArray(item?.value).length === 0 ? <div className="text-sm text-tertiary">—</div> : null}
                             </div>
                         </div>
 

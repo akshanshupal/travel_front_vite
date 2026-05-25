@@ -227,6 +227,7 @@ export default function ClientItineraryListPage() {
     };
 
     const handleCreateQuotation = async (item: any) => {
+        debugger
         const id = String(item?._id || item?.id || "");
         if (!id || sendingQuotationIds[id]) return;
 
@@ -244,8 +245,10 @@ export default function ClientItineraryListPage() {
                 previewData?.salesExecutive?.id ||
                 previewData?.salesExecutive?._id ||
                 previewData?.salesExecutive;
+            console.log(previewData)
 
             const html = renderToStaticMarkup(<PreviewMail previewData={previewData} />);
+
             const response = await addSavedItinerary({
                 clientName: previewData?.clientName,
                 mobile: previewData?.mobile,
