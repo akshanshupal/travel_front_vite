@@ -103,13 +103,13 @@ export default function PreviewMail({ previewData }: PreviewMailProps) {
             <div ref={contentRef}>
                 {isTemplate2 ? (
                     <div className="bg-[#f7f6f1] text-black">
-                        <div className="max-w-6xl mx-auto px-4 py-8 lg:py-12 space-y-10">
+                        <div className="max-w-6xl mx-auto px-3 py-5 sm:px-4 sm:py-8 lg:py-12 space-y-6 sm:space-y-10">
                             <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-md overflow-hidden bg-gradient-to-br from-[#0b1720] via-[#0f2230] to-[#071018] text-white">
-                                <div className="px-5 py-4 flex items-center justify-between gap-4 border-b border-white/10">
+                                <div className="px-4 py-3 sm:px-5 sm:py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-white/10">
                                     <div className="flex items-center gap-3 min-w-0">
                                         {previewData?.templateId?.logo && (
                                             <img
-                                                className="h-10 w-auto bg-white/95 rounded-xl px-2.5 py-2"
+                                                className="h-9 sm:h-10 w-auto bg-white/95 rounded-xl px-2 py-1.5 sm:px-2.5 sm:py-2"
                                                 src={previewData.templateId.logo}
                                                 alt="logo"
                                             />
@@ -118,34 +118,34 @@ export default function PreviewMail({ previewData }: PreviewMailProps) {
                                             <div className="text-[10px] uppercase tracking-[0.3em] text-white/60 font-semibold">
                                                 Travel Proposal
                                             </div>
-                                            <div className="text-lg sm:text-xl font-extrabold truncate">
+                                            <div className="text-base sm:text-xl font-extrabold leading-tight break-words sm:truncate">
                                                 {previewData?.clientArea?.title || "Package"}
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="hidden sm:flex items-center gap-4">
+                                    <div className="w-full pt-2 border-t border-white/10 flex flex-col items-start gap-1 sm:w-auto sm:pt-0 sm:border-t-0 sm:flex-row sm:items-center sm:gap-4">
                                         {template2Summary.tourDate && (
-                                            <div className="flex items-center gap-2 text-xs font-semibold text-white/80">
+                                            <div className="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-white/80">
                                                 <FaCalendarAlt className="text-[#f27a21]" />
                                                 <span>{template2Summary.tourDate}</span>
                                             </div>
                                         )}
                                         {previewData?.clientName && (
-                                            <div className="flex items-center gap-2 text-xs font-semibold text-white/80">
+                                            <div className="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-white/80">
                                                 <FaUserTie className="text-[#f27a21]" />
-                                                <span className="truncate max-w-[220px]">{previewData.clientName}</span>
+                                                <span className="truncate max-w-[150px] sm:max-w-[220px]">{previewData.clientName}</span>
                                             </div>
                                         )}
                                     </div>
                                 </div>
 
-                                <div className="p-6 md:p-8 space-y-8">
-                                    <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
+                                <div className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8">
+                                    <div className="rounded-2xl bg-white/5 border border-white/10 p-4 sm:p-5">
                                         <div className="text-[10px] uppercase tracking-[0.3em] text-white/60 font-semibold">
                                             Snapshot
                                         </div>
-                                        <div className="mt-4 grid grid-cols-2 gap-4 text-xs">
+                                        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs">
                                             <div className="flex items-center gap-2 text-white/85">
                                                 <FaUsers className="text-[#f27a21]" />
                                                 <span>
@@ -155,7 +155,7 @@ export default function PreviewMail({ previewData }: PreviewMailProps) {
                                             </div>
                                             <div className="flex items-center gap-2 text-white/85">
                                                 <FaHotel className="text-[#f27a21]" />
-                                                <span className="truncate">{template2Summary.hotelCategory || "-"}</span>
+                                                <span className="break-words sm:truncate">{template2Summary.hotelCategory || "-"}</span>
                                             </div>
                                             <div className="flex items-center gap-2 text-white/85">
                                                 <FaBed className="text-[#f27a21]" />
@@ -177,7 +177,7 @@ export default function PreviewMail({ previewData }: PreviewMailProps) {
                                     </div>
 
                                     {previewData?.clientArea?.headerContent && (
-                                        <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
+                                        <div className="rounded-2xl bg-white/5 border border-white/10 p-4 sm:p-5">
                                             <div
                                                 className="inner-html-box text-white"
                                                 dangerouslySetInnerHTML={{
@@ -190,7 +190,7 @@ export default function PreviewMail({ previewData }: PreviewMailProps) {
                                         </div>
                                     )}
 
-                                    <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
+                                    <div className="rounded-2xl bg-white/5 border border-white/10 p-4 sm:p-5">
                                         <div className="text-[10px] uppercase tracking-[0.3em] text-white/60 font-semibold">
                                             Contacts
                                         </div>
@@ -240,7 +240,7 @@ export default function PreviewMail({ previewData }: PreviewMailProps) {
                                     </div>
 
                                     {previewData?.templateId?.paymentType?.length > 0 && (
-                                        <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
+                                        <div className="rounded-2xl bg-white/5 border border-white/10 p-4 sm:p-5">
                                             <div className="text-[10px] uppercase tracking-[0.3em] text-white/60 font-semibold">
                                                 Payment Options
                                             </div>
@@ -249,10 +249,10 @@ export default function PreviewMail({ previewData }: PreviewMailProps) {
                                                     <a
                                                         key={index}
                                                         href={item.url}
-                                                        className="inline-flex items-center gap-2 rounded-xl bg-white/10 border border-white/10 px-3 py-2 hover:bg-white/15 transition-colors"
+                                                        className="inline-flex items-center gap-2 rounded-xl bg-white/10 border border-white/10 px-2.5 py-1.5 sm:px-3 sm:py-2 hover:bg-white/15 transition-colors"
                                                     >
                                                         <img src={item.paymentImage} alt="bank" width={22} height={22} />
-                                                        <span className="text-xs font-semibold text-white/90">Pay</span>
+                                                        <span className="text-[11px] sm:text-xs font-semibold text-white/90">Pay</span>
                                                     </a>
                                                 ))}
                                             </div>
@@ -260,7 +260,7 @@ export default function PreviewMail({ previewData }: PreviewMailProps) {
                                     )}
 
                                     <div className="rounded-3xl overflow-hidden border border-white/10 bg-white/5">
-                                                <div className="relative h-[220px] md:h-[320px] w-full">
+                                                <div className="relative h-[180px] sm:h-[220px] md:h-[320px] w-full">
                                                     {previewData?.clientArea?.featureImg ? (
                                                         <img
                                                             alt={previewData?.clientArea?.title || "Package"}
@@ -272,7 +272,7 @@ export default function PreviewMail({ previewData }: PreviewMailProps) {
                                                         <div className="w-full h-full bg-gradient-to-br from-[#1b2e3c] to-[#2c4456]" />
                                                     )}
                                                     <div className="absolute inset-0 bg-gradient-to-r from-[#071018]/70 via-transparent to-transparent" />
-                                                    <div className="absolute left-6 bottom-6 right-6">
+                                                    <div className="absolute left-4 bottom-4 right-4 sm:left-6 sm:bottom-6 sm:right-6">
                                                         <div className="inline-flex items-center gap-2 bg-[#f27a21] text-[#071018] rounded-xl px-3 py-2 text-xs font-extrabold">
                                                             <FaLink />
                                                             <span>Itinerary & Details</span>
@@ -281,7 +281,7 @@ export default function PreviewMail({ previewData }: PreviewMailProps) {
                                                 </div>
                                     </div>
 
-                                    <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+                                    <div className="rounded-3xl border border-white/10 bg-white/5 p-4 sm:p-6">
                                         <div className="text-[10px] uppercase tracking-[0.3em] text-white/60 font-semibold">
                                             Overview
                                         </div>
@@ -317,19 +317,19 @@ export default function PreviewMail({ previewData }: PreviewMailProps) {
                                                                         key={day.id}
                                                                         className="rounded-3xl border border-white/10 bg-white/5 overflow-hidden"
                                                                     >
-                                                                        <div className="px-5 py-4 flex items-center justify-between gap-4 bg-white/5 border-b border-white/10">
+                                                                        <div className="px-4 py-3 sm:px-5 sm:py-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4 bg-white/5 border-b border-white/10">
                                                                             <div className="flex items-center gap-3 min-w-0">
-                                                                                <div className="w-10 h-10 rounded-2xl bg-[#f27a21] text-[#071018] flex items-center justify-center font-extrabold">
+                                                                                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-[#f27a21] text-[#071018] flex items-center justify-center font-extrabold">
                                                                                     {startIndex}
                                                                                 </div>
                                                                                 <div className="min-w-0">
-                                                                                    <div className="text-sm font-extrabold truncate">{dayTitle}</div>
-                                                                                    <div className="text-[11px] text-white/65 truncate">
+                                                                                    <div className="text-sm font-extrabold leading-snug break-words">{dayTitle}</div>
+                                                                                    <div className="text-[11px] text-white/65 break-words sm:truncate">
                                                                                         {day.hotels && day.hotels.length > 0 ? `${day.hotels.length} Hotels` : " "}
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
-                                                                            <div className="text-[10px] font-semibold text-white/60">
+                                                                            <div className="hidden sm:block text-[10px] font-semibold text-white/60">
                                                                                 {index % 2 === 0 ? "Route" : "Experience"}
                                                                             </div>
                                                                         </div>
@@ -345,7 +345,7 @@ export default function PreviewMail({ previewData }: PreviewMailProps) {
 
                                                                         {day?.description && (
                                                                             <div
-                                                                                className="inner-html-box w-full break-words p-5 text-white"
+                                                                                className="inner-html-box w-full break-words p-4 sm:p-5 text-white"
                                                                                 dangerouslySetInnerHTML={{
                                                                                     __html: replaceClientName(day.description, previewData.clientName),
                                                                                 }}
@@ -353,7 +353,7 @@ export default function PreviewMail({ previewData }: PreviewMailProps) {
                                                                         )}
 
                                                                         {day.hotels && day.hotels.length > 0 && (
-                                                                            <div className="px-5 pb-6">
+                                                                            <div className="px-4 pb-5 sm:px-5 sm:pb-6">
                                                                                 <div className="flex items-center gap-2 text-white/70 text-xs font-semibold mb-3">
                                                                                     <FaHotel className="text-[#f27a21]" />
                                                                                     <span>Hotels</span>
@@ -367,7 +367,7 @@ export default function PreviewMail({ previewData }: PreviewMailProps) {
                                                                                             className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/10 px-4 py-2 text-xs font-semibold hover:bg-white/15 transition-colors"
                                                                                         >
                                                                                             <FaLink className="text-[#f27a21]" />
-                                                                                            <span className="truncate max-w-[220px]">{hotelName.name}</span>
+                                                                                            <span className="truncate max-w-[160px] sm:max-w-[220px]">{hotelName.name}</span>
                                                                                         </a>
                                                                                     ))}
                                                                                 </div>
@@ -382,7 +382,7 @@ export default function PreviewMail({ previewData }: PreviewMailProps) {
                                             )}
 
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+                                                <div className="rounded-3xl border border-white/10 bg-white/5 p-4 sm:p-6">
                                                     <div className="text-[10px] uppercase tracking-[0.3em] text-white/60 font-semibold">
                                                         Package Inclusions
                                                     </div>
@@ -453,7 +453,7 @@ export default function PreviewMail({ previewData }: PreviewMailProps) {
                                                     </ul>
                                                 </div>
 
-                                                <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+                                                <div className="rounded-3xl border border-white/10 bg-white/5 p-4 sm:p-6">
                                                     <div className="text-[10px] uppercase tracking-[0.3em] text-white/60 font-semibold">
                                                         Package Exclusions                                                        
                                                     </div>
@@ -511,7 +511,7 @@ export default function PreviewMail({ previewData }: PreviewMailProps) {
                                                 </div>
                                             </div>
 
-                                            <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+                                            <div className="rounded-3xl border border-white/10 bg-white/5 p-4 sm:p-6">
                                                 <div className="text-[10px] uppercase tracking-[0.3em] text-white/60 font-semibold">
                                                     Package Details
                                                 </div>
@@ -592,7 +592,7 @@ export default function PreviewMail({ previewData }: PreviewMailProps) {
                                             </div>
 
                                             {previewData?.templateId?.disclaimer && (
-                                                <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+                                                <div className="rounded-3xl border border-white/10 bg-white/5 p-4 sm:p-6">
                                                     <div className="text-[10px] uppercase tracking-[0.3em] text-white/60 font-semibold">
                                                         Disclaimer
                                                     </div>
