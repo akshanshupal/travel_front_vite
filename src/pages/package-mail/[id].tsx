@@ -59,7 +59,7 @@ export default function PackageItineraryMailPage() {
 
     return (
         <div className="bg-white min-h-screen">
-            <div className="mx-auto max-w-[1000px] p-4">
+            <div className="mx-auto max-w-[1000px] p-0 md:p-4">
                 {isLoading && (
                     <div className="flex h-40 items-center justify-center">
                         <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-primary" />

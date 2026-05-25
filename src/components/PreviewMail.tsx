@@ -103,8 +103,8 @@ export default function PreviewMail({ previewData }: PreviewMailProps) {
             <div ref={contentRef}>
                 {isTemplate2 ? (
                     <div className="bg-[#f7f6f1] text-black">
-                        <div className="max-w-6xl mx-auto px-3 py-5 sm:px-4 sm:py-8 lg:py-12 space-y-6 sm:space-y-10">
-                            <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-md overflow-hidden bg-gradient-to-br from-[#0b1720] via-[#0f2230] to-[#071018] text-white">
+                        <div className="max-w-6xl mx-auto">
+                            <div className="rounded-none md:rounded-3xl border border-white/10 bg-white/5 backdrop-blur-md overflow-hidden bg-gradient-to-br from-[#0b1720] via-[#0f2230] to-[#071018] text-white">
                                 <div className="px-4 py-3 sm:px-5 sm:py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-white/10">
                                     <div className="flex items-center gap-3 min-w-0">
                                         {previewData?.templateId?.logo && (
