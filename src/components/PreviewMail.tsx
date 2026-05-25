@@ -37,6 +37,7 @@ interface PreviewMailProps {
 
 export default function PreviewMail({ previewData }: PreviewMailProps) {
     const contentRef = useRef<HTMLDivElement>(null);
+    console.log(11)
     
 
     const dateFormatter = new Intl.DateTimeFormat("en-IN", {
