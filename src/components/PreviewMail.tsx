@@ -169,10 +169,6 @@ export default function PreviewMail({ previewData }: PreviewMailProps) {
                                                 <FaRupeeSign className="text-[#f27a21]" />
                                                 <span>{template2Summary.cost || "-"}</span>
                                             </div>
-                                            <div className="flex items-center gap-2 text-white/85">
-                                                <FaInfoCircle className="text-[#f27a21]" />
-                                                <span>{template2Summary.taxes ? `Tax: ${template2Summary.taxes}` : "Tax: -"}</span>
-                                            </div>
                                         </div>
                                     </div>
 
