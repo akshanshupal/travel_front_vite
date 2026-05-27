@@ -1,10 +1,11 @@
-import { StrictMode } from "react";
+import { StrictMode, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router";
 import { HomeScreen } from "@/pages/home-screen";
 import { NotFound } from "@/pages/not-found";
 import { RouteProvider } from "@/providers/router-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
+import { useStoreCompany } from "@/store/company";
 import "@/styles/globals.css";
 import LoginPage from "@/pages/login";
 import DashboardPage from "@/pages/dashboard/index";
@@ -189,9 +190,67 @@ const installNumberInputWheelGuard = () => {
 
 installNumberInputWheelGuard();
 
+const clearCompanyFavicons = () => {
+    document.head.querySelectorAll<HTMLLinkElement>('link[data-company-favicon="true"]').forEach((link) => link.remove());
+};
+
+const guessFaviconType = (href: string) => {
+    if (href.startsWith("data:image/")) {
+        const semi = href.indexOf(";");
+        const comma = href.indexOf(",");
+        const end = semi !== -1 ? semi : comma;
+        return end !== -1 ? href.slice("data:".length, end) : undefined;
+    }
+
+    const normalized = href.split("#")[0]?.split("?")[0]?.toLowerCase() ?? "";
+    if (normalized.endsWith(".svg")) return "image/svg+xml";
+    if (normalized.endsWith(".png")) return "image/png";
+    if (normalized.endsWith(".ico")) return "image/x-icon";
+    if (normalized.endsWith(".jpg") || normalized.endsWith(".jpeg")) return "image/jpeg";
+    if (normalized.endsWith(".webp")) return "image/webp";
+    return undefined;
+};
+
+const setCompanyFavicons = (href: string) => {
+    clearCompanyFavicons();
+
+    const type = guessFaviconType(href);
+
+    const icon = document.createElement("link");
+    icon.rel = "icon";
+    icon.href = href;
+    if (type) icon.type = type;
+    icon.setAttribute("data-company-favicon", "true");
+
+    const shortcut = document.createElement("link");
+    shortcut.rel = "shortcut icon";
+    shortcut.href = href;
+    if (type) shortcut.type = type;
+    shortcut.setAttribute("data-company-favicon", "true");
+
+    document.head.appendChild(icon);
+    document.head.appendChild(shortcut);
+};
+
+const CompanyFaviconSync = () => {
+    const favicon = useStoreCompany((s) => s.company?.favicon);
+
+    useEffect(() => {
+        if (!favicon) {
+            clearCompanyFavicons();
+            return;
+        }
+
+        setCompanyFavicons(favicon);
+    }, [favicon]);
+
+    return null;
+};
+
 createRoot(document.getElementById("root")!).render(
     <StrictMode>
         <ThemeProvider>
+            <CompanyFaviconSync />
             <Snackbar />
             <BrowserRouter>
                 <RouteProvider>
