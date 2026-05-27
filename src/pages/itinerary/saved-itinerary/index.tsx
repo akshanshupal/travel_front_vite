@@ -25,6 +25,7 @@ import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-m
 import { Label } from "@/components/base/input/label";
 import { Button } from "@/components/base/buttons/button";
 import { useStoreLogin } from "@/store/login";
+import { useStoreCompany } from "@/store/company";
 
 const statusColorMap: Record<string, "success" | "error"> = {
     true: "success",
@@ -94,6 +95,7 @@ export default function SavedItineraryListPage() {
     const [whatsappPhone, setWhatsappPhone] = useState("");
     const [whatsappPhoneError, setWhatsappPhoneError] = useState("");
     const [whatsappMessage, setWhatsappMessage] = useState("");
+    const company = useStoreCompany((state) => state.company);
 
     useEffect(() => {
         if (!isAgent || !agentId) return;
@@ -243,6 +245,7 @@ export default function SavedItineraryListPage() {
         return `${window.location.origin}${path}`;
     };
 
+
     const buildQuotationWhatsappMessage = (clientName?: string, quotationUrl?: string) => {
         const resolvedName = String(clientName || "Traveler").trim();
         return [
@@ -250,7 +253,7 @@ export default function SavedItineraryListPage() {
             "",
             "🌟 *Your Personalized Trip Quotation is Ready!*",
             "",
-            "Thank you for showing interest in planning your trip with *Tripzipper*.",
+            `Thank you for showing interest in planning your trip with ${company?.company?.name || "Tripzipper"}.`,
             "We have prepared a tailored quotation for your journey.",
             "",
             "🔗 *View Your Quotation*",

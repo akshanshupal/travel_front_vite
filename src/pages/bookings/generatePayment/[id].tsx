@@ -397,62 +397,130 @@ export default function GeneratedPymId() {
 
                 {/* Payment Summary */}
                 <div className="mb-8">
-                    <h3 className="text-lg font-bold text-gray-800 mb-3">Payment Summary</h3>
-                    <div className="border border-gray-200 rounded-lg overflow-hidden">
-                        <table className="w-full text-sm text-left text-gray-800">
-                            <thead className="bg-blue-600 text-white">
-                                <tr>
-                                    <th className="px-4 py-3 font-semibold">Payment Date</th>
-                                    <th className="px-4 py-3 font-semibold">Mode</th>
-                                    <th className="px-4 py-3 font-semibold text-right">Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200">
-                                {paymentData.length > 0 ? (
-                                    paymentData.map((item) => (
-                                        <tr key={item.id} className="hover:bg-gray-50">
-                                            <td className="px-4 py-3">
-                                                {new Intl.DateTimeFormat("en-GB", {
-                                                    day: "2-digit",
-                                                    month: "short",
-                                                    year: "numeric",
-                                                }).format(new Date(item.paymentDate))}
-                                            </td>
-                                            <td className="px-4 py-3">{item?.paymentStore?.title || "-"}</td>
-                                            <td className="px-4 py-3 text-right">₹ {item.amount}</td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan={3} className="px-4 py-3 text-center text-gray-500 italic">No payments recorded yet.</td>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Payment Summary</h3>
+                    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                        <div className="md:hidden">
+                            <div className="divide-y divide-gray-200">
+                                <div className="p-4 space-y-3">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div className="text-sm font-semibold text-gray-700">Package Cost</div>
+                                        <div className="text-sm font-semibold text-gray-900">
+                                            ₹ {Number(assignmentData.packageCost || 0).toLocaleString("en-IN")}
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div className="text-sm font-semibold text-gray-700">Package Cost with GST</div>
+                                        <div className="text-sm font-semibold text-gray-900">
+                                            ₹ {Number(assignmentData.packageCost + (assignmentData.packageCost * parseFloat(assignmentData.taxes || 0) / 100) || 0).toLocaleString("en-IN")}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="p-4">
+                                    <div className="text-sm font-semibold text-gray-900">Payment History</div>
+                                    {paymentData.length > 0 ? (
+                                        <div className="mt-3 space-y-3">
+                                            {paymentData.map((item) => (
+                                                <div key={item.id} className="rounded-lg border border-gray-200 bg-gray-50/40 p-3">
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div className="min-w-0">
+                                                            <div className="text-sm font-semibold text-gray-900">
+                                                                {new Intl.DateTimeFormat("en-GB", {
+                                                                    day: "2-digit",
+                                                                    month: "short",
+                                                                    year: "numeric",
+                                                                }).format(new Date(item.paymentDate))}
+                                                            </div>
+                                                            <div className="mt-1 text-xs text-gray-600 break-words">{item?.paymentStore?.title || "-"}</div>
+                                                        </div>
+                                                        <div className="text-sm font-semibold text-gray-900 whitespace-nowrap">
+                                                            ₹ {Number(item.amount || 0).toLocaleString("en-IN")}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="mt-2 text-sm text-gray-500">No payments recorded yet.</div>
+                                    )}
+                                </div>
+
+                                <div className="p-4 space-y-3 bg-gray-50">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div className="text-sm font-semibold text-gray-900">Payment Received</div>
+                                        <div className="text-sm font-semibold text-gray-900">
+                                            ₹ {Number(paymentData.reduce((total, item) => total + parseFloat(item.amount || 0), 0) || 0).toLocaleString("en-IN")}
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-between gap-3 rounded-lg bg-red-50 border border-red-100 p-3">
+                                        <div className="text-sm font-bold text-red-700">Amount Due</div>
+                                        <div className="text-sm font-bold text-red-700 whitespace-nowrap">
+                                            ₹ {Number((assignmentData.packageCost + (assignmentData.packageCost * parseFloat(assignmentData.taxes || 0) / 100) - paymentData.reduce((total, item) => total + parseFloat(item.amount || 0), 0)) || 0).toLocaleString("en-IN")}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="hidden md:block">
+                            <table className="w-full text-sm text-left text-gray-900">
+                                <tbody className="divide-y divide-gray-200">
+                                    <tr className="bg-gray-50/60">
+                                        <th colSpan={2} className="px-3 py-2 md:px-4 md:py-3 font-semibold text-gray-700">1Package Cost</th>
+                                        <th className="px-3 py-2 md:px-4 md:py-3 font-semibold text-right">₹ {Number(assignmentData.packageCost || 0).toLocaleString("en-IN")}</th>
                                     </tr>
-                                )}
-                            </tbody>
-                            <tfoot className="bg-gray-50 font-bold text-gray-800">
-                                <tr>
-                                    <td colSpan={2} className="px-4 py-3 text-right">Payment Received:</td>
-                                    <td className="px-4 py-3 text-right">₹ {paymentData.reduce((total, item) => total + parseFloat(item.amount || 0), 0)}</td>
-                                </tr>
-                                <tr>
-                                    <td colSpan={2} className="px-4 py-3 text-right">Package Cost:</td>
-                                    <td className="px-4 py-3 text-right">₹ {assignmentData.packageCost}</td>
-                                </tr>
-                                <tr>
-                                    <td colSpan={2} className="px-4 py-3 text-right">GST ({assignmentData.taxes}%):</td>
-                                    <td className="px-4 py-3 text-right">₹ {(assignmentData.packageCost * parseFloat(assignmentData.taxes || 0)) / 100}</td>
-                                </tr>
-                                <tr className="bg-blue-50 text-blue-800 text-base">
-                                    <td colSpan={2} className="px-4 py-3 text-right">Total Package Cost:</td>
-                                    <td className="px-4 py-3 text-right">₹ {assignmentData.packageCost + (assignmentData.packageCost * parseFloat(assignmentData.taxes || 0) / 100)}</td>
-                                </tr>
-                                <tr className="bg-red-50 text-red-600 text-base border-t border-red-100">
-                                    <td colSpan={2} className="px-4 py-3 text-right">Amount Due:</td>
-                                    <td className="px-4 py-3 text-right">
-                                        ₹ {(assignmentData.packageCost + (assignmentData.packageCost * parseFloat(assignmentData.taxes || 0) / 100) - paymentData.reduce((total, item) => total + parseFloat(item.amount || 0), 0))}
-                                    </td>
-                                </tr>
-                            </tfoot>
-                        </table>
+                                    <tr className="bg-gray-50/60">
+                                        <th colSpan={2} className="px-3 py-2 md:px-4 md:py-3 font-semibold text-gray-700">Package Cost with GST</th>
+                                        <th className="px-3 py-2 md:px-4 md:py-3 font-semibold text-right">
+                                            ₹ {Number(assignmentData.packageCost + (assignmentData.packageCost * parseFloat(assignmentData.taxes || 0) / 100) || 0).toLocaleString("en-IN")}
+                                        </th>
+                                    </tr>
+                                    <tr>
+                                        <th colSpan={3} className="px-3 py-2 md:px-4 md:py-3 bg-white font-semibold text-gray-900">Payment History</th>
+                                    </tr>
+                                    <tr className="bg-gray-50 text-xs uppercase tracking-wide text-gray-600">
+                                        <th className="px-3 py-2 md:px-4 md:py-3 font-semibold">Date</th>
+                                        <th className="px-3 py-2 md:px-4 md:py-3 font-semibold">Mode</th>
+                                        <th className="px-3 py-2 md:px-4 md:py-3 font-semibold text-right">Amount</th>
+                                    </tr>
+                                    {paymentData.length > 0 ? (
+                                        paymentData.map((item, idx) => (
+                                            <tr key={item.id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50/40"}>
+                                                <td className="px-3 py-2 md:px-4 md:py-3 whitespace-nowrap">
+                                                    {new Intl.DateTimeFormat("en-GB", {
+                                                        day: "2-digit",
+                                                        month: "short",
+                                                        year: "numeric",
+                                                    }).format(new Date(item.paymentDate))}
+                                                </td>
+                                                <td className="px-3 py-2 md:px-4 md:py-3">{item?.paymentStore?.title || "-"}</td>
+                                                <td className="px-3 py-2 md:px-4 md:py-3 text-right font-medium">
+                                                    ₹ {Number(item.amount || 0).toLocaleString("en-IN")}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={3} className="px-3 py-3 md:px-4 md:py-4 text-center text-gray-500">No payments recorded yet.</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                                <tfoot className="bg-gray-50 font-semibold text-gray-900">
+                                    <tr>
+                                        <td colSpan={2} className="px-3 py-2 md:px-4 md:py-3">Payment Received</td>
+                                        <td className="px-3 py-2 md:px-4 md:py-3 text-right">
+                                            ₹ {Number(paymentData.reduce((total, item) => total + parseFloat(item.amount || 0), 0) || 0).toLocaleString("en-IN")}
+                                        </td>
+                                    </tr>
+                                    <tr className="bg-red-50 text-red-700 text-base border-t border-red-100">
+                                        <td colSpan={2} className="px-3 py-2 md:px-4 md:py-3 font-bold">Amount Due</td>
+                                        <td className="px-3 py-2 md:px-4 md:py-3 font-bold text-right">
+                                            ₹ {Number((assignmentData.packageCost + (assignmentData.packageCost * parseFloat(assignmentData.taxes || 0) / 100) - paymentData.reduce((total, item) => total + parseFloat(item.amount || 0), 0)) || 0).toLocaleString("en-IN")}
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
                     </div>
                 </div>
 

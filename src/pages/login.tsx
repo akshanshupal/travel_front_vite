@@ -1,14 +1,17 @@
 import { AuthLayout } from "@/layouts/AuthLayout";
 import { useStoreLogin } from "@/store/login";
+import { useStoreCompany } from "@/store/company";
 import { Input } from "@/components/base/input/input";
 import { Button } from "@/components/base/buttons/button";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import { getCompanyConfig } from "@/utils/services/userService";
 
 export default function LoginPage() {
     const navigate = useNavigate();
     const login = useStoreLogin((s) => s.login);
+    const setCompany = useStoreCompany((s) => s.setCompany);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -21,6 +24,20 @@ export default function LoginPage() {
         setErrorMsg("");
         try {
             await login({ username: email, password });
+            try {
+                const host = typeof window !== "undefined" ? window.location.hostname : "";
+                if (host) {
+                    debugger
+                    const res = await getCompanyConfig({ websiteUrls: host, populate: "company" });
+                    const resolved = (res as any)?.data ?? res;
+                    const company = Array.isArray(resolved) ? (resolved[0] ?? null) : resolved;
+                    setCompany(company || null);
+                } else {
+                    setCompany(null);
+                }
+            } catch {
+                setCompany(null);
+            }
             navigate("/dashboard");
         } catch (error: any) {
             setErrorMsg(error?.error?.message || error?.message || "Something went wrong. Please try again.");

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { useStoreSnackbar } from "./snackbar";
+import { useStoreCompany } from "./company";
 import { authService } from "@/utils/services/authService";
 
 type User = {
@@ -37,10 +38,22 @@ export const useStoreLogin = create<LoginState>()(
             login: async (userData) => {
                 try {
                     const response = await authService.login(userData);
+                    const user = (response as any)?.user;
+                    const userType = String(user?.type || "").toUpperCase();
+                    const hasRole = Boolean(user?.role && (user.role.id || user.role._id || user.role.title));
+                    if (userType !== "ADMIN" && !hasRole) {
+                        const error = new Error("Role is not assigned to this user.");
+                        useStoreSnackbar.getState().showSnackbar({
+                            title: "Access denied",
+                            description: "Role is not assigned to this user.",
+                            color: "danger",
+                        });
+                        throw error;
+                    }
                     set({
-                        user: response.user,
-                        authToken: response.token,
-                        refreshToken: response.refreshToken,
+                        user,
+                        authToken: (response as any)?.token,
+                        refreshToken: (response as any)?.refreshToken,
                     });
                 } catch (error: any) {
                     useStoreSnackbar
@@ -67,9 +80,11 @@ export const useStoreLogin = create<LoginState>()(
             },
             logout: () => {
                 set({ user: null, authToken: null, refreshToken: null });
+                useStoreCompany.getState().clearCompany();
                 if (typeof window === "undefined") return;
                 try {
                     window.localStorage.removeItem("tz-auth-storage");
+                    window.localStorage.removeItem("tz-company-storage");
                     window.localStorage.setItem("tz-logout", String(Date.now()));
                 } catch {
                 }
