@@ -98,6 +98,7 @@ const permissionSections: PermissionSection[] = [
         label: "Lead Management",
         nodes: [
             { label: "Leads", resource: "leads" },
+            { label: "Enquiries", resource: "enquiry" },
             { label: "Pipeline", resource: "pipeline" },
             { label: "Campaign", resource: "campaign" },
             { label: "Settings", resource: "leadsettings" },

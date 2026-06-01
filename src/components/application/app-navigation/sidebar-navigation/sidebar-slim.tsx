@@ -95,7 +95,7 @@ export const SidebarNavigationSlim = ({
         >
             <div
                 className={cx(
-                    "flex w-auto flex-col justify-between rounded-xl bg-primary pt-5 ring-1 ring-secondary transition duration-300 ring-inset",
+                    "flex w-auto flex-col justify-between rounded-xl bg-primary pt- ring-1 ring-secondary transition duration-300 ring-inset",
                     hideBorder && !isSecondarySidebarVisible && "ring-transparent",
                 )}
             >

@@ -115,6 +115,7 @@ const buildBaseMenu = (): SidebarMenuItem[] => [
         icon: UsersMinus,
         items: [
             { href: "/lead-management/leads", label: "Leads", icon: UsersMinus },
+            { href: "/lead-management/enquiry", label: "Enquiries", icon: Mail01 },
             { href: "/lead-management/pipeline", label: "Pipeline", icon: FilterLines },
             { href: "/lead-management/campaign", label: "Campaign", icon: Announcement01 },
             { href: "/lead-management/settings", label: "Settings", icon: Settings01 },
@@ -241,6 +242,7 @@ const hrefToResourceKey = (href: string) => {
     if (section === "lead-management") {
         const sub = parts[2] || "";
         if (page === "leads") return "leads";
+        if (page === "enquiry") return "enquiry";
         if (page === "pipeline") return "pipeline";
         if (page === "campaign") return "campaign";
         if (page === "settings" && sub === "contact-properties") return "leadcontactproperties";

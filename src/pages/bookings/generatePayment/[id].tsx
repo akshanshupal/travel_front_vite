@@ -466,7 +466,7 @@ export default function GeneratedPymId() {
                             <table className="w-full text-sm text-left text-gray-900">
                                 <tbody className="divide-y divide-gray-200">
                                     <tr className="bg-gray-50/60">
-                                        <th colSpan={2} className="px-3 py-2 md:px-4 md:py-3 font-semibold text-gray-700">1Package Cost</th>
+                                        <th colSpan={2} className="px-3 py-2 md:px-4 md:py-3 font-semibold text-gray-700">Package Cost</th>
                                         <th className="px-3 py-2 md:px-4 md:py-3 font-semibold text-right">₹ {Number(assignmentData.packageCost || 0).toLocaleString("en-IN")}</th>
                                     </tr>
                                     <tr className="bg-gray-50/60">

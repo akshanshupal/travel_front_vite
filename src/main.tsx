@@ -116,6 +116,7 @@ import LeadsIndexPage from "@/pages/lead-management/leads/index";
 import LeadsAddPage from "@/pages/lead-management/leads/add";
 import LeadsEditPage from "@/pages/lead-management/leads/edit/[id]";
 import LeadsViewPage from "@/pages/lead-management/leads/view/[id]";
+import EnquiryIndexPage from "@/pages/lead-management/enquiry";
 import CampaignIndexPage from "@/pages/lead-management/campaign/index";
 import CampaignAddPage from "@/pages/lead-management/campaign/add";
 import CampaignEditPage from "@/pages/lead-management/campaign/edit/[id]";
@@ -332,6 +333,7 @@ createRoot(document.getElementById("root")!).render(
                         <Route path="/lead-management/leads/add" element={<LeadsAddPage />} />
                         <Route path="/lead-management/leads/edit/:id" element={<LeadsEditPage />} />
                         <Route path="/lead-management/leads/view/:id" element={<LeadsViewPage />} />
+                        <Route path="/lead-management/enquiry" element={<EnquiryIndexPage />} />
                         <Route path="/lead-management/campaign" element={<CampaignIndexPage />} />
                         <Route path="/lead-management/campaign/add" element={<CampaignAddPage />} />
                         <Route path="/lead-management/campaign/edit/:id" element={<CampaignEditPage />} />
