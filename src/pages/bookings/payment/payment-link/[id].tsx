@@ -32,6 +32,7 @@ import {
 } from "@/utils/services/packageVoucherService";
 import { getAssignmentById } from "@/utils/services/assignmentService";
 import { DefaultLayout } from "@/layouts/DefaultLayout";
+import { useStoreCompany } from "@/store/company";
 
 const columns = [
     { id: "index", name: "S. No.", isRowHeader: true, widthRatio: 5, minWidth: 50 },
@@ -48,6 +49,7 @@ export default function PaymentLink() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { showSnackbar } = useStoreSnackbar();
   const availableWidth = useAvailableTableWidth();
+  const company = useStoreCompany((state) => state.company);
 
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -254,7 +256,7 @@ export default function PaymentLink() {
       "",
       "🧾 *YOUR PACKAGE VOUCHER*",
       "",
-      "Thank you for booking with *Tripzipper*.",
+      `Thank you for booking with ${company?.company?.name || "Tripzipper"}.`,
       "",
       "We are excited to share your package booking voucher with you.",
       "Click below to view your complete booking details and get ready for your trip.",
