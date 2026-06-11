@@ -45,8 +45,25 @@ export default function HotelChangeSavedItinerary({ data, onSuccess, onFailure }
                 const oldHref = updatedAnchors[ht.index].getAttribute("href");
                 if (oldHref) {
                     const newHref = oldHref.replace(/\/hotel-images\/[^/]+/, `/hotel-images/${ht.id}`);
-                    (updatedAnchors[ht.index] as HTMLElement).innerText = ht.name;
-                    updatedAnchors[ht.index].setAttribute("href", newHref);
+                    const anchor = updatedAnchors[ht.index] as HTMLAnchorElement;
+                    anchor.setAttribute("href", newHref);
+
+                    const nameSpanCandidates = Array.from(anchor.querySelectorAll("span"));
+                    const nameSpan =
+                        nameSpanCandidates.find((el) => el.className?.includes("truncate")) ||
+                        nameSpanCandidates[nameSpanCandidates.length - 1];
+
+                    if (nameSpan) {
+                        nameSpan.textContent = String(ht.name || "");
+                    } else {
+                        const textNodes = Array.from(anchor.childNodes).filter((n) => n.nodeType === Node.TEXT_NODE) as Text[];
+                        const targetTextNode = textNodes[textNodes.length - 1];
+                        if (targetTextNode) {
+                            targetTextNode.textContent = String(ht.name || "");
+                        } else {
+                            anchor.textContent = String(ht.name || "");
+                        }
+                    }
                 }
             }
 
