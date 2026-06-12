@@ -141,7 +141,7 @@ export default function PreviewMail({ previewData }: PreviewMailProps) {
                                 </div>
 
                                 <div className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8">
-                                    <div className="rounded-2xl bg-white/5 border border-white/10 p-4 sm:p-5">
+                                <div className="rounded-2xl bg-white/5 border border-white/10 p-4 sm:p-5">
                                         <div className="text-[10px] uppercase tracking-[0.3em] text-white/60 font-semibold">
                                             Snapshot
                                         </div>
@@ -171,22 +171,7 @@ export default function PreviewMail({ previewData }: PreviewMailProps) {
                                             </div>
                                         </div>
                                     </div>
-
-                                    {previewData?.clientArea?.headerContent && (
-                                        <div className="rounded-2xl bg-white/5 border border-white/10 p-4 sm:p-5">
-                                            <div
-                                                className="inner-html-box text-white"
-                                                dangerouslySetInnerHTML={{
-                                                    __html: replaceClientName(
-                                                        previewData.clientArea.headerContent,
-                                                        previewData.clientName,
-                                                    ),
-                                                }}
-                                            />
-                                        </div>
-                                    )}
-
-                                    <div className="rounded-2xl bg-white/5 border border-white/10 p-4 sm:p-5">
+                                       <div className="rounded-2xl bg-white/5 border border-white/10 p-4 sm:p-5">
                                         <div className="text-[10px] uppercase tracking-[0.3em] text-white/60 font-semibold">
                                             Contacts
                                         </div>
@@ -234,6 +219,22 @@ export default function PreviewMail({ previewData }: PreviewMailProps) {
                                             )}
                                         </div>
                                     </div>
+
+                                    {previewData?.clientArea?.headerContent && (
+                                        <div className="rounded-2xl bg-white/5 border border-white/10 p-4 sm:p-5">
+                                            <div
+                                                className="inner-html-box text-white"
+                                                dangerouslySetInnerHTML={{
+                                                    __html: replaceClientName(
+                                                        previewData.clientArea.headerContent,
+                                                        previewData.clientName,
+                                                    ),
+                                                }}
+                                            />
+                                        </div>
+                                    )}
+
+                                 
 
                                     {previewData?.templateId?.paymentType?.length > 0 && (
                                         <div className="rounded-2xl bg-white/5 border border-white/10 p-4 sm:p-5">
