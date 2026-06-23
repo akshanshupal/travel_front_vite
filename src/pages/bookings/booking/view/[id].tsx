@@ -418,6 +418,7 @@ export default function BookingViewPage() {
     };
 
     const handleDeleteService = async () => {
+        debugger
         if (!deleteTarget) return;
         setSaving(true);
         try {
@@ -442,6 +443,7 @@ export default function BookingViewPage() {
     };
 
     const openPaymentModal = (service: any, payment?: any) => {
+        debugger
         setPaymentService(service);
         setEditingPayment(payment || null);
         setPaymentForm({
@@ -540,12 +542,15 @@ export default function BookingViewPage() {
         }
     };
 
-    const confirmDeletePayment = (payment: any) => {
+    const confirmDeletePayment = (service: any,payment: any) => {
+        debugger
+        setPaymentService(service);
         setDeletePaymentTarget(payment);
         setConfirmPaymentDeleteOpen(true);
     };
 
     const handleDeletePayment = async () => {
+        debugger
         if (!deletePaymentTarget || !paymentService) return;
         setSaving(true);
         try {
@@ -1163,7 +1168,7 @@ export default function BookingViewPage() {
                                                                                         size="sm"
                                                                                         color="error"
                                                                                         tooltip="Delete Payments"
-                                                                                        onClick={() => confirmDeletePayment(payment)}
+                                                                                        onClick={() => confirmDeletePayment(service,payment)}
                                                                                     />
                                                                                 </div>
                                                                             </div>
