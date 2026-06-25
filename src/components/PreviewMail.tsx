@@ -219,24 +219,7 @@ export default function PreviewMail({ previewData }: PreviewMailProps) {
                                             )}
                                         </div>
                                     </div>
-
-                                    {previewData?.clientArea?.headerContent && (
-                                        <div className="rounded-2xl bg-white/5 border border-white/10 p-4 sm:p-5">
-                                            <div
-                                                className="inner-html-box text-white"
-                                                dangerouslySetInnerHTML={{
-                                                    __html: replaceClientName(
-                                                        previewData.clientArea.headerContent,
-                                                        previewData.clientName,
-                                                    ),
-                                                }}
-                                            />
-                                        </div>
-                                    )}
-
-                                 
-
-                                    {previewData?.templateId?.paymentType?.length > 0 && (
+                                                                       {previewData?.templateId?.paymentType?.length > 0 && (
                                         <div className="rounded-2xl bg-white/5 border border-white/10 p-4 sm:p-5">
                                             <div className="text-[10px] uppercase tracking-[0.3em] text-white/60 font-semibold">
                                                 Payment Options
@@ -255,6 +238,24 @@ export default function PreviewMail({ previewData }: PreviewMailProps) {
                                             </div>
                                         </div>
                                     )}
+
+                                    {previewData?.clientArea?.headerContent && (
+                                        <div className="rounded-2xl bg-white/5 border border-white/10 p-4 sm:p-5">
+                                            <div
+                                                className="inner-html-box text-white"
+                                                dangerouslySetInnerHTML={{
+                                                    __html: replaceClientName(
+                                                        previewData.clientArea.headerContent,
+                                                        previewData.clientName,
+                                                    ),
+                                                }}
+                                            />
+                                        </div>
+                                    )}
+
+                                 
+
+ 
 
                                     <div className="rounded-3xl overflow-hidden border border-white/10 bg-white/5">
                                                 <div className="relative h-[180px] sm:h-[220px] md:h-[320px] w-full">
