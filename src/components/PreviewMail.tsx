@@ -322,9 +322,9 @@ export default function PreviewMail({ previewData }: PreviewMailProps) {
                                                                                 </div>
                                                                                 <div className="min-w-0">
                                                                                     <div className="text-sm font-extrabold leading-snug break-words">{dayTitle}</div>
-                                                                                    <div className="text-[11px] text-white/65 break-words sm:truncate">
+                                                                                    {/* <div className="text-[11px] text-white/65 break-words sm:truncate">
                                                                                         {day.hotels && day.hotels.length > 0 ? `${day.hotels.length} Hotels` : " "}
-                                                                                    </div>
+                                                                                    </div> */}
                                                                                 </div>
                                                                             </div>
                                                                             <div className="hidden sm:block text-[10px] font-semibold text-white/60">
