@@ -71,9 +71,9 @@ export default function LoginPage() {
                 <Input
                     value={email}
                     onChange={setEmail}
-                    label="Email"
-                    placeholder="you@example.com"
-                    type="email"
+                    label={useOtp ? "Email" : "Username"}
+                    placeholder={useOtp ? "you@example.com" : "Enter username"}
+                    type={useOtp ? "email" : "text"}
                 />
                 {useOtp ? (
                     otpSent ? (
