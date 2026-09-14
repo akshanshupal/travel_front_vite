@@ -32,6 +32,7 @@ const emailFunctionOptions = [
     { id: "sendPaymentMail", label: "Payment Confirmation Mail" },
     { id: "sendVoucherMail", label: "Booking Voucher Mail" },
     { id: "sendPaymentReminderMail", label: "Payment Reminder Mail" },
+    { id: "otpLogin", label: "OTP Login Mail" },
 ];
 
 const emailFunctionTitleMap: Record<string, string> = emailFunctionOptions.reduce(

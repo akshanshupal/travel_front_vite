@@ -102,6 +102,12 @@ export default function AssignmentEditPage() {
         travelLocation: "",
         packageCost: "",
         taxes: "",
+        landPackageAmount: "",
+        landPackageGstPercentage: "",
+        landPackageGstAmount: "",
+        transportPackageAmount: "",
+        transportPackageGstPercentage: "",
+        transportPackageGstAmount: "",
         finalPackageCost: "",
         tokenAmount: "",
         paymentStore: "",
@@ -187,6 +193,12 @@ export default function AssignmentEditPage() {
                     travelLocation: resolved?.travelLocation || "",
                     packageCost: resolved?.packageCost ?? "",
                     taxes: resolved?.taxes ?? "",
+                    landPackageAmount: resolved?.landPackageAmount ?? "",
+                    landPackageGstPercentage: resolved?.landPackageGstPercentage ?? "",
+                    landPackageGstAmount: resolved?.landPackageGstAmount ?? "",
+                    transportPackageAmount: resolved?.transportPackageAmount ?? "",
+                    transportPackageGstPercentage: resolved?.transportPackageGstPercentage ?? "",
+                    transportPackageGstAmount: resolved?.transportPackageGstAmount ?? "",
                     finalPackageCost: resolved?.finalPackageCost ?? "",
                     tokenAmount: resolved?.tokenPayment?.amount ?? "",
                     paymentStore: resolved?.tokenPayment?.paymentStore ?? "",
@@ -282,7 +294,15 @@ export default function AssignmentEditPage() {
         if (!form.email) next.email = "Email is required";
         if (!form.homeLocation) next.homeLocation = "Home Location is required";
         if (!form.travelLocation) next.travelLocation = "Travel Location is required";
-        if (!form.packageCost) next.packageCost = "Package Amount is required";
+        const hasSplitPricing = form.landPackageAmount !== "" || form.transportPackageAmount !== "";
+        if (hasSplitPricing) {
+            if (form.landPackageAmount === "") next.landPackageAmount = "Land Package Amount is required";
+            if (form.landPackageGstPercentage === "") next.landPackageGstPercentage = "Land Package GST is required";
+            if (form.transportPackageAmount === "") next.transportPackageAmount = "Train / Flight / Bus Amount is required";
+            if (form.transportPackageGstPercentage === "") next.transportPackageGstPercentage = "Train / Flight / Bus GST is required";
+        } else if (!form.packageCost) {
+            next.packageCost = "Package Amount is required";
+        }
         if (!form.finalPackageCost) next.finalPackageCost = "Final Package Cost is required";
         if (!form.tokenAmount) next.tokenAmount = "Token Amount is required";
         if (!form.paymentStore) next.paymentStore = "Payment Mode is required";
@@ -316,6 +336,18 @@ export default function AssignmentEditPage() {
                 if (!Number.isNaN(cost) && !Number.isNaN(taxes)) {
                     next.finalPackageCost = (cost + (cost * taxes) / 100).toFixed(2);
                 }
+            }
+            if (["landPackageAmount", "landPackageGstPercentage", "transportPackageAmount", "transportPackageGstPercentage"].includes(key)) {
+                const landAmount = Number(next.landPackageAmount) || 0;
+                const landGstPercentage = Number(next.landPackageGstPercentage) || 0;
+                const transportAmount = Number(next.transportPackageAmount) || 0;
+                const transportGstPercentage = Number(next.transportPackageGstPercentage) || 0;
+                const landGstAmount = (landAmount * landGstPercentage) / 100;
+                const transportGstAmount = (transportAmount * transportGstPercentage) / 100;
+                next.landPackageGstAmount = landGstAmount.toFixed(2);
+                next.transportPackageGstAmount = transportGstAmount.toFixed(2);
+                next.packageCost = (landAmount + transportAmount).toFixed(2);
+                next.finalPackageCost = (landAmount + landGstAmount + transportAmount + transportGstAmount).toFixed(2);
             }
             if (key === "noOfKids") {
                 const count = Number(value) || 0;
@@ -369,6 +401,10 @@ export default function AssignmentEditPage() {
             homeLocation: true,
             travelLocation: true,
             packageCost: true,
+            landPackageAmount: true,
+            landPackageGstPercentage: true,
+            transportPackageAmount: true,
+            transportPackageGstPercentage: true,
             finalPackageCost: true,
             tokenAmount: true,
             paymentStore: true,
@@ -611,9 +647,19 @@ export default function AssignmentEditPage() {
                             <div className="rounded-xl border border-secondary bg-primary">
                                 <SectionHeader title="Package Details" />
                                 <div className="grid grid-cols-1 gap-3 px-4 py-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                                    <Input label="Package Amount" isRequired type="number" value={form.packageCost} onChange={(value) => updateField("packageCost", value)} isInvalid={dirty.packageCost && !!errors.packageCost} hint={dirty.packageCost ? errors.packageCost : ""} />
-                                    <Input label="Taxes (%)" type="number" value={form.taxes} onChange={(value) => updateField("taxes", value)} />
-                                    <Input label="Final Package Cost" isRequired value={form.finalPackageCost} onChange={(value) => updateField("finalPackageCost", value)} isInvalid={dirty.finalPackageCost && !!errors.finalPackageCost} hint={dirty.finalPackageCost ? errors.finalPackageCost : ""} />
+                                    {form.landPackageAmount === "" && form.transportPackageAmount === "" ? (
+                                        <>
+                                            <Input label="Package Amount (Legacy)" isRequired type="number" value={form.packageCost} onChange={(value) => updateField("packageCost", value)} isInvalid={dirty.packageCost && !!errors.packageCost} hint={dirty.packageCost ? errors.packageCost : ""} />
+                                            <Input label="Taxes (%) (Legacy)" type="number" value={form.taxes} onChange={(value) => updateField("taxes", value)} />
+                                        </>
+                                    ) : null}
+                                    <Input label="Land Package Amount" type="number" value={form.landPackageAmount} onChange={(value) => updateField("landPackageAmount", value)} isInvalid={dirty.landPackageAmount && !!errors.landPackageAmount} hint={dirty.landPackageAmount ? errors.landPackageAmount : ""} />
+                                    <Input label="Land Package GST (%)" type="number" value={form.landPackageGstPercentage} onChange={(value) => updateField("landPackageGstPercentage", value)} isInvalid={dirty.landPackageGstPercentage && !!errors.landPackageGstPercentage} hint={dirty.landPackageGstPercentage ? errors.landPackageGstPercentage : ""} />
+                                    <Input label="Land Package GST Amount" value={form.landPackageGstAmount} isDisabled />
+                                    <Input label="Train / Flight / Bus Amount" type="number" value={form.transportPackageAmount} onChange={(value) => updateField("transportPackageAmount", value)} isInvalid={dirty.transportPackageAmount && !!errors.transportPackageAmount} hint={dirty.transportPackageAmount ? errors.transportPackageAmount : ""} />
+                                    <Input label="Train / Flight / Bus GST (%)" type="number" value={form.transportPackageGstPercentage} onChange={(value) => updateField("transportPackageGstPercentage", value)} isInvalid={dirty.transportPackageGstPercentage && !!errors.transportPackageGstPercentage} hint={dirty.transportPackageGstPercentage ? errors.transportPackageGstPercentage : ""} />
+                                    <Input label="Train / Flight / Bus GST Amount" value={form.transportPackageGstAmount} isDisabled />
+                                    <Input label="Final Package Cost" isRequired value={form.finalPackageCost} isDisabled={form.landPackageAmount !== "" || form.transportPackageAmount !== ""} onChange={(value) => updateField("finalPackageCost", value)} isInvalid={dirty.finalPackageCost && !!errors.finalPackageCost} hint={dirty.finalPackageCost ? errors.finalPackageCost : ""} />
                                     <Input label="Package Days" isRequired type="number" value={form.noOfPackageDays} onChange={(value) => updateField("noOfPackageDays", value)} isInvalid={dirty.noOfPackageDays && !!errors.noOfPackageDays} hint={dirty.noOfPackageDays ? errors.noOfPackageDays : ""} />
                                     <Input label="Package Nights" isRequired type="number" value={form.noOfPackageNights} onChange={(value) => updateField("noOfPackageNights", value)} isInvalid={dirty.noOfPackageNights && !!errors.noOfPackageNights} hint={dirty.noOfPackageNights ? errors.noOfPackageNights : ""} />
                                     <Input label="Rooms" isRequired type="number" value={form.noOfRooms} onChange={(value) => updateField("noOfRooms", value)} isInvalid={dirty.noOfRooms && !!errors.noOfRooms} hint={dirty.noOfRooms ? errors.noOfRooms : ""} />

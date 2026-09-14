@@ -8,6 +8,18 @@ export const authService = {
             headers: { "Content-Type": "application/json" },
         });
     },
+    requestOtp: async (email: string) => {
+        return await fetchWithOutToken("/api/auth/request-otp", { email }, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+        });
+    },
+    verifyOtp: async (email: string, otp: string) => {
+        return await fetchWithOutToken("/api/auth/verify-otp", { email, otp }, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+        });
+    },
     getAuthToken: async () => {
         const refreshToken = useStoreLogin.getState().refreshToken;
         return await fetchWithOutToken(

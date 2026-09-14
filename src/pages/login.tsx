@@ -7,14 +7,19 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { getCompanyConfig } from "@/utils/services/userService";
+import { authService } from "@/utils/services/authService";
 
 export default function LoginPage() {
     const navigate = useNavigate();
     const login = useStoreLogin((s) => s.login);
+    const loginWithOtp = useStoreLogin((s) => s.loginWithOtp);
     const setCompany = useStoreCompany((s) => s.setCompany);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [otp, setOtp] = useState("");
     const [showPassword, setShowPassword] = useState(false);
+    const [useOtp, setUseOtp] = useState(false);
+    const [otpSent, setOtpSent] = useState(false);
     const [loading, setLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
 
@@ -23,7 +28,16 @@ export default function LoginPage() {
         setLoading(true);
         setErrorMsg("");
         try {
-            await login({ username: email, password });
+            if (useOtp && !otpSent) {
+                await authService.requestOtp(email);
+                setOtpSent(true);
+                return;
+            }
+            if (useOtp) {
+                await loginWithOtp(email, otp);
+            } else {
+                await login({ username: email, password });
+            }
             try {
                 const host = typeof window !== "undefined" ? window.location.hostname : "";
                 if (host) {
@@ -59,29 +73,50 @@ export default function LoginPage() {
                     onChange={setEmail}
                     label="Email"
                     placeholder="you@example.com"
-                    type="text"
+                    type="email"
                 />
-                <div className="relative">
-                    <Input
-                        value={password}
-                        onChange={setPassword}
-                        label="Password"
-                        placeholder="Enter password"
-                        type={showPassword ? "text" : "password"}
-                        inputClassName="pr-10"
-                    />
-                    <button
-                        type="button"
-                        className="absolute bottom-[9px] right-3 text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
-                        onClick={() => setShowPassword(!showPassword)}
-                        aria-label={showPassword ? "Hide password" : "Show password"}
-                    >
-                        {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
-                    </button>
-                </div>
+                {useOtp ? (
+                    otpSent ? (
+                        <Input
+                            value={otp}
+                            onChange={setOtp}
+                            label="Verification code"
+                            placeholder="Enter 6-digit OTP"
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={6}
+                        />
+                    ) : null
+                ) : (
+                    <div className="relative">
+                        <Input
+                            value={password}
+                            onChange={setPassword}
+                            label="Password"
+                            placeholder="Enter password"
+                            type={showPassword ? "text" : "password"}
+                            inputClassName="pr-10"
+                        />
+                        <button
+                            type="button"
+                            className="absolute bottom-[9px] right-3 text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+                            onClick={() => setShowPassword(!showPassword)}
+                            aria-label={showPassword ? "Hide password" : "Show password"}
+                        >
+                            {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                        </button>
+                    </div>
+                )}
                 <Button type="submit" disabled={loading} className="mt-2 w-full">
-                    {loading ? "Signing in..." : "Sign in"}
+                    {loading ? (useOtp && !otpSent ? "Sending code..." : "Signing in...") : (useOtp && !otpSent ? "Send OTP" : "Sign in")}
                 </Button>
+                <button
+                    type="button"
+                    className="text-sm font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400"
+                    onClick={() => { setUseOtp(!useOtp); setOtpSent(false); setOtp(""); setErrorMsg(""); }}
+                >
+                    {useOtp ? "Sign in with password" : "Sign in with email OTP"}
+                </button>
             </form>
         </AuthLayout>
     );

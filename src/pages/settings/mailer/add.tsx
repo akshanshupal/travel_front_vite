@@ -189,6 +189,21 @@ export default function SettingsMailerAddPage() {
                 ],
             },
             {
+                title: "OTP Login Mail",
+                emailFunction: "otpLogin",
+                subject: `Your ${companyName} login code`,
+                html: `<div style="font-family: Arial, sans-serif; background-color: #f4f7fb; padding: 32px 16px;">
+<div style="max-width: 560px; margin: 0 auto; background: #ffffff; padding: 32px; border-radius: 12px; text-align: center;">
+<img src="${companyLogo}" alt="${companyName}" style="max-width: 120px; margin-bottom: 20px;">
+<h1 style="color: #101828; font-size: 24px; margin: 0 0 12px;">Your login code</h1>
+<p style="color: #475467; font-size: 15px;">Use this verification code to sign in to ${companyName}.</p>
+<div style="margin: 24px 0; color: #175cd3; font-size: 32px; font-weight: 700; letter-spacing: 8px;">[[otp]]</div>
+<p style="color: #667085; font-size: 14px;">This code expires in [[expiresInMinutes]] minutes. Do not share it with anyone.</p>
+</div>
+</div>`,
+                dynamicFields: ["otp", "expiresInMinutes"],
+            },
+            {
                 title: "Payment Reminder Mail",
                 emailFunction: "sendPaymentReminderMail",
                 subject: `⚠️ Payment Reminder - Package #assignmentId | ${companyName} | Due by #dueDate`,

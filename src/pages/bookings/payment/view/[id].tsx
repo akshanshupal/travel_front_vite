@@ -657,10 +657,23 @@ export default function PaymentViewPage() {
                                                 <div className="text-xs font-semibold uppercase text-tertiary">Travel Date</div>
                                                 <div className="text-sm font-semibold text-primary">{formatShortDate(assignment?.tourDate)}</div>
                                             </div>
-                                            <div className="rounded-lg border border-secondary bg-secondary p-3">
-                                                <div className="text-xs font-semibold uppercase text-tertiary">Package Cost</div>
-                                                <div className="text-sm font-semibold text-primary">{formatCurrencyInr(assignment?.packageCost)}</div>
-                                            </div>
+                                            {assignment?.landPackageAmount !== undefined && assignment?.landPackageAmount !== null ? (
+                                                <>
+                                                    <div className="rounded-lg border border-secondary bg-secondary p-3">
+                                                        <div className="text-xs font-semibold uppercase text-tertiary">Land Package + GST</div>
+                                                        <div className="text-sm font-semibold text-primary">{formatCurrencyInr(Number(assignment.landPackageAmount) + Number(assignment?.landPackageGstAmount || 0))}</div>
+                                                    </div>
+                                                    <div className="rounded-lg border border-secondary bg-secondary p-3">
+                                                        <div className="text-xs font-semibold uppercase text-tertiary">Train / Flight / Bus + GST</div>
+                                                        <div className="text-sm font-semibold text-primary">{formatCurrencyInr(Number(assignment?.transportPackageAmount || 0) + Number(assignment?.transportPackageGstAmount || 0))}</div>
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <div className="rounded-lg border border-secondary bg-secondary p-3">
+                                                    <div className="text-xs font-semibold uppercase text-tertiary">Package Cost</div>
+                                                    <div className="text-sm font-semibold text-primary">{formatCurrencyInr(assignment?.packageCost)}</div>
+                                                </div>
+                                            )}
                                             <div className="rounded-lg border border-secondary bg-secondary p-3">
                                                 <div className="text-xs font-semibold uppercase text-tertiary">Final Cost</div>
                                                 <div className="text-sm font-semibold text-primary">{formatCurrencyInr(assignment?.finalPackageCost)}</div>

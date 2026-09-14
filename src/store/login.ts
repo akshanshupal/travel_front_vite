@@ -25,6 +25,7 @@ type LoginState = {
     authToken: string | null;
     refreshToken: string | null;
     login: (payload: Record<string, unknown>) => Promise<void>;
+    loginWithOtp: (email: string, otp: string) => Promise<void>;
     getNewAuthToken: () => Promise<void>;
     logout: () => void;
 };
@@ -66,6 +67,29 @@ export const useStoreLogin = create<LoginState>()(
                                 "Something went wrong",
                             color: "danger",
                         });
+                    throw error;
+                }
+            },
+            loginWithOtp: async (email, otp) => {
+                try {
+                    const response = await authService.verifyOtp(email, otp);
+                    const user = (response as any)?.user;
+                    const userType = String(user?.type || "").toUpperCase();
+                    const hasRole = Boolean(user?.role && (user.role.id || user.role._id || user.role.title));
+                    if (userType !== "ADMIN" && !hasRole) {
+                        throw new Error("Role is not assigned to this user.");
+                    }
+                    set({
+                        user,
+                        authToken: (response as any)?.token,
+                        refreshToken: (response as any)?.refreshToken,
+                    });
+                } catch (error: any) {
+                    useStoreSnackbar.getState().showSnackbar({
+                        title: "OTP login failed",
+                        description: error?.error?.message || error?.message || "Something went wrong",
+                        color: "danger",
+                    });
                     throw error;
                 }
             },

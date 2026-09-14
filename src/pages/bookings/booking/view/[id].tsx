@@ -854,7 +854,14 @@ export default function BookingViewPage() {
                                 <InfoBox label="Customer" value={assignmentData?.clientName} />
                                 <InfoBox label="Travel Date" value={formatShortDate(assignmentData?.tourDate)} />
                                 <InfoBox label="Travel Location" value={assignmentData?.travelLocation} />
-                                <InfoBox label="Package Cost" value={assignmentData?.packageCost} />
+                                {assignmentData?.landPackageAmount !== undefined && assignmentData?.landPackageAmount !== null ? (
+                                    <>
+                                        <InfoBox label="Land Package" value={`${assignmentData.landPackageAmount} + ${assignmentData?.landPackageGstAmount || 0} GST (${assignmentData?.landPackageGstPercentage || 0}%)`} />
+                                        <InfoBox label="Train / Flight / Bus" value={`${assignmentData?.transportPackageAmount || 0} + ${assignmentData?.transportPackageGstAmount || 0} GST (${assignmentData?.transportPackageGstPercentage || 0}%)`} />
+                                    </>
+                                ) : (
+                                    <InfoBox label="Package Cost" value={assignmentData?.packageCost} />
+                                )}
                                 <InfoBox label="Final Cost" value={assignmentData?.finalPackageCost} />
                                 <div className="md:col-span-3 relative flex flex-row items-center justify-between rounded-lg border border-secondary bg-secondary px-3 py-2">
                                     <div className="text-sm font-semibold text-primary">
@@ -904,6 +911,19 @@ export default function BookingViewPage() {
                                             />
                                             <InfoBox label="Car Seater" value={assignmentData?.carSeater} icon={<FaCar />} />
                                             <InfoBox label="No of Rooms" value={assignmentData?.noOfRooms} icon={<FaBed />} />
+                                            <InfoBox label="Adults" value={assignmentData?.noOfAdult ?? 0} icon={<FaUserFriends />} />
+                                            <InfoBox
+                                                label="Kids"
+                                                value={(() => {
+                                                    const kidsCount = assignmentData?.noOfKids ?? 0;
+                                                    const ages = asArray(assignmentData?.kidsAges)
+                                                        .map((age: any) => String(age).trim())
+                                                        .filter(Boolean)
+                                                        .map((age: string) => (age.toLowerCase().endsWith("yrs") ? age : `${age}yrs`));
+                                                    return ages.length ? `${kidsCount} [${ages.join(", ")}]` : kidsCount;
+                                                })()}
+                                                icon={<FaUserFriends />}
+                                            />
                                         </div>
 
                                         {Array.isArray(assignmentData?.stayInformation) && assignmentData?.stayInformation.length > 0 && (

@@ -202,8 +202,19 @@ export const AssignmentDetails = ({ data, paymentStores = [] }: AssignmentDetail
                         <InfoBox label="Lead Date" value={formatDateShortSec(data?.leadDate)} icon={<FaCalendarAlt />} />
                         <InfoBox label="Booking Date and Time" value={formatDateTime(data?.bookingDate)} icon={<FaCalendarAlt />} />
                         <InfoBox label="Travel Date" value={formatDateShort(data?.tourDate)} icon={<FaCalendarAlt />} />
-                        <InfoBox label="Package Amount" value={data?.packageCost} icon={<FaMoneyBillWave />} />
-                        <InfoBox label="Taxes" value={computedTaxAmount !== null ? `${computedTaxAmount} (${data?.taxes}%)` : "N/A"} icon={<FaMoneyBillWave />} />
+                        {data?.landPackageAmount !== undefined && data?.landPackageAmount !== null ? (
+                            <>
+                                <InfoBox label="Land Package Amount" value={data.landPackageAmount} icon={<FaMoneyBillWave />} />
+                                <InfoBox label="Land Package GST" value={`${data?.landPackageGstAmount || 0} (${data?.landPackageGstPercentage || 0}%)`} icon={<FaMoneyBillWave />} />
+                                <InfoBox label="Train / Flight / Bus Amount" value={data?.transportPackageAmount || 0} icon={<FaMoneyBillWave />} />
+                                <InfoBox label="Train / Flight / Bus GST" value={`${data?.transportPackageGstAmount || 0} (${data?.transportPackageGstPercentage || 0}%)`} icon={<FaMoneyBillWave />} />
+                            </>
+                        ) : (
+                            <>
+                                <InfoBox label="Package Amount" value={data?.packageCost} icon={<FaMoneyBillWave />} />
+                                <InfoBox label="Taxes" value={computedTaxAmount !== null ? `${computedTaxAmount} (${data?.taxes}%)` : "N/A"} icon={<FaMoneyBillWave />} />
+                            </>
+                        )}
                         <InfoBox label="Final Package Cost" value={data?.finalPackageCost} icon={<FaMoneyBillWave />} />
                         <InfoBox
                             label="Payment Mode"
