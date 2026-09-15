@@ -200,7 +200,7 @@ export default function PaymentViewPage() {
                 [...items].sort((a, b) => {
                     const firstDate = new Date(a?.paymentDate || 0).getTime();
                     const secondDate = new Date(b?.paymentDate || 0).getTime();
-                    return firstDate - secondDate;
+                    return  secondDate- firstDate;
                 }),
             ]),
         );
