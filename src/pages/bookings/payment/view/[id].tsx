@@ -190,8 +190,21 @@ export default function PaymentViewPage() {
             if (!acc[key]) acc[key] = [];
             acc[key].push(payment);
             return acc;
-        }, {});
+        }, Object.create(null));
     }, [payments]);
+
+    const sortedGroupedPayments = useMemo(() => {
+        return Object.fromEntries(
+            Object.entries(groupedPayments).map(([paymentTo, items]) => [
+                paymentTo,
+                [...items].sort((a, b) => {
+                    const firstDate = new Date(a?.paymentDate || 0).getTime();
+                    const secondDate = new Date(b?.paymentDate || 0).getTime();
+                    return firstDate - secondDate;
+                }),
+            ]),
+        );
+    }, [groupedPayments]);
 
     const paymentToOptions = [
         { id: "paymentToCompany", label: "Payment To Company" },
@@ -708,7 +721,7 @@ export default function PaymentViewPage() {
                                         {Object.keys(groupedPayments).length === 0 && (
                                             <div className="text-sm text-tertiary">No payments found.</div>
                                         )}
-                                        {Object.entries(groupedPayments).map(([paymentTo, items]) => {
+                                        {Object.entries(sortedGroupedPayments).map(([paymentTo, items]) => {
                                             const totalAmount = items.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
                                             const showTable = isTableVisible[paymentTo] ?? true;
                                             return (
