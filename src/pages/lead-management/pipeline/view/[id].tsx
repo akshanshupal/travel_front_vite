@@ -7,6 +7,7 @@ import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/mod
 import { useStoreSnackbar } from "@/store/snackbar";
 import { getPipelineById } from "@/utils/services/pipelineService";
 import { getCampaign, updateCampaignPauseFunction } from "@/utils/services/campaignService";
+import { getLeadFunnelReport } from "@/utils/services/leadReportService";
 import { ArrowLeft, Edit01, Plus } from "@untitledui/icons";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
@@ -46,6 +47,7 @@ export default function PipelineViewPage() {
     const [campaignData, setCampaignData] = useState<CampaignItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [campaignLoading, setCampaignLoading] = useState(true);
+    const [reportTotals, setReportTotals] = useState<Record<string, number>>({});
     const [hidePaused, setHidePaused] = useState(false);
 
     const [selectedItems, setSelectedItems] = useState<string[]>([]);
@@ -71,6 +73,16 @@ export default function PipelineViewPage() {
 
     useEffect(() => {
         if (!id) return;
+        getLeadFunnelReport({ pipeline: id })
+            .then((res) => {
+                const resolved = (res as any)?.data?.data ?? (res as any)?.data ?? res;
+                setReportTotals(resolved?.totals || {});
+            })
+            .catch(() => setReportTotals({}));
+    }, [id]);
+
+    useEffect(() => {
+        if (!id) return;
         const run = async () => {
             setCampaignLoading(true);
             try {
@@ -78,6 +90,7 @@ export default function PipelineViewPage() {
                     populate: "pipeline",
                     pipeline: id,
                     select: "title,additionalSetting,pause",
+                    limit: "all",
                 });
                 const resolved = (res as any)?.data ?? res;
                 const list = Array.isArray(resolved?.data) ? resolved.data : Array.isArray(resolved) ? resolved : asArray(resolved?.items);
@@ -152,9 +165,9 @@ export default function PipelineViewPage() {
                     {/* Stats row */}
                     <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
                         {[
-                            { label: "Total Leads", value: "—" },
-                            { label: "Total In-Progress", value: "—" },
-                            { label: "Total Closed", value: "—" },
+                            { label: "Total Leads", value: reportTotals.total ?? 0 },
+                            { label: "Total In-Progress", value: reportTotals.open ?? 0 },
+                            { label: "Total Closed", value: (reportTotals.converted ?? 0) + (reportTotals.lost ?? 0) },
                             { label: "Campaigns", value: campaignLoading ? "…" : campaignData.length },
                         ].map(stat => (
                             <div key={stat.label} className="rounded-lg border border-secondary bg-primary p-4 text-center ring-1 ring-secondary">

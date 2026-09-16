@@ -45,11 +45,36 @@ export default function ClientUrl() {
   }, [id, showSnackbar]);
 
   const replaceClientName = (content: string) => {
-    let replacedContent = content?.replace(
+    const replacedContent = content?.replace(
       /\[\{CLIENT_NAME\}\]|\{CLIENT_NAME\}/g,
       "Guest"
-    );
-    return replacedContent?.replace(/\{|\}/g, "");
+    )?.replace(/\{|\}/g, "");
+
+    if (!replacedContent || typeof DOMParser === "undefined") return replacedContent;
+
+    const document = new DOMParser().parseFromString(replacedContent, "text/html");
+    const headings = Array.from(document.querySelectorAll("h1, h2, h3, h4, h5, h6, th, div, p"));
+
+    headings
+      .filter((node) => String(node.textContent || "").trim().toLowerCase() === "payment history")
+      .forEach((heading) => {
+        const table = heading.closest("table") || heading.parentElement?.querySelector("table");
+        if (!table) return;
+
+        const body = table.querySelector("tbody");
+        if (!body) return;
+
+        const rows = Array.from(body.querySelectorAll(":scope > tr")) as HTMLTableRowElement[];
+        rows.sort((first, second) => {
+          const firstDate = new Date(String(first.cells[0]?.textContent || "").trim()).getTime();
+          const secondDate = new Date(String(second.cells[0]?.textContent || "").trim()).getTime();
+          return (Number.isNaN(firstDate) ? Number.MAX_SAFE_INTEGER : firstDate) -
+            (Number.isNaN(secondDate) ? Number.MAX_SAFE_INTEGER : secondDate);
+        });
+        rows.forEach((row) => body.appendChild(row));
+      });
+
+    return document.body.innerHTML;
   };
 
   return (

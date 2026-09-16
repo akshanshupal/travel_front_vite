@@ -90,7 +90,7 @@ export default function PipelineIndexPage() {
         const run = async () => {
             setCampaignLoading(true);
             try {
-                const res = await getCampaign({ populate: "pipeline", select: "title,additionalSetting,managingCampaign,pipeline", select_pipeline: "title" });
+                const res = await getCampaign({ populate: "pipeline", select: "title,additionalSetting,managingCampaign,pipeline", select_pipeline: "title", limit: "all" });
                 const resolved = (res as any)?.data ?? res;
                 const list = Array.isArray(resolved?.data) ? resolved.data : Array.isArray(resolved) ? resolved : asArray(resolved?.items);
                 setCampaignData(asArray(list).map((it: any) => ({ id: getId(it), title: it?.title || "", pipeline: it?.pipeline, additionalSetting: it?.additionalSetting, pause: it?.pause })).filter((x: any) => x.id));

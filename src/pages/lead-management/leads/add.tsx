@@ -7,6 +7,8 @@ import { Select } from "@/components/base/select/select";
 import { useStoreSnackbar } from "@/store/snackbar";
 import { addLeads } from "@/utils/services/leadsService";
 import { getCampaign } from "@/utils/services/campaignService";
+import { getContactProperties } from "@/utils/services/contactPropertiesService";
+import { CustomPropertiesFields, normalizeContactProperties, normalizeCustomPropertyPayload, type ContactPropertyDefinition } from "./custom-properties-fields";
 import { ArrowLeft } from "@untitledui/icons";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
@@ -19,6 +21,10 @@ type CampaignItem = {
 
 const asArray = (value: any) => (Array.isArray(value) ? value : []);
 const getId = (value: any) => String(value?.id ?? value?._id ?? value ?? "").trim();
+const optionalKey = (key: unknown): string => {
+    const value = key == null ? "" : String(key);
+    return value === "__none__" ? "" : value;
+};
 
 export default function LeadsAddPage() {
     const navigate = useNavigate();
@@ -26,6 +32,8 @@ export default function LeadsAddPage() {
 
     const [saving, setSaving] = useState(false);
     const [campaignList, setCampaignList] = useState<CampaignItem[]>([]);
+    const [propertyDefinitions, setPropertyDefinitions] = useState<ContactPropertyDefinition[]>([]);
+    const [customProperties, setCustomProperties] = useState<Record<string, any>>({});
     const [loadingLookups, setLoadingLookups] = useState(true);
 
     const [form, setForm] = useState({
@@ -45,10 +53,14 @@ export default function LeadsAddPage() {
         const run = async () => {
             setLoadingLookups(true);
             try {
-                const campaignRes = await getCampaign({ populate: "pipeline", select_pipeline: "title", populateUser: true });
+                const [campaignRes, propertyRes] = await Promise.all([
+                    getCampaign({ populate: "pipeline", select_pipeline: "title", populateUser: true, limit: "all" }),
+                    getContactProperties({ limit: "all" }),
+                ]);
                 const campaignResolved = (campaignRes as any)?.data ?? campaignRes;
                 const list = Array.isArray(campaignResolved?.data) ? campaignResolved.data : Array.isArray(campaignResolved) ? campaignResolved : asArray(campaignResolved?.items);
                 setCampaignList(asArray(list).map((it: any) => ({ id: getId(it), title: it?.title || "", salesExecutive: asArray(it?.salesExecutive) })).filter((x: any) => x.id));
+                setPropertyDefinitions(normalizeContactProperties(propertyRes));
             } catch (e: any) {
                 showSnackbar({ title: "Error", description: e?.message || "Failed to load campaigns", color: "danger" });
                 setCampaignList([]);
@@ -94,7 +106,8 @@ export default function LeadsAddPage() {
                 ...(form.campaign ? { campaign: form.campaign } : {}),
                 ...(form.salesExecutive ? { salesExecutive: form.salesExecutive } : {}),
                 ...(form.otherOptions ? { otherOptions: form.otherOptions } : {}),
-                status: form.status,
+                status: form.status === "true",
+                customProperties: normalizeCustomPropertyPayload(propertyDefinitions, customProperties),
             };
             const res = await addLeads(payload);
             if ((res as any)?.error) throw new Error((res as any).error);
@@ -175,7 +188,7 @@ export default function LeadsAddPage() {
                                 aria-label="Campaign"
                                 selectedKey={form.campaign || null}
                                 onChange={undefined}
-                                onSelectionChange={(key) => setForm(p => ({ ...p, campaign: key ? String(key) : "", salesExecutive: "" }))}
+                                onSelectionChange={(key) => setForm(p => ({ ...p, campaign: optionalKey(key), salesExecutive: "" }))}
                                 items={[{ id: "__none__", label: "Select Campaign" }, ...campaignList.map(c => ({ id: c.id, label: c.title || c.id }))]}
                                 isDisabled={loadingLookups}
                             >
@@ -189,7 +202,7 @@ export default function LeadsAddPage() {
                                     aria-label="Sales Executive"
                                     selectedKey={form.salesExecutive || null}
                                     onChange={undefined}
-                                    onSelectionChange={(key) => setForm(p => ({ ...p, salesExecutive: key ? String(key) : "" }))}
+                                    onSelectionChange={(key) => setForm(p => ({ ...p, salesExecutive: optionalKey(key) }))}
                                     items={[{ id: "__none__", label: "Select Sales Executive" }, ...selectedSalesExecutives.map(s => ({ id: s.id, label: s.name || s.id }))]}
                                 >
                                     {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
@@ -217,6 +230,11 @@ export default function LeadsAddPage() {
                                 {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
                             </Select>
                         </div>
+                        <CustomPropertiesFields
+                            definitions={propertyDefinitions}
+                            values={customProperties}
+                            onChange={(key, value) => setCustomProperties(prev => ({ ...prev, [key]: value }))}
+                        />
                     </div>
                 </div>
             </TableCard.Root>

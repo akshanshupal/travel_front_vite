@@ -16,6 +16,10 @@ type LookupItem = { id: string; title?: string; name?: string };
 
 const asArray = (value: any) => (Array.isArray(value) ? value : []);
 const getId = (value: any) => String(value?.id ?? value?._id ?? value ?? "").trim();
+const optionalKey = (key: unknown): string => {
+    const value = key == null ? "" : String(key);
+    return value === "__none__" ? "" : value;
+};
 
 const priorityList = [
     { id: "highest", label: "Highest" },
@@ -111,7 +115,7 @@ export default function CampaignAddPage() {
     };
 
     const handleSave = async () => {
-        setDirty({ title: true });
+        setDirty({ title: true, pipeline: true });
         if (!validate()) return;
         if (saving) return;
         setSaving(true);
@@ -172,12 +176,13 @@ export default function CampaignAddPage() {
                                     aria-label="Pipeline"
                                     selectedKey={form.pipeline || null}
                                     onChange={undefined}
-                                    onSelectionChange={(key) => setForm(p => ({ ...p, pipeline: key ? String(key) : "" }))}
+                                    onSelectionChange={(key) => setForm(p => ({ ...p, pipeline: optionalKey(key) }))}
                                     items={[{ id: "__none__", label: "Select Pipeline" }, ...pipelineList.map(p => ({ id: p.id, label: p.title || p.id }))]}
                                     isDisabled={loadingLookups}
                                 >
                                     {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
                                 </Select>
+                                {dirty.pipeline && errors.pipeline ? <p className="text-sm text-error-primary">{errors.pipeline}</p> : null}
                             </div>
                         </div>
                     </div>
@@ -271,7 +276,7 @@ export default function CampaignAddPage() {
                                     aria-label="Priority"
                                     selectedKey={form.additionalSetting.priority || null}
                                     onChange={undefined}
-                                    onSelectionChange={(key) => setForm(p => ({ ...p, additionalSetting: { ...p.additionalSetting, priority: key ? String(key) : "" } }))}
+                                    onSelectionChange={(key) => setForm(p => ({ ...p, additionalSetting: { ...p.additionalSetting, priority: optionalKey(key) } }))}
                                     items={[{ id: "__none__", label: "Select Priority" }, ...priorityList.map(p => ({ id: p.id, label: p.label }))]}
                                 >
                                     {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
@@ -283,7 +288,7 @@ export default function CampaignAddPage() {
                                     aria-label="Check for Duplicates"
                                     selectedKey={form.additionalSetting.checkForDuplicates || null}
                                     onChange={undefined}
-                                    onSelectionChange={(key) => setForm(p => ({ ...p, additionalSetting: { ...p.additionalSetting, checkForDuplicates: key ? String(key) : "" } }))}
+                                    onSelectionChange={(key) => setForm(p => ({ ...p, additionalSetting: { ...p.additionalSetting, checkForDuplicates: optionalKey(key) } }))}
                                     items={[{ id: "__none__", label: "Select Option" }, ...checkForDuplicatesList.map(o => ({ id: o.id, label: o.label }))]}
                                 >
                                     {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
@@ -295,7 +300,7 @@ export default function CampaignAddPage() {
                                     aria-label="Duplicates Found"
                                     selectedKey={form.additionalSetting.duplicatesFound || null}
                                     onChange={undefined}
-                                    onSelectionChange={(key) => setForm(p => ({ ...p, additionalSetting: { ...p.additionalSetting, duplicatesFound: key ? String(key) : "" } }))}
+                                    onSelectionChange={(key) => setForm(p => ({ ...p, additionalSetting: { ...p.additionalSetting, duplicatesFound: optionalKey(key) } }))}
                                     items={[{ id: "__none__", label: "Select Option" }, ...duplicatesFoundList.map(o => ({ id: o.id, label: o.label }))]}
                                 >
                                     {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}

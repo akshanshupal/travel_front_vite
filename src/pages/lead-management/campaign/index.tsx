@@ -95,7 +95,7 @@ export default function CampaignIndexPage() {
     useEffect(() => {
         const run = async () => {
             try {
-                const res = await getSalesEx();
+                const res = await getSalesEx({ limit: "all" });
                 const resolved = (res as any)?.data ?? res;
                 const list = Array.isArray(resolved?.data) ? resolved.data : Array.isArray(resolved) ? resolved : asArray(resolved?.items);
                 setSalesList(asArray(list).map((it: any) => ({ id: getId(it), username: it?.username || "", name: it?.name || "" })).filter((x: any) => x.id));

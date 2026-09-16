@@ -82,7 +82,14 @@ export default function GeneratedPymId() {
       };
       try {
         const response: any = await getpayment(params);
-        setPaymentData(Array.isArray(response) ? response : response.data || []);
+        const records = Array.isArray(response) ? response : response.data || [];
+        setPaymentData(
+          [...records].sort(
+            (first, second) =>
+              new Date(first?.paymentDate || 0).getTime() -
+              new Date(second?.paymentDate || 0).getTime()
+          )
+        );
       } catch (error) {
         console.error("Error fetching data:", error);
       }

@@ -28,6 +28,7 @@ type LeadItem = {
     pipeline?: { id: string; title?: string; initialStage?: { name?: string; tags?: string[] } };
     salesExecutive?: { id: string; name?: string } | string;
     status?: boolean | string;
+    currentStageName?: string;
     createdAt?: string;
     updatedAt?: string;
 };
@@ -516,7 +517,7 @@ export default function LeadsIndexPage() {
                                                     <Badge size="sm" color="warning">{formatDate(item.updatedAt)}</Badge>
                                                 </div>
                                             ) : column.id === "leadstage" ? (
-                                                <span className="text-sm text-tertiary">{item.pipeline?.initialStage?.name || "—"}</span>
+                                                <span className="text-sm text-tertiary">{item.currentStageName || item.pipeline?.initialStage?.name || "—"}</span>
                                             ) : column.id === "tags" ? (
                                                 <div className="flex flex-wrap gap-1">
                                                     {(item.pipeline?.initialStage?.tags || []).map((tag, i) => (

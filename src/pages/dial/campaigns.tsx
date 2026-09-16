@@ -1,0 +1,5 @@
+import { useEffect, useState } from "react";
+import { getDialCampaigns } from "@/utils/services/dialService";
+import { DialShell, EmptyPanel } from "./shared";
+
+export default function DialCampaignsPage() { const [campaigns, setCampaigns] = useState<Record<string, any>[]>([]); useEffect(() => { getDialCampaigns().then((response) => setCampaigns(Array.isArray(response) ? response : [])).catch(() => setCampaigns([])); }, []); return <DialShell title="Campaigns" description="Choose a campaign to organize your calling queue."><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{campaigns.map((campaign) => <div key={String(campaign.id)} className="rounded-xl border border-secondary bg-primary p-5"><h2 className="font-semibold text-primary">{campaign.title || "Untitled campaign"}</h2><p className="mt-3 text-sm text-tertiary">{campaign.queueCount ?? 0} ready · {campaign.leadCount ?? 0} total leads</p></div>)}</div>{!campaigns.length && <EmptyPanel title="No campaigns available" description="There are no active campaigns available for dialing."/>}</DialShell>; }

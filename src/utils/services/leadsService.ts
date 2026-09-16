@@ -36,6 +36,14 @@ export const updateLeadsById = async (id: string, formUpdatedData: Record<string
     return response;
 };
 
+export const updateLeadStage = async (id: string, formData: Record<string, any>) => {
+    const response = await fetchWithToken(`/api/leads/${id}/stage`, formData, { method: 'PUT' });
+    if ((response as any).error) {
+        throw new Error((response as any).error?.message || 'Failed to update lead stage');
+    }
+    return response;
+};
+
 export const getLeadsDelete = async (id: string) => {
     const response = await fetchWithToken(`/api/leads/${id}`, {}, { method: 'DELETE' });
     if ((response as any).error) {

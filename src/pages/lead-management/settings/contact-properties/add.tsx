@@ -46,8 +46,8 @@ export default function ContactPropertiesAddPage() {
         setSaving(true);
         try {
             await addContactProperty({
-                title: form.title.trim(),
-                dataType: { type: form.dataType },
+                label: form.title.trim(),
+                fieldType: form.dataType,
                 status: form.status === "true",
             });
             showSnackbar({ title: "Success", description: "Contact property added", color: "success" });

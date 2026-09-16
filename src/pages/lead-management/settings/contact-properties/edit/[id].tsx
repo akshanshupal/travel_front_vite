@@ -40,8 +40,8 @@ export default function ContactPropertiesEditPage() {
                 const data = (res as any)?.data ?? res;
                 if (data) {
                     setForm({
-                        title: data.title || "",
-                        dataType: data.dataType?.type || "text",
+                        title: data.label || data.title || "",
+                        dataType: data.fieldType || data.dataType?.type || "text",
                         status: data.status !== undefined ? String(data.status) : "true",
                     });
                 }
@@ -70,8 +70,8 @@ export default function ContactPropertiesEditPage() {
         setSaving(true);
         try {
             await updateContactPropertyById(id, {
-                title: form.title.trim(),
-                dataType: { type: form.dataType },
+                label: form.title.trim(),
+                fieldType: form.dataType,
                 status: form.status === "true",
             });
             showSnackbar({ title: "Success", description: "Contact property updated", color: "success" });

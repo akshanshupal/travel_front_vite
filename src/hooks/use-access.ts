@@ -75,6 +75,7 @@ const routeToResourceKey = (parts: string[]) => {
         if (page === "enquiry") return "enquiry";
         if (page === "pipeline") return "pipeline";
         if (page === "campaign") return "campaign";
+        if (page === "reports") return "leads";
         if (page === "settings" && sub === "contact-properties") return "leadcontactproperties";
         if (page === "settings") return "leadsettings";
         return "";

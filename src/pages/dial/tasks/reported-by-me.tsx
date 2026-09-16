@@ -1,0 +1,5 @@
+import { useEffect, useState } from "react";
+import { getDialTasks, type DialTask } from "@/utils/services/dialService";
+import { DialShell, EmptyPanel } from "../shared";
+
+export default function ReportedByMePage() { const [tasks, setTasks] = useState<DialTask[]>([]); useEffect(() => { getDialTasks({ page: 1, limit: 50, reportedByMe: true }).then((response) => setTasks(response?.data || [])).catch(() => setTasks([])); }, []); return <DialShell title="Reported by me" description="Tasks you have raised in the dial workspace."><div className="rounded-xl border border-secondary bg-primary p-6">{tasks.length ? tasks.map((task) => <div key={String(task.id)} className="border-b border-secondary py-4 last:border-0"><p className="font-medium text-primary">{task.title || task.description || task.type || "Dial task"}</p><p className="mt-1 text-sm text-tertiary">{task.status || "pending"}</p></div>) : <EmptyPanel title="No reported tasks" description="Reported dial tasks will appear here when supported by the task API."/>}</div></DialShell>; }

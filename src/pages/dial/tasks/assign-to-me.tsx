@@ -1,0 +1,6 @@
+import { Button } from "@/components/base/buttons/button";
+import { useEffect, useState } from "react";
+import { assignDialTaskToMe, getDialTasks, type DialTask } from "@/utils/services/dialService";
+import { DialShell, EmptyPanel } from "../shared";
+
+export default function AssignToMePage() { const [tasks, setTasks] = useState<DialTask[]>([]); const load = () => getDialTasks({ page: 1, limit: 50 }).then((response) => setTasks(response?.data || [])).catch(() => setTasks([])); useEffect(() => { load(); }, []); return <DialShell title="Assigned to me" description="Tasks currently assigned to your dial account."><div className="rounded-xl border border-secondary bg-primary p-6">{tasks.length ? tasks.map((task) => <div key={String(task.id)} className="flex items-center justify-between border-b border-secondary py-4 last:border-0"><span className="text-sm text-primary">{task.title || task.description || task.type || "Dial task"}</span><Button color="secondary" size="sm" onClick={async () => { await assignDialTaskToMe(String(task.id)); load(); }}>Assign to me</Button></div>) : <EmptyPanel title="No tasks available" description="There are no tasks available to assign."/>}</div></DialShell>; }

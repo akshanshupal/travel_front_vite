@@ -8,7 +8,7 @@ import { Badge } from "@/components/base/badges/badges";
 import { useStoreSnackbar } from "@/store/snackbar";
 import { addPipeline } from "@/utils/services/pipelineService";
 import { ArrowLeft, Plus, Trash01 } from "@untitledui/icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -90,14 +90,14 @@ function StageEditModal({ isOpen, stage, stageKey, allStageNames, insertAfter, o
     const isFixedStage = stageKey === "convertedStage" || stageKey === "rejectedStage";
     const isNewStage = stage === null;
 
-    // Sync when modal opens for a different stage
-    const handleOpen = () => {
+    useEffect(() => {
+        if (!isOpen) return;
         setName(stage?.name || "");
         setTags(stage?.tags || []);
         setTransitions(stage?.additional?.transitions || []);
         setTagInput("");
         setNameError("");
-    };
+    }, [isOpen, stage]);
 
     const handleAddTag = () => {
         const t = tagInput.trim();
@@ -124,7 +124,7 @@ function StageEditModal({ isOpen, stage, stageKey, allStageNames, insertAfter, o
             {({ state }) => (
                 <Modal className="max-w-lg w-full">
                     <Dialog>
-                        <div className="relative w-full rounded-xl bg-primary p-5 ring-1 ring-secondary" onMouseEnter={handleOpen}>
+                        <div className="relative w-full rounded-xl bg-primary p-5 ring-1 ring-secondary">
                             <CloseButton onPress={() => state.close()} className="absolute right-4 top-4" size="sm" />
                             <h2 className="mb-4 text-base font-semibold text-primary">
                                 {isNewStage ? "Add Stage" : `Edit Stage: ${stage?.name}`}

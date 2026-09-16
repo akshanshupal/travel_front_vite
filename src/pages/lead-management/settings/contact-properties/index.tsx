@@ -16,7 +16,9 @@ import { useNavigate } from "react-router";
 
 type ContactProperty = {
     id: string;
+    label?: string;
     title?: string;
+    fieldType?: string;
     dataType?: { type?: string; key?: string; value?: string };
     status?: boolean | string;
 };
@@ -24,10 +26,8 @@ type ContactProperty = {
 const asArray = (v: any) => (Array.isArray(v) ? v : []);
 const getId = (v: any) => String(v?.id ?? v?._id ?? v ?? "").trim();
 
-const dataTypeLabel = (dt: ContactProperty["dataType"]) => {
-    if (!dt) return "—";
-    return dt.type || dt.key || "—";
-};
+const dataTypeLabel = (item: ContactProperty) =>
+    item.fieldType || item.dataType?.type || item.dataType?.key || "—";
 
 export default function ContactPropertiesPage() {
     const navigate = useNavigate();
@@ -154,9 +154,9 @@ export default function ContactPropertiesPage() {
                                             {col.id === "index" ? (
                                                 <span className="text-sm text-tertiary">{indexById.get(item.id) ?? "—"}</span>
                                             ) : col.id === "title" ? (
-                                                <span className="text-sm font-semibold text-primary">{item.title || "—"}</span>
+                                                <span className="text-sm font-semibold text-primary">{item.label || item.title || "—"}</span>
                                             ) : col.id === "type" ? (
-                                                <Badge size="sm" color="blue">{dataTypeLabel(item.dataType)}</Badge>
+                                                <Badge size="sm" color="blue">{dataTypeLabel(item)}</Badge>
                                             ) : col.id === "status" ? (
                                                 <Badge size="sm" color={item.status === true || item.status === "true" ? "success" : "error"}>
                                                     {item.status === true || item.status === "true" ? "Active" : "Inactive"}
@@ -164,7 +164,7 @@ export default function ContactPropertiesPage() {
                                             ) : (
                                                 <div className="flex w-full items-center justify-end gap-1.5">
                                                     <ButtonUtility tooltip="Edit" tooltipPlacement="bottom" icon={Edit01} onClick={() => navigate(`/lead-management/settings/contact-properties/edit/${item.id}`)} color="warning" />
-                                                    <ButtonUtility tooltip="Delete" tooltipPlacement="bottom" icon={Trash01} onClick={() => setDeleteTarget({ id: item.id, title: item.title })} color="error" />
+                                                    <ButtonUtility tooltip="Delete" tooltipPlacement="bottom" icon={Trash01} onClick={() => setDeleteTarget({ id: item.id, title: item.label || item.title })} color="error" />
                                                 </div>
                                             )}
                                         </Table.Cell>

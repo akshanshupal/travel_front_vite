@@ -2,10 +2,11 @@ import { DefaultLayout } from "@/layouts/DefaultLayout";
 import { StickyTable, Table, TableCard } from "@/components/application/table/table";
 import { PaginationButtonGroup } from "@/components/application/pagination/pagination";
 import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
-import { getEnquiries, updateEnquiryById } from "@/utils/services/enquiryService";
+import { convertEnquiryToLead, getEnquiries } from "@/utils/services/enquiryService";
 import { useStoreSnackbar } from "@/store/snackbar";
 import { Eye } from "@untitledui/icons";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router";
 
 type EnquiryItem = {
     id: string;
@@ -46,6 +47,7 @@ const formatUrl = (url: string | undefined) => {
 };
 
 export default function EnquiryIndexPage() {
+    const navigate = useNavigate();
     const availableWidth = useAvailableTableWidth();
 
     const [items, setItems] = useState<EnquiryItem[]>([]);
@@ -108,10 +110,13 @@ export default function EnquiryIndexPage() {
         if (transferringRef.current.has(id)) return;
         transferringRef.current.add(id);
         try {
-            await updateEnquiryById(id, { transferredToLead: true });
+            const response = await convertEnquiryToLead(id);
+            const resolved = (response as any)?.data ?? response;
+            const leadId = getId(resolved?.lead ?? resolved?.convertedLead ?? resolved);
             setItems((prev) => prev.map((it) => (it.id === id ? { ...it, transferredToLead: true } : it)));
             if (viewing?.id === id) setViewing({ ...viewing, transferredToLead: true });
-            useStoreSnackbar.getState().showSnackbar({ title: "Transferred", description: "Enquiry marked as transferred to lead", color: "success" });
+            useStoreSnackbar.getState().showSnackbar({ title: "Transferred", description: "Enquiry converted to lead", color: "success" });
+            if (leadId) navigate(`/lead-management/leads/view/${leadId}`);
         } catch (e: any) {
             useStoreSnackbar.getState().showSnackbar({ title: "Error", description: e?.message || "Failed to transfer enquiry", color: "danger" });
         } finally {

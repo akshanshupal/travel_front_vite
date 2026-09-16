@@ -18,6 +18,14 @@ export const getEnquiryById = async (id: string) => {
     return response;
 };
 
+export const convertEnquiryToLead = async (id: string) => {
+    const response = await fetchWithToken(`/api/enquiry/${id}/convert-to-lead`, {}, { method: "POST" });
+    if ((response as any).error) {
+        throw new Error((response as any).error?.message || "Failed to convert enquiry to lead");
+    }
+    return response;
+};
+
 export const updateEnquiryById = async (id: string, formUpdatedData: Record<string, any>) => {
     const response = await fetchWithToken(`/api/enquiry/${id}`, formUpdatedData, { method: "PUT" });
     if ((response as any).error) {

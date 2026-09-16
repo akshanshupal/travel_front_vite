@@ -129,6 +129,17 @@ import LeadSettingsPage from "@/pages/lead-management/settings/index";
 import ContactPropertiesPage from "@/pages/lead-management/settings/contact-properties/index";
 import ContactPropertiesAddPage from "@/pages/lead-management/settings/contact-properties/add";
 import ContactPropertiesEditPage from "@/pages/lead-management/settings/contact-properties/edit/[id]";
+import LeadReportsPage from "@/pages/lead-management/reports";
+import DialHomePage from "@/pages/dial";
+import DialLeadsPage from "@/pages/dial/leads";
+import DialLeadViewPage from "@/pages/dial/leads/view/[id]";
+import DialTasksPage from "@/pages/dial/tasks";
+import AssignToMePage from "@/pages/dial/tasks/assign-to-me";
+import ReportedByMePage from "@/pages/dial/tasks/reported-by-me";
+import DialReportsPage from "@/pages/dial/reports";
+import DialCallLogsPage from "@/pages/dial/call-logs";
+import DialCampaignsPage from "@/pages/dial/campaigns";
+import DialWalkInLeadsPage from "@/pages/dial/walk-in-leads";
 import PhotographyClientPage from "@/pages/photography/client";
 import PhotographyClientAddPage from "@/pages/photography/client/add";
 import PhotographyClientEditPage from "@/pages/photography/client/edit/[id]";
@@ -265,13 +276,16 @@ createRoot(document.getElementById("root")!).render(
                         <Route path="/itinerary/list/edit/:id" element={<ItineraryEditPage />} />
                         <Route path="/routes" element={<RoutesPage />} />
                         <Route path="/docs" element={<PlaceholderPage />} />
-                        <Route path="/dial/home" element={<PlaceholderPage />} />
-                        <Route path="/dial/leads" element={<PlaceholderPage />} />
-                        <Route path="/dial/tasks" element={<PlaceholderPage />} />
-                        <Route path="/dial/reports" element={<PlaceholderPage />} />
-                        <Route path="/dial/call-logs" element={<PlaceholderPage />} />
-                        <Route path="/dial/campaigns" element={<PlaceholderPage />} />
-                        <Route path="/dial/walk-in-leads" element={<PlaceholderPage />} />
+                        <Route path="/dial/home" element={<DialHomePage />} />
+                        <Route path="/dial/leads" element={<DialLeadsPage />} />
+                        <Route path="/dial/leads/view/:id" element={<DialLeadViewPage />} />
+                        <Route path="/dial/tasks" element={<DialTasksPage />} />
+                        <Route path="/dial/tasks/assign-to-me" element={<AssignToMePage />} />
+                        <Route path="/dial/tasks/reported-by-me" element={<ReportedByMePage />} />
+                        <Route path="/dial/reports" element={<DialReportsPage />} />
+                        <Route path="/dial/call-logs" element={<DialCallLogsPage />} />
+                        <Route path="/dial/campaigns" element={<DialCampaignsPage />} />
+                        <Route path="/dial/walk-in-leads" element={<DialWalkInLeadsPage />} />
                         <Route path="/bookings/assignment" element={<AssignmentPage />} />
                         <Route path="/bookings/assignment/add" element={<AssignmentAddPage />} />
                         <Route path="/bookings/assignment/view/:id" element={<AssignmentViewPage />} />
@@ -334,6 +348,7 @@ createRoot(document.getElementById("root")!).render(
                         <Route path="/lead-management/leads/edit/:id" element={<LeadsEditPage />} />
                         <Route path="/lead-management/leads/view/:id" element={<LeadsViewPage />} />
                         <Route path="/lead-management/enquiry" element={<EnquiryIndexPage />} />
+                        <Route path="/lead-management/reports" element={<LeadReportsPage />} />
                         <Route path="/lead-management/campaign" element={<CampaignIndexPage />} />
                         <Route path="/lead-management/campaign/add" element={<CampaignAddPage />} />
                         <Route path="/lead-management/campaign/edit/:id" element={<CampaignEditPage />} />
