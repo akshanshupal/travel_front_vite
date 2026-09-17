@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { DefaultLayout } from "@/layouts/DefaultLayout";
-import { TableCard } from "@/components/application/table/table";
+import { FloatingHeaderTable, TableCard } from "@/components/application/table/table";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { useStoreSnackbar } from "@/store/snackbar";
@@ -134,12 +134,12 @@ export default function PhotographyEstimateViewPage() {
                             </div>
                         </div>
 
-                        <div className="mt-4 overflow-x-auto rounded border border-secondary">
+                        <FloatingHeaderTable className="mt-4 rounded border border-secondary">
                             <table className="w-full border-collapse text-left text-sm">
                                 <thead>
-                                    <tr className="border-b border-secondary bg-secondary/20">
-                                        <th className="px-3 py-2 font-semibold text-primary">Items</th>
-                                        <th className="px-3 py-2 font-semibold text-primary">Price</th>
+                                    <tr className="border-b border-secondary">
+                                        <th className="sticky left-0 z-20 bg-secondary px-3 py-2 font-semibold text-primary shadow-[4px_0_8px_-6px_rgba(0,0,0,0.35)]">Items</th>
+                                        <th className="bg-secondary px-3 py-2 font-semibold text-primary">Price</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -149,7 +149,7 @@ export default function PhotographyEstimateViewPage() {
                                             .filter(Boolean);
                                         return (
                                             <tr key={index} className="border-b border-secondary align-top">
-                                                <td className="px-3 py-2 text-primary">
+                                                <td className="sticky left-0 z-10 bg-primary px-3 py-2 text-primary shadow-[4px_0_8px_-6px_rgba(0,0,0,0.35)]">
                                                     <div className="font-bold uppercase">{item.mainEventName || "-"}</div>
                                                     <div className="mt-1 text-sm">Event Date: {item.eventDate ? formatDate(item.eventDate) : "-"}</div>
                                                     <div className="text-sm">Event Duration: {item.timing || "8:00 PM to 2:00 AM"}</div>
@@ -174,7 +174,7 @@ export default function PhotographyEstimateViewPage() {
                                     )}
                                 </tbody>
                             </table>
-                        </div>
+                        </FloatingHeaderTable>
 
                         <div className="mt-4 text-xs text-tertiary">
                             Notes / Terms Hospitality Group - Kotak Account Number- 4049111673 IFSC - KKBK0000154 Branch - Sector 51 Noida UPI:-

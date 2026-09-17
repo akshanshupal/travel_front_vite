@@ -1,5 +1,6 @@
 import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
+import { FloatingHeaderTable } from "@/components/application/table/table";
 import { useMemo, useState } from "react";
 import {
     FaBarcode,
@@ -228,26 +229,26 @@ export const AssignmentDetails = ({ data, paymentStores = [] }: AssignmentDetail
                             <div className="mb-2">
                                 <SectionSubHeader title="Payment Info" icon={<FaIdCard />} />
                             </div>
-                            <div className="overflow-x-auto rounded-lg border border-secondary">
+                            <FloatingHeaderTable className="rounded-lg border border-secondary">
                                 <table className="min-w-full divide-y divide-secondary text-sm text-primary">
                                     <thead className="bg-secondary">
                                         <tr>
-                                            <th className="px-3 py-2 text-left text-xs font-semibold">Date</th>
-                                            <th className="px-3 py-2 text-left text-xs font-semibold">Token Amount</th>
-                                            <th className="px-3 py-2 text-left text-xs font-semibold">Action</th>
+                                            <th className="sticky left-0 z-20 bg-secondary px-3 py-2 text-left text-xs font-semibold shadow-[4px_0_8px_-6px_rgba(0,0,0,0.35)]">Date</th>
+                                            <th className="bg-secondary px-3 py-2 text-left text-xs font-semibold">Token Amount</th>
+                                            <th className="sticky right-0 z-20 border-l border-secondary bg-secondary px-3 py-2 text-left text-xs font-semibold shadow-[-4px_0_8px_-6px_rgba(0,0,0,0.35)]">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-secondary">
                                         <tr className="hover:bg-primary_hover">
-                                            <td className="px-3 py-2">{formatDateTime(data?.tokenPayment?.paymentDate) || "N/A"}</td>
+                                            <td className="sticky left-0 z-10 bg-primary px-3 py-2 shadow-[4px_0_8px_-6px_rgba(0,0,0,0.35)]">{formatDateTime(data?.tokenPayment?.paymentDate) || "N/A"}</td>
                                             <td className="px-3 py-2">{data?.tokenPayment?.amount || "N/A"}</td>
-                                            <td className="px-3 py-2">
+                                            <td className="sticky right-0 z-10 border-l border-secondary bg-primary px-3 py-2 shadow-[-4px_0_8px_-6px_rgba(0,0,0,0.35)]">
                                                 {data?.tokenPayment?.paymentImg ? <ViewFileButton href={data?.tokenPayment?.paymentImg} /> : <span className="text-tertiary">No File</span>}
                                             </td>
                                         </tr>
                                     </tbody>
                                 </table>
-                            </div>
+                            </FloatingHeaderTable>
                         </div>
                     )}
                 </div>
@@ -274,26 +275,26 @@ export const AssignmentDetails = ({ data, paymentStores = [] }: AssignmentDetail
                             <div className="mb-2">
                                 <SectionSubHeader title="ID Proofs" icon={<FaIdCard />} />
                             </div>
-                            <div className="overflow-x-auto rounded-lg border border-secondary">
+                            <FloatingHeaderTable className="rounded-lg border border-secondary">
                                 <table className="min-w-full divide-y divide-secondary text-sm text-primary">
                                     <thead className="bg-secondary">
                                         <tr>
-                                            <th className="px-3 py-2 text-left text-xs font-semibold">ID Type</th>
-                                            <th className="px-3 py-2 text-left text-xs font-semibold">ID Number</th>
-                                            <th className="px-3 py-2 text-left text-xs font-semibold">Action</th>
+                                            <th className="sticky left-0 z-20 bg-secondary px-3 py-2 text-left text-xs font-semibold shadow-[4px_0_8px_-6px_rgba(0,0,0,0.35)]">ID Type</th>
+                                            <th className="bg-secondary px-3 py-2 text-left text-xs font-semibold">ID Number</th>
+                                            <th className="sticky right-0 z-20 border-l border-secondary bg-secondary px-3 py-2 text-left text-xs font-semibold shadow-[-4px_0_8px_-6px_rgba(0,0,0,0.35)]">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-secondary">
                                         {data.idProof.map((item: any, index: number) => (
                                             <tr key={index} className="hover:bg-primary_hover">
-                                                <td className="px-3 py-2 capitalize">{item?.name || "N/A"}</td>
+                                                <td className="sticky left-0 z-10 bg-primary px-3 py-2 capitalize shadow-[4px_0_8px_-6px_rgba(0,0,0,0.35)]">{item?.name || "N/A"}</td>
                                                 <td className="px-3 py-2">{item?.number || "N/A"}</td>
-                                                <td className="px-3 py-2">{item?.file ? <ViewFileButton href={item?.file} /> : <span className="text-tertiary">No File</span>}</td>
+                                                <td className="sticky right-0 z-10 border-l border-secondary bg-primary px-3 py-2 shadow-[-4px_0_8px_-6px_rgba(0,0,0,0.35)]">{item?.file ? <ViewFileButton href={item?.file} /> : <span className="text-tertiary">No File</span>}</td>
                                             </tr>
                                         ))}
                                     </tbody>
                                 </table>
-                            </div>
+                            </FloatingHeaderTable>
                         </div>
                     )}
                 </div>

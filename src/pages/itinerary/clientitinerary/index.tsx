@@ -4,7 +4,7 @@ import { Badge, BadgeWithButton } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
-import { PaginationButtonGroup } from "@/components/application/pagination/pagination";
+import { CompactPagination } from "@/components/application/pagination/pagination";
 import { Input } from "@/components/base/input/input";
 import { useStoreLogin } from "@/store/login";
 import { useStoreSnackbar } from "@/store/snackbar";
@@ -45,7 +45,8 @@ export default function ClientItineraryListPage() {
     // Pagination state
     const [page, setPage] = useState(Number(searchParams.get("page")) || 1);
     const [limit, setLimit] = useState(Number(searchParams.get("limit")) || 10);
-    const [totalRecords, setTotalRecords] = useState(0);
+    const [totalRecords, setTotalRecords] = useState<number | null>(null);
+    const [countLoading, setCountLoading] = useState(false);
 
     // Filter state
     const [filters, setFilters] = useState({
@@ -153,7 +154,6 @@ export default function ClientItineraryListPage() {
             setLoading(true);
             try {
                 const query: any = {
-                    totalCount: true,
                     page,
                     limit,
                     populate: "salesExecutive",
@@ -181,11 +181,8 @@ export default function ClientItineraryListPage() {
                     throw new Error(res.error);
                 }
 
-                const list = Array.isArray(res?.data) ? res.data : (res?.data?.docs || res?.docs || []);
-                const total = res?.totalCount || res?.data?.totalDocs || res?.totalDocs || 0;
-
+                const list = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : (res?.data?.docs || res?.docs || []);
                 setItems(list);
-                setTotalRecords(total);
             } catch (error: any) {
                 showSnackbar({
                     title: "Error",
@@ -199,6 +196,28 @@ export default function ClientItineraryListPage() {
 
         fetchData();
     }, [page, limit, debouncedFilters, sortField, user, showSnackbar]);
+
+    useEffect(() => setTotalRecords(null), [debouncedFilters, sortField, user]);
+
+    const viewTotalCount = async () => {
+        if (countLoading || totalRecords !== null) return;
+        setCountLoading(true);
+        try {
+            const query: any = { page: 1, limit: 1, totalCount: true, populate: "salesExecutive" };
+            if (sortField !== "updatedAt") {
+                query.sortField = sortField;
+                query.sortOrder = "DESC";
+            }
+            Object.entries(debouncedFilters).forEach(([key, value]) => {
+                if (value) query[key] = value;
+            });
+            if ((user as any)?.type === "AGENT") query.salesExecutive = user?.id;
+            const res: any = await clientItineraryService.list(query);
+            setTotalRecords(Number(res?.totalCount ?? res?.data?.totalDocs ?? res?.totalDocs ?? 0));
+        } finally {
+            setCountLoading(false);
+        }
+    };
 
     const handleDelete = async (id: string) => {
         if (!window.confirm("Are you sure you want to delete this client itinerary?")) return;
@@ -216,7 +235,7 @@ export default function ClientItineraryListPage() {
             // Refresh list
             const newItems = items.filter(item => item._id !== id && item.id !== id);
             setItems(newItems);
-            setTotalRecords(prev => prev - 1);
+            setTotalRecords(null);
         } catch (error: any) {
             showSnackbar({
                 title: "Error",
@@ -673,12 +692,7 @@ export default function ClientItineraryListPage() {
                         </StickyTable>
                     )}
 
-                    <PaginationButtonGroup
-                        page={page}
-                        total={Math.ceil(totalRecords / limit)}
-                        align="center"
-                        onPageChange={setPage}
-                    />
+                    <CompactPagination page={page} limit={limit} itemCount={items.length} totalCount={totalRecords} countLoading={countLoading} onPageChange={setPage} onLimitChange={(nextLimit) => { setPage(1); setLimit(nextLimit); }} onRequestTotalCount={viewTotalCount} />
                 </TableCard.Root>
             </div>
             <ModalOverlay

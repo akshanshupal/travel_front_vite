@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { DefaultLayout } from "@/layouts/DefaultLayout";
-import { TableCard } from "@/components/application/table/table";
+import { FloatingHeaderTable, TableCard } from "@/components/application/table/table";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { Select } from "@/components/base/select/select";
@@ -220,27 +220,27 @@ export default function PhotographyPaymentViewPage() {
                                     <div className="text-sm font-semibold text-primary">{booking?.paymentStatus || "-"}</div>
                                 </div>
                             </div>
-                            <div className="overflow-x-auto rounded border border-secondary">
+                            <FloatingHeaderTable className="rounded border border-secondary">
                                 <table className="w-full border-collapse text-left text-sm">
                                     <thead>
-                                        <tr className="border-b border-secondary bg-secondary/20">
-                                            <th className="px-3 py-2 font-semibold text-primary">Receipt</th>
-                                            <th className="px-3 py-2 font-semibold text-primary">Payment Date</th>
-                                            <th className="px-3 py-2 font-semibold text-primary">Amount</th>
-                                            <th className="px-3 py-2 font-semibold text-primary">Payment Mode</th>
-                                            <th className="px-3 py-2 font-semibold text-primary">Remarks</th>
-                                            <th className="px-3 py-2 font-semibold text-primary">Actions</th>
+                                        <tr className="border-b border-secondary">
+                                            <th className="sticky left-0 z-20 bg-secondary px-3 py-2 font-semibold text-primary shadow-[4px_0_8px_-6px_rgba(0,0,0,0.35)]">Receipt</th>
+                                            <th className="bg-secondary px-3 py-2 font-semibold text-primary">Payment Date</th>
+                                            <th className="bg-secondary px-3 py-2 font-semibold text-primary">Amount</th>
+                                            <th className="bg-secondary px-3 py-2 font-semibold text-primary">Payment Mode</th>
+                                            <th className="bg-secondary px-3 py-2 font-semibold text-primary">Remarks</th>
+                                            <th className="sticky right-0 z-20 border-l border-secondary bg-secondary px-3 py-2 font-semibold text-primary shadow-[-4px_0_8px_-6px_rgba(0,0,0,0.35)]">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {asArray(payments).map((payment: any) => (
                                             <tr key={payment.id} className="border-b border-secondary">
-                                                <td className="px-3 py-2 text-primary">{payment?.receiptNo || "-"}</td>
+                                                <td className="sticky left-0 z-10 bg-primary px-3 py-2 text-primary shadow-[4px_0_8px_-6px_rgba(0,0,0,0.35)]">{payment?.receiptNo || "-"}</td>
                                                 <td className="px-3 py-2 text-primary">{formatDateTime(payment?.paymentDate)}</td>
                                                 <td className="px-3 py-2 text-primary">₹{Number(payment?.amount || 0).toFixed(2)}</td>
                                                 <td className="px-3 py-2 text-primary">{payment?.paymentStore?.title || "-"}</td>
                                                 <td className="px-3 py-2 text-primary">{payment?.remarks || "-"}</td>
-                                                <td className="px-3 py-2 text-primary">
+                                                <td className="sticky right-0 z-10 border-l border-secondary bg-primary px-3 py-2 text-primary shadow-[-4px_0_8px_-6px_rgba(0,0,0,0.35)]">
                                                     <Button
                                                         color="secondary"
                                                         onClick={() => window.open(`/photography/payments-receipt/${payment?.id}`, "_blank")}
@@ -259,7 +259,7 @@ export default function PhotographyPaymentViewPage() {
                                         ) : null}
                                     </tbody>
                                 </table>
-                            </div>
+                            </FloatingHeaderTable>
                         </>
                     )}
                 </div>

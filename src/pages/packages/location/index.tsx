@@ -6,7 +6,7 @@ import { CloseButton } from "@/components/base/buttons/close-button";
 import { Input } from "@/components/base/input/input";
 import { Label } from "@/components/base/input/label";
 import { Select } from "@/components/base/select/select";
-import { PaginationButtonGroup } from "@/components/application/pagination/pagination";
+import { CompactPagination } from "@/components/application/pagination/pagination";
 import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { BadgeWithButton } from "@/components/base/badges/badges";
@@ -63,12 +63,12 @@ export default function PackageLocationListPage() {
     const [items, setItems] = useState<LocationItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
-    const [totalRecords, setTotalRecords] = useState(0);
+    const [totalRecords, setTotalRecords] = useState<number | null>(null);
+    const [countLoading, setCountLoading] = useState(false);
 
     const [deleteTarget, setDeleteTarget] = useState<{ id: string; title?: string } | null>(null);
     const deletingRef = useRef(false);
 
-    const totalPages = Math.max(1, Math.ceil((totalRecords || 0) / limit));
     const indexById = useMemo(() => new Map(items.map((item, index) => [item.id, (page - 1) * limit + index + 1])), [items, limit, page]);
     const isFilterActive = Boolean(filters.title || filters.status);
 
@@ -98,7 +98,6 @@ export default function PackageLocationListPage() {
             setLoadError(null);
             try {
                 const res = await fetchWithToken("/api/location", {
-                    totalCount: "true",
                     page: String(page),
                     limit: String(limit),
                     ...(debouncedFilters.title ? { title: debouncedFilters.title } : {}),
@@ -119,29 +118,34 @@ export default function PackageLocationListPage() {
                         return { ...it, id } as LocationItem;
                     })
                     .filter(Boolean) as LocationItem[];
-                const countRaw =
-                    (res as any)?.totalCount ??
-                    (res as any)?.total ??
-                    (res as any)?.count ??
-                    resolved?.totalCount ??
-                    resolved?.total ??
-                    resolved?.count ??
-                    resolved?.pagination?.total ??
-                    resolved?.pagination?.totalCount ??
-                    resolved?.meta?.total;
-                const count = Number(countRaw ?? normalized.length) || normalized.length;
                 setItems(normalized);
-                setTotalRecords(count);
             } catch (e: any) {
                 setLoadError(e?.error?.message || e?.message || "Failed to load locations");
                 setItems([]);
-                setTotalRecords(0);
             } finally {
                 setLoading(false);
             }
         };
         run();
     }, [debouncedFilters.status, debouncedFilters.title, limit, page]);
+
+    useEffect(() => setTotalRecords(null), [debouncedFilters]);
+
+    const viewTotalCount = async () => {
+        if (countLoading || totalRecords !== null) return;
+        setCountLoading(true);
+        try {
+            const res: any = await fetchWithToken("/api/location", {
+                page: "1", limit: "1", totalCount: "true",
+                ...(debouncedFilters.title ? { title: debouncedFilters.title } : {}),
+                ...(debouncedFilters.status ? { status: debouncedFilters.status } : {}),
+            });
+            const resolved = res?.data ?? res;
+            setTotalRecords(Number(res?.totalCount ?? res?.total ?? res?.count ?? resolved?.totalCount ?? resolved?.total ?? resolved?.count ?? resolved?.pagination?.total ?? resolved?.pagination?.totalCount ?? resolved?.meta?.total ?? 0));
+        } finally {
+            setCountLoading(false);
+        }
+    };
 
     const handleOpenFilters = () => setTempFilters(filters);
 
@@ -172,7 +176,7 @@ export default function PackageLocationListPage() {
             }
             useStoreSnackbar.getState().showSnackbar({ title: "Deleted", description: "Location deleted", color: "success" });
             setItems((prev) => prev.filter((it) => it.id !== deleteTarget.id));
-            setTotalRecords((prev) => Math.max(0, prev - 1));
+            setTotalRecords(null);
             setDeleteTarget(null);
         } catch (e: any) {
             useStoreSnackbar.getState().showSnackbar({ title: "Error", description: e?.message || "Failed to delete location", color: "danger" });
@@ -372,7 +376,7 @@ export default function PackageLocationListPage() {
                         </StickyTable>
                     )}
 
-                    <PaginationButtonGroup page={page} total={totalPages} align="center" onPageChange={(next) => setPage(Math.min(totalPages, Math.max(1, next)))} />
+                    <CompactPagination page={page} limit={limit} itemCount={items.length} totalCount={totalRecords} countLoading={countLoading} onPageChange={setPage} onLimitChange={(nextLimit) => { setPage(1); setLimit(nextLimit); }} onRequestTotalCount={viewTotalCount} />
                 </TableCard.Root>
             </div>
 

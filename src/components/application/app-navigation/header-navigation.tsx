@@ -150,6 +150,7 @@ export const HeaderNavigationBase = ({
             return (
                 <li key={item.label} className="relative py-0.5 group">
                     <AriaButton
+                        onPress={() => navigate(item.href)}
                         className={cx(
                             "group flex items-center rounded-md bg-primary px-3 py-2 outline-focus-ring transition duration-100 ease-linear select-none hover:bg-primary_hover focus-visible:outline-2 focus-visible:outline-offset-2",
                             isActive && "bg-active hover:bg-secondary_hover text-brand-secondary",
@@ -167,7 +168,7 @@ export const HeaderNavigationBase = ({
                         <ChevronDown className="ml-2 size-4 text-fg-quaternary transition-inherit-all" />
                     </AriaButton>
                     <div className="absolute left-0 top-full z-50 mt-2 hidden min-w-56 rounded-lg border border-secondary bg-primary shadow-lg group-hover:block before:absolute before:-top-2 before:left-0 before:h-2 before:w-full before:content-['']">
-                        <ul className="py-2">{item.items.map((child) => renderDropdownItem(child))}</ul>
+                        <ul className="max-h-80 overflow-y-auto py-2">{item.items.map((child) => renderDropdownItem(child))}</ul>
                     </div>
                 </li>
             );

@@ -1,5 +1,5 @@
 import { DefaultLayout } from "@/layouts/DefaultLayout";
-import { PaginationButtonGroup } from "@/components/application/pagination/pagination";
+import { CompactPagination } from "@/components/application/pagination/pagination";
 import { StickyTable, Table, TableCard } from "@/components/application/table/table";
 import { Badge, BadgeWithButton } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
@@ -37,7 +37,8 @@ export default function PaymentStorePage() {
 
     const [loading, setLoading] = useState(false);
     const [items, setItems] = useState<any[]>([]);
-    const [totalRecords, setTotalRecords] = useState(0);
+    const [totalRecords, setTotalRecords] = useState<number | null>(null);
+    const [countLoading, setCountLoading] = useState(false);
 
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState<any>(null);
@@ -53,7 +54,6 @@ export default function PaymentStorePage() {
     const [debouncedFilters, setDebouncedFilters] = useState(filters);
     const [tempFilters, setTempFilters] = useState(filters);
     const isFilterActive = Boolean(filters.title || filters.isDefault || filters.status);
-    const totalPages = Math.max(1, Math.ceil((totalRecords || 0) / limit));
     const getItemId = (item: any) => String(item?.id || item?._id || "");
     const indexById = useMemo(
         () => new Map(items.map((item, index) => [getItemId(item), (page - 1) * limit + index + 1])),
@@ -122,7 +122,6 @@ export default function PaymentStorePage() {
         setLoading(true);
         try {
             const params: Record<string, any> = {
-                totalCount: true,
                 page,
                 limit,
                 ...debouncedFilters,
@@ -134,8 +133,7 @@ export default function PaymentStorePage() {
             if (response.error) {
                 throw new Error(response.error);
             }
-            setItems(response.data || []);
-            setTotalRecords(response.totalCount || 0);
+            setItems(Array.isArray(response) ? response : (response.data || []));
         } catch (error: any) {
             showSnackbar({
                 title: "Error",
@@ -150,6 +148,21 @@ export default function PaymentStorePage() {
         fetchData();
     }, [page, limit, debouncedFilters]);
 
+    useEffect(() => setTotalRecords(null), [debouncedFilters, limit]);
+
+    const requestTotalCount = async () => {
+        setCountLoading(true);
+        try {
+            const params: Record<string, any> = { ...debouncedFilters, page: 1, limit: 1, totalCount: true };
+            Object.keys(params).forEach(key => { if (params[key] === "") delete params[key]; });
+            const response = await getPhotographyPaymentStore(params);
+            if (response.error) throw new Error(response.error);
+            setTotalRecords(Number(response.totalCount ?? 0));
+        } catch {
+            showSnackbar({ title: "Error", description: "Failed to load total count", color: "danger" });
+        } finally { setCountLoading(false); }
+    };
+
     const handleDelete = async () => {
         if (!deleteTarget) return;
         try {
@@ -163,6 +176,7 @@ export default function PaymentStorePage() {
                 color: "success",
             });
             setDeleteModalOpen(false);
+            setTotalRecords(null);
             fetchData();
         } catch (error: any) {
             showSnackbar({
@@ -179,7 +193,7 @@ export default function PaymentStorePage() {
                 <TableCard.Root className="w-full">
                     <TableCard.Header
                         title="Payment Store List"
-                        badge={loading ? "..." : totalRecords}
+                        badge={loading ? "..." : totalRecords ?? "—"}
                         contentTrailing={
                             <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center">
                                 <Select
@@ -376,12 +390,18 @@ export default function PaymentStorePage() {
                         )}
                     </StickyTable>
 
-                    <PaginationButtonGroup
+                    <CompactPagination
                         page={page}
-                        total={totalPages}
-                        onPageChange={(nextPage) => setPage(Math.min(totalPages, Math.max(1, nextPage)))}
-                        align="center"
-                        className="py-4"
+                        limit={limit}
+                        itemCount={items.length}
+                        totalCount={totalRecords}
+                        countLoading={countLoading}
+                        onPageChange={setPage}
+                        onLimitChange={(nextLimit) => {
+                            setLimit(nextLimit);
+                            setPage(1);
+                        }}
+                        onRequestTotalCount={requestTotalCount}
                     />
                 </TableCard.Root>
             </div>

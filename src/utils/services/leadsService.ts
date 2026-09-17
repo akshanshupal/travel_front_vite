@@ -52,3 +52,18 @@ export const getLeadsDelete = async (id: string) => {
     }
     return response;
 };
+
+export const getLeadLogs = async (params: Record<string, any> = {}) => {
+    const response = await fetchWithToken('/api/lead-logs', params);
+    if ((response as any).error) {
+        console.error('Error fetching lead logs:', (response as any).error);
+        throw new Error((response as any).error?.message || 'Failed to fetch lead logs');
+    }
+    return response;
+};
+
+export const bulkLeads = async (data: Record<string, any>) => {
+    const response = await fetchWithToken('/api/leads/bulk', data, { method: 'POST' });
+    if ((response as any).error) throw new Error((response as any).error?.message || 'Failed to process leads');
+    return response;
+};

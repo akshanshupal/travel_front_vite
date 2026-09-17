@@ -310,16 +310,16 @@ const AgentWiseGraph = () => {
                         graphFilters.chartType === "table" ? (
                             <div className="h-full overflow-auto rounded-lg border border-secondary">
                                 <table className="w-full text-sm">
-                                    <thead className="bg-secondary/30 text-left">
+                                    <thead className="text-left">
                                         <tr>
-                                            <th className="px-3 py-2">Agent</th>
-                                            <th className="px-3 py-2">Total Quotations</th>
+                                            <th className="sticky left-0 top-0 z-20 bg-secondary px-3 py-2 shadow-[4px_0_8px_-6px_rgba(0,0,0,0.35)]">Agent</th>
+                                            <th className="sticky top-0 bg-secondary px-3 py-2">Total Quotations</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {graphData.labels.map((label, index) => (
                                             <tr key={`${label}-${index}`} className="border-t border-secondary">
-                                                <td className="px-3 py-2">{label}</td>
+                                                <td className="sticky left-0 z-10 bg-primary px-3 py-2 shadow-[4px_0_8px_-6px_rgba(0,0,0,0.35)]">{label}</td>
                                                 <td className="px-3 py-2">{graphData.datasets[0].data[index]}</td>
                                             </tr>
                                         ))}
@@ -589,16 +589,16 @@ const DurationWiseGraph = () => {
                         graphFilters.chartType === "table" ? (
                             <div className="h-full overflow-auto rounded-lg border border-secondary">
                                 <table className="w-full text-sm">
-                                    <thead className="bg-secondary/30 text-left">
+                                    <thead className="text-left">
                                         <tr>
-                                            <th className="px-3 py-2">Duration</th>
-                                            <th className="px-3 py-2">Total Quotations</th>
+                                            <th className="sticky left-0 top-0 z-20 bg-secondary px-3 py-2 shadow-[4px_0_8px_-6px_rgba(0,0,0,0.35)]">Duration</th>
+                                            <th className="sticky top-0 bg-secondary px-3 py-2">Total Quotations</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {graphData.labels.map((label, index) => (
                                             <tr key={`${label}-${index}`} className="border-t border-secondary">
-                                                <td className="px-3 py-2">{label}</td>
+                                                <td className="sticky left-0 z-10 bg-primary px-3 py-2 shadow-[4px_0_8px_-6px_rgba(0,0,0,0.35)]">{label}</td>
                                                 <td className="px-3 py-2">{graphData.datasets[0].data[index]}</td>
                                             </tr>
                                         ))}

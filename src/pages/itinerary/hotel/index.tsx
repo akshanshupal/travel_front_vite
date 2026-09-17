@@ -5,7 +5,7 @@ import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { CloseButton } from "@/components/base/buttons/close-button";
 import { Input } from "@/components/base/input/input";
 import { Select } from "@/components/base/select/select";
-import { PaginationButtonGroup } from "@/components/application/pagination/pagination";
+import { CompactPagination } from "@/components/application/pagination/pagination";
 import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { fetchWithToken } from "@/utils/fetchApi";
 import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
@@ -71,13 +71,13 @@ export default function ItineraryHotelListPage() {
     const [categories, setCategories] = useState<CategoryItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
-    const [totalRecords, setTotalRecords] = useState(0);
+    const [totalRecords, setTotalRecords] = useState<number | null>(null);
+    const [countLoading, setCountLoading] = useState(false);
     const availableWidth = useAvailableTableWidth();
 
     const [deleteTarget, setDeleteTarget] = useState<{ id: string; name?: string } | null>(null);
     const deletingRef = useRef(false);
 
-    const totalPages = Math.max(1, Math.ceil((totalRecords || 0) / limit));
     const indexById = useMemo(() => new Map(items.map((item, index) => [item.id, (page - 1) * limit + index + 1])), [items, limit, page]);
     const isFilterActive = Boolean(filters.name || filters.location || filters.category || filters.status);
 
@@ -124,7 +124,6 @@ export default function ItineraryHotelListPage() {
             setLoadError(null);
             try {
                 const res = await fetchWithToken("/api/hotel", {
-                    totalCount: "true",
                     page: String(page),
                     limit: String(limit),
                     ...(debouncedFilters.name ? { name: debouncedFilters.name } : {}),
@@ -148,19 +147,9 @@ export default function ItineraryHotelListPage() {
                         return { ...it, id } as HotelItem;
                     })
                     .filter(Boolean) as HotelItem[];
-                const countRaw =
-                    (res as any)?.totalCount ??
-                    (res as any)?.total ??
-                    (res as any)?.count ??
-                    resolved?.totalCount ??
-                    resolved?.total ??
-                    resolved?.count ??
-                    normalized.length;
                 setItems(normalized);
-                setTotalRecords(Number(countRaw) || 0);
             } catch (e: any) {
                 setItems([]);
-                setTotalRecords(0);
                 setLoadError(e?.error?.message || e?.message || "Failed to load hotels");
             } finally {
                 setLoading(false);
@@ -168,6 +157,26 @@ export default function ItineraryHotelListPage() {
         };
         run();
     }, [debouncedFilters, limit, page]);
+
+    useEffect(() => setTotalRecords(null), [debouncedFilters]);
+
+    const viewTotalCount = async () => {
+        if (countLoading || totalRecords !== null) return;
+        setCountLoading(true);
+        try {
+            const res: any = await fetchWithToken("/api/hotel", {
+                page: "1", limit: "1", totalCount: "true", populate: "category",
+                ...(debouncedFilters.name ? { name: debouncedFilters.name } : {}),
+                ...(debouncedFilters.location ? { location: debouncedFilters.location } : {}),
+                ...(debouncedFilters.category ? { category: debouncedFilters.category } : {}),
+                ...(debouncedFilters.status ? { status: debouncedFilters.status } : {}),
+            });
+            const resolved = res?.data ?? res;
+            setTotalRecords(Number(res?.totalCount ?? res?.total ?? res?.count ?? resolved?.totalCount ?? resolved?.total ?? resolved?.count ?? 0));
+        } finally {
+            setCountLoading(false);
+        }
+    };
 
     const handleOpenFilters = () => {
         setTempFilters(filters);
@@ -202,7 +211,7 @@ export default function ItineraryHotelListPage() {
         try {
             await fetchWithToken(`/api/hotel/${deleteTarget.id}`, {}, { method: "DELETE" });
             setItems((prev) => prev.filter((it) => it.id !== deleteTarget.id));
-            setTotalRecords((prev) => Math.max(0, prev - 1));
+            setTotalRecords(null);
             setDeleteTarget(null);
         } finally {
             deletingRef.current = false;
@@ -454,12 +463,7 @@ export default function ItineraryHotelListPage() {
                         </StickyTable>
                     )}
 
-                    <PaginationButtonGroup
-                        page={page}
-                        total={totalPages}
-                        align="center"
-                        onPageChange={(nextPage) => setPage(Math.min(totalPages, Math.max(1, nextPage)))}
-                    />
+                    <CompactPagination page={page} limit={limit} itemCount={items.length} totalCount={totalRecords} countLoading={countLoading} onPageChange={setPage} onLimitChange={(nextLimit) => { setPage(1); setLimit(nextLimit); }} onRequestTotalCount={viewTotalCount} />
                 </TableCard.Root>
             </div>
 

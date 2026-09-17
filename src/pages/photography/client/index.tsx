@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { DefaultLayout } from "@/layouts/DefaultLayout";
 import { Button } from "@/components/base/buttons/button";
-import { PaginationButtonGroup } from "@/components/application/pagination/pagination";
+import { CompactPagination } from "@/components/application/pagination/pagination";
 import { StickyTable, Table, TableCard } from "@/components/application/table/table";
 import { Input } from "@/components/base/input/input";
 import { Select } from "@/components/base/select/select";
@@ -40,7 +40,7 @@ export default function PhotographyClientPage() {
         setLoading(true);
         setLoadError(null);
         try {
-            const response: any = await getPhotographyClients({ limit: "all", totalCount: "true" });
+            const response: any = await getPhotographyClients({ limit: "all" });
             const resolved = response?.data ?? response;
             const list = Array.isArray(resolved?.data) ? resolved.data : Array.isArray(resolved) ? resolved : [];
             setClients(list);
@@ -339,11 +339,17 @@ export default function PhotographyClientPage() {
                         </StickyTable>
                     )}
 
-                    <PaginationButtonGroup
+                    <CompactPagination
                         page={page}
-                        total={totalPages}
-                        align="center"
+                        limit={limit}
+                        itemCount={pagedClients.length}
+                        totalCount={filteredClients.length}
+                        pageSizeOptions={[10, 25, 50]}
                         onPageChange={(nextPage) => setPage(Math.min(totalPages, Math.max(1, nextPage)))}
+                        onLimitChange={(nextLimit) => {
+                            setLimit(nextLimit);
+                            setPage(1);
+                        }}
                     />
                 </TableCard.Root>
             </div>

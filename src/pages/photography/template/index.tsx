@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { DefaultLayout } from "@/layouts/DefaultLayout";
-import { PaginationButtonGroup } from "@/components/application/pagination/pagination";
+import { CompactPagination } from "@/components/application/pagination/pagination";
 import { StickyTable, Table, TableCard } from "@/components/application/table/table";
 import { Input } from "@/components/base/input/input";
 import { Select } from "@/components/base/select/select";
@@ -250,11 +250,17 @@ export default function PhotographyTemplatePage() {
                         )}
                     </StickyTable>
 
-                    <PaginationButtonGroup
+                    <CompactPagination
                         page={page}
-                        total={totalPages}
-                        align="center"
+                        limit={limit}
+                        itemCount={pagedTemplates.length}
+                        totalCount={filteredTemplates.length}
+                        pageSizeOptions={[10, 25, 50]}
                         onPageChange={(nextPage) => setPage(Math.min(totalPages, Math.max(1, nextPage)))}
+                        onLimitChange={(nextLimit) => {
+                            setLimit(nextLimit);
+                            setPage(1);
+                        }}
                     />
                 </TableCard.Root>
             </div>

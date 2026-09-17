@@ -1,5 +1,5 @@
 import { DefaultLayout } from "@/layouts/DefaultLayout";
-import { TableCard } from "@/components/application/table/table";
+import { FloatingHeaderTable, TableCard } from "@/components/application/table/table";
 import { Tabs } from "@/components/application/tabs/tabs";
 import { AssignmentDetails } from "@/components/application/assignment-details/assignment-details";
 import MailConfirmation from "@/components/application/mail-confirmation/mail-confirmation";
@@ -750,24 +750,24 @@ export default function PaymentViewPage() {
                                                     </div>
 
                                                     {showTable && (
-                                                        <div className="overflow-x-auto rounded-lg border border-secondary">
+                                                        <FloatingHeaderTable className="rounded-lg border border-secondary">
                                                             <table className="w-full border-collapse text-sm">
                                                                 <thead className="bg-secondary text-tertiary">
                                                                     <tr>
-                                                                        <th className="px-3 py-2 text-left font-semibold">#</th>
-                                                                        <th className="px-3 py-2 text-left font-semibold">Date</th>
-                                                                        <th className="px-3 py-2 text-left font-semibold">Amount</th>
-                                                                        <th className="px-3 py-2 text-left font-semibold">Payment Mode</th>
-                                                                        <th className="px-3 py-2 text-left font-semibold">Payment To</th>
-                                                                        <th className="px-3 py-2 text-left font-semibold">Remarks</th>
-                                                                        <th className="px-3 py-2 text-left font-semibold">Receipt No</th>
-                                                                        <th className="px-3 py-2 text-left font-semibold">Actions</th>
+                                                                        <th className="sticky left-0 z-20 bg-secondary px-3 py-2 text-left font-semibold shadow-[4px_0_8px_-6px_rgba(0,0,0,0.35)]">#</th>
+                                                                        <th className="bg-secondary px-3 py-2 text-left font-semibold">Date</th>
+                                                                        <th className="bg-secondary px-3 py-2 text-left font-semibold">Amount</th>
+                                                                        <th className="bg-secondary px-3 py-2 text-left font-semibold">Payment Mode</th>
+                                                                        <th className="bg-secondary px-3 py-2 text-left font-semibold">Payment To</th>
+                                                                        <th className="bg-secondary px-3 py-2 text-left font-semibold">Remarks</th>
+                                                                        <th className="bg-secondary px-3 py-2 text-left font-semibold">Receipt No</th>
+                                                                        <th className="sticky right-0 z-20 border-l border-secondary bg-secondary px-3 py-2 text-left font-semibold shadow-[-4px_0_8px_-6px_rgba(0,0,0,0.35)]">Actions</th>
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody>
                                                                     {items.map((payment, index) => (
                                                                         <tr key={getId(payment) || index} className="border-t border-secondary">
-                                                                            <td className="px-3 py-2 text-tertiary">{index + 1}</td>
+                                                                            <td className="sticky left-0 z-10 bg-primary px-3 py-2 text-tertiary shadow-[4px_0_8px_-6px_rgba(0,0,0,0.35)]">{index + 1}</td>
                                                                             <td className="px-3 py-2 text-tertiary">
                                                                                 {formatPaymentDate(payment.paymentDate)}
                                                                             </td>
@@ -788,7 +788,7 @@ export default function PaymentViewPage() {
                                                                             </td>
                                                                             <td className="px-3 py-2 text-tertiary">{payment.remarks || "-"}</td>
                                                                             <td className="px-3 py-2 text-tertiary">{payment.receiptNo || "-"}</td>
-                                                                            <td className="px-3 py-2">
+                                                                            <td className="sticky right-0 z-10 border-l border-secondary bg-primary px-3 py-2 shadow-[-4px_0_8px_-6px_rgba(0,0,0,0.35)]">
                                                                                 <Dropdown.Root>
                                                                                     <Dropdown.DotsButton />
                                                                                     <Dropdown.Popover>
@@ -831,7 +831,7 @@ export default function PaymentViewPage() {
                                                                     ))}
                                                                 </tbody>
                                                             </table>
-                                                        </div>
+                                                        </FloatingHeaderTable>
                                                     )}
                                                 </div>
                                             );

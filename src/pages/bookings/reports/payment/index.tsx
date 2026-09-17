@@ -1,5 +1,5 @@
 import { DefaultLayout } from "@/layouts/DefaultLayout";
-import { PaginationButtonGroup } from "@/components/application/pagination/pagination";
+import { CompactPagination } from "@/components/application/pagination/pagination";
 import { StickyTable, Table, TableCard } from "@/components/application/table/table";
 import { Badge, BadgeWithIcon } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
@@ -825,7 +825,8 @@ export default function ReportsPaymentPage() {
 
     const [loading, setLoading] = useState(false);
     const [items, setItems] = useState<any[]>([]);
-    const [totalRecords, setTotalRecords] = useState(0);
+    const [totalCount, setTotalCount] = useState<number | null>(null);
+    const [countLoading, setCountLoading] = useState(false);
     const [selectedReportData, setSelectedReportData] = useState<any | null>(null);
     const [reportModalOpen, setReportModalOpen] = useState(false);
 
@@ -876,7 +877,6 @@ export default function ReportsPaymentPage() {
             setLoading(true);
             try {
                 const params: Record<string, any> = {
-                    totalCount: true,
                     page,
                     limit,
                     populate: "assignment,paymentStore",
@@ -891,8 +891,7 @@ export default function ReportsPaymentPage() {
                 if (response.error) {
                     throw new Error(response.error);
                 }
-                setItems(response.data || []);
-                setTotalRecords(response.totalCount || 0);
+                setItems(Array.isArray(response) ? response : (response.data || []));
             } catch (error: any) {
                 showSnackbar({
                     title: "Error",
@@ -905,6 +904,33 @@ export default function ReportsPaymentPage() {
         };
         fetchData();
     }, [page, limit, debouncedFilters]);
+
+    useEffect(() => {
+        setTotalCount(null);
+    }, [limit, debouncedFilters]);
+
+    const handleRequestTotalCount = async () => {
+        setCountLoading(true);
+        try {
+            const params: Record<string, any> = {
+                page: 1, limit: 1, totalCount: true,
+                populate: "assignment,paymentStore",
+                select_assignment: "clientName,email,mobile,travelLocation,packageId,agentName",
+                select_paymentStore: "title",
+                ...debouncedFilters,
+            };
+            Object.keys(params).forEach(key => {
+                if (params[key] === "" || params[key] === undefined || params[key] === null) delete params[key];
+            });
+            const response = await getpayment(params);
+            if (response.error) throw new Error(response.error);
+            setTotalCount(response.totalCount || 0);
+        } catch (error: any) {
+            showSnackbar({ title: "Error", description: error.message || "Failed to fetch total count", color: "danger" });
+        } finally {
+            setCountLoading(false);
+        }
+    };
 
     const handleResetTempFilters = (close?: () => void) => {
         const resetState = {
@@ -981,24 +1007,7 @@ export default function ReportsPaymentPage() {
                         <TableCard.Root>
                             <TableCard.Header
                                 title="Payment Reports"
-                                badge={loading ? "..." : totalRecords}
-                                contentTrailing={
-                                    <div className="flex flex-col gap-2 md:flex-row md:items-center">
-                                        <Select
-                                            aria-label="Rows per page"
-                                            className="w-full md:w-32"
-                                            selectedKey={String(limit)}
-                                            onSelectionChange={(key) => handleLimitChange(String(key))}
-                                            items={[
-                                                { id: "10", label: "10 / page" },
-                                                { id: "25", label: "25 / page" },
-                                                { id: "50", label: "50 / page" },
-                                            ]}
-                                        >
-                                            {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
-                                        </Select>
-                                    </div>
-                                }
+                                badge={loading ? "..." : totalCount ?? items.length}
                             />
 
                             <div className="border-b border-secondary bg-primary px-4 py-4 md:px-6">
@@ -1152,12 +1161,16 @@ export default function ReportsPaymentPage() {
                                 }}
                             </StickyTable>
 
-                            <PaginationButtonGroup
+                            <CompactPagination
                                 page={page}
-                                total={Math.ceil(totalRecords / limit)}
+                                limit={limit}
+                                itemCount={items.length}
+                                totalCount={totalCount}
+                                countLoading={countLoading}
+                                pageSizeOptions={[10, 25, 50]}
                                 onPageChange={handlePageChange}
-                                align="center"
-                                className="py-4"
+                                onLimitChange={(nextLimit) => handleLimitChange(String(nextLimit))}
+                                onRequestTotalCount={handleRequestTotalCount}
                             />
                         </TableCard.Root>
                     </Tabs.Panel>

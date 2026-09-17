@@ -19,7 +19,6 @@ import {
     ShoppingCart02,
     Tag01,
     TrendUp01,
-    User01,
     UsersMinus,
     Users01,
 } from "@untitledui/icons";
@@ -110,16 +109,17 @@ const buildBaseMenu = (): SidebarMenuItem[] => [
         ],
     },
     {
-        href: "/lead-management/leads",
+        href: "/lead-management/dashboard",
         label: "Lead Management",
         icon: UsersMinus,
         items: [
+            { href: "/lead-management/dashboard", label: "Dashboard", icon: BarChart01 },
+            { href: "/lead-management/contacts", label: "Contacts", icon: Users01 },
             { href: "/lead-management/leads", label: "Leads", icon: UsersMinus },
             { href: "/lead-management/enquiry", label: "Enquiries", icon: Mail01 },
             { href: "/lead-management/pipeline", label: "Pipeline", icon: FilterLines },
             { href: "/lead-management/campaign", label: "Campaign", icon: Announcement01 },
             { href: "/lead-management/settings", label: "Settings", icon: Settings01 },
-            { href: "/lead-management/settings/contact-properties", label: "Contact Properties", icon: User01 },
         ],
     },
     {
@@ -242,6 +242,7 @@ const hrefToResourceKey = (href: string) => {
     if (section === "lead-management") {
         const sub = parts[2] || "";
         if (page === "leads") return "leads";
+        if (page === "contacts") return "leads";
         if (page === "enquiry") return "enquiry";
         if (page === "pipeline") return "pipeline";
         if (page === "campaign") return "campaign";

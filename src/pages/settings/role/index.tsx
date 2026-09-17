@@ -1,5 +1,5 @@
 import { DefaultLayout } from "@/layouts/DefaultLayout";
-import { PaginationButtonGroup } from "@/components/application/pagination/pagination";
+import { CompactPagination } from "@/components/application/pagination/pagination";
 import { StickyTable, Table, TableCard } from "@/components/application/table/table";
 import { Badge } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
@@ -43,7 +43,8 @@ export default function SettingsRoleListPage() {
 
     const [loading, setLoading] = useState(false);
     const [items, setItems] = useState<any[]>([]);
-    const [totalRecords, setTotalRecords] = useState(0);
+    const [totalRecords, setTotalRecords] = useState<number | null>(null);
+    const [countLoading, setCountLoading] = useState(false);
 
     const [filters, setFilters] = useState({
         title: searchParams.get("title") || "",
@@ -51,7 +52,6 @@ export default function SettingsRoleListPage() {
     });
     const [debouncedFilters, setDebouncedFilters] = useState(filters);
 
-    const totalPages = Math.max(1, Math.ceil((totalRecords || 0) / limit));
     const getItemId = (item: any) => String(item?.id || item?._id || "");
     const indexById = useMemo(
         () => new Map(items.map((item, index) => [getItemId(item), (page - 1) * limit + index + 1])),
@@ -80,7 +80,6 @@ export default function SettingsRoleListPage() {
             setLoading(true);
             try {
                 const qs = new URLSearchParams();
-                qs.set("totalCount", "true");
                 qs.set("page", String(page));
                 qs.set("limit", String(limit));
                 qs.set("select", "title,status,permissions");
@@ -88,8 +87,7 @@ export default function SettingsRoleListPage() {
                 if (debouncedFilters.status) qs.set("status", debouncedFilters.status);
                 const response: any = await fetchWithToken(`/api/role?${qs.toString()}`, undefined, { method: "GET" });
                 if (response?.error) throw new Error(response.error);
-                setItems(response?.data || []);
-                setTotalRecords(response?.totalCount || 0);
+                setItems(Array.isArray(response) ? response : (response?.data || []));
             } catch (e: any) {
                 showSnackbar({ title: "Error", description: e?.message || "Failed to fetch roles", color: "danger" });
             } finally {
@@ -99,13 +97,28 @@ export default function SettingsRoleListPage() {
         fetchData();
     }, [debouncedFilters, limit, page, showSnackbar]);
 
+    useEffect(() => setTotalRecords(null), [debouncedFilters, limit]);
+
+    const requestTotalCount = async () => {
+        setCountLoading(true);
+        try {
+            const qs = new URLSearchParams({ page: "1", limit: "1", totalCount: "true" });
+            if (debouncedFilters.title) qs.set("title", debouncedFilters.title);
+            if (debouncedFilters.status) qs.set("status", debouncedFilters.status);
+            const response: any = await fetchWithToken(`/api/role?${qs.toString()}`, undefined, { method: "GET" });
+            setTotalRecords(Number(response?.totalCount ?? 0));
+        } finally {
+            setCountLoading(false);
+        }
+    };
+
     return (
         <DefaultLayout>
             <div className="space-y-4" style={{ width: availableWidth }}>
                 <TableCard.Root className="w-full">
                     <TableCard.Header
                         title="Role List"
-                        badge={loading ? "..." : totalRecords}
+                        badge={loading ? "..." : totalRecords ?? "—"}
                         contentTrailing={
                             <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center">
                                 <Select
@@ -245,18 +258,25 @@ export default function SettingsRoleListPage() {
                         </StickyTable>
                     </div>
 
-                    <PaginationButtonGroup
+                    <CompactPagination
                         page={page}
-                        total={totalPages}
-                        onPageChange={(nextPage: number) =>
-                            setSearchParams((prev) => {
-                                const next = new URLSearchParams(prev);
-                                next.set("page", String(nextPage));
-                                return next;
-                            })
-                        }
-                        align="center"
-                        className="py-4"
+                        limit={limit}
+                        itemCount={items.length}
+                        totalCount={totalRecords}
+                        countLoading={countLoading}
+                        pageSizeOptions={[10, 25, 50]}
+                        onPageChange={(nextPage) => setSearchParams((prev) => {
+                            const next = new URLSearchParams(prev);
+                            next.set("page", String(nextPage));
+                            return next;
+                        })}
+                        onLimitChange={(nextLimit) => setSearchParams((prev) => {
+                            const next = new URLSearchParams(prev);
+                            next.set("limit", String(nextLimit));
+                            next.set("page", "1");
+                            return next;
+                        })}
+                        onRequestTotalCount={requestTotalCount}
                     />
                 </TableCard.Root>
             </div>

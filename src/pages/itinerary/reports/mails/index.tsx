@@ -4,7 +4,7 @@ import { Input } from "@/components/base/input/input";
 import { Select } from "@/components/base/select/select";
 import { SelectItem } from "@/components/base/select/select-item";
 import { StickyTable, Table, TableCard } from "@/components/application/table/table";
-import { PaginationButtonGroup } from "@/components/application/pagination/pagination";
+import { CompactPagination } from "@/components/application/pagination/pagination";
 import { DatePicker } from "@/components/application/date-picker/date-picker";
 import { DateRangePicker } from "@/components/application/date-picker/date-range-picker";
 import { DefaultLayout } from "@/layouts/DefaultLayout";
@@ -393,16 +393,16 @@ const DurationWiseGraph = ({ users }: { users: any[] }) => {
                         graphFilters.chartType === "table" ? (
                             <div className="h-full overflow-auto rounded-lg border border-secondary">
                                 <table className="w-full text-sm">
-                                    <thead className="bg-secondary/30 text-left">
+                                    <thead className="text-left">
                                         <tr>
-                                            <th className="px-3 py-2">Date</th>
-                                            <th className="px-3 py-2">Total Mails</th>
+                                            <th className="sticky left-0 top-0 z-20 bg-secondary px-3 py-2 shadow-[4px_0_8px_-6px_rgba(0,0,0,0.35)]">Date</th>
+                                            <th className="sticky top-0 bg-secondary px-3 py-2">Total Mails</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {graphData.labels.map((label, index) => (
                                             <tr key={`${label}-${index}`} className="border-t border-secondary">
-                                                <td className="px-3 py-2">{label}</td>
+                                                <td className="sticky left-0 z-10 bg-primary px-3 py-2 shadow-[4px_0_8px_-6px_rgba(0,0,0,0.35)]">{label}</td>
                                                 <td className="px-3 py-2">{graphData.datasets[0].data[index]}</td>
                                             </tr>
                                         ))}
@@ -653,16 +653,16 @@ const ExecutiveWiseGraph = () => {
                         graphFilters.chartType === "table" ? (
                             <div className="h-full overflow-auto rounded-lg border border-secondary">
                                 <table className="w-full text-sm">
-                                    <thead className="bg-secondary/30 text-left">
+                                    <thead className="text-left">
                                         <tr>
-                                            <th className="px-3 py-2">Executive Name</th>
-                                            <th className="px-3 py-2">Total Mails</th>
+                                            <th className="sticky left-0 top-0 z-20 bg-secondary px-3 py-2 shadow-[4px_0_8px_-6px_rgba(0,0,0,0.35)]">Executive Name</th>
+                                            <th className="sticky top-0 bg-secondary px-3 py-2">Total Mails</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {graphData.labels.map((label, index) => (
                                             <tr key={`${label}-${index}`} className="border-t border-secondary">
-                                                <td className="px-3 py-2">{label}</td>
+                                                <td className="sticky left-0 z-10 bg-primary px-3 py-2 shadow-[4px_0_8px_-6px_rgba(0,0,0,0.35)]">{label}</td>
                                                 <td className="px-3 py-2">{graphData.datasets[0].data[index]}</td>
                                             </tr>
                                         ))}
@@ -692,7 +692,8 @@ export default function ItineraryReportMailsPage() {
 
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
-    const [totalRecords, setTotalRecords] = useState(0);
+    const [totalRecords, setTotalRecords] = useState<number | null>(null);
+    const [countLoading, setCountLoading] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [data, setData] = useState<any[]>([]);
 
@@ -740,7 +741,6 @@ export default function ItineraryReportMailsPage() {
         setIsLoading(true);
         try {
             const params: any = {
-                totalCount: true,
                 page,
                 limit,
                 populate: "sendBy",
@@ -756,7 +756,6 @@ export default function ItineraryReportMailsPage() {
             if (toDate) params.to = toDate.toString();
 
             const response: any = await getSentMailById(params);
-            setTotalRecords(response?.totalCount || 0);
             setData(response?.data || []);
         } catch (error: any) {
             showSnackbar({
@@ -769,7 +768,27 @@ export default function ItineraryReportMailsPage() {
         }
     };
 
-    const totalPages = useMemo(() => Math.ceil(totalRecords / limit), [totalRecords, limit]);
+    useEffect(() => setTotalRecords(null), [emailFunction, email, sendBy, status, fromDate, toDate, isAgent, agentId]);
+
+    const viewTotalCount = async () => {
+        if (countLoading || totalRecords !== null) return;
+        setCountLoading(true);
+        try {
+            const params: any = { page: 1, limit: 1, totalCount: true, populate: "sendBy", select_sendBy: "name" };
+            if (emailFunction) params.emailFunction = emailFunction;
+            if (email) params.email = email;
+            if (isAgent && agentId) params.sendBy = agentId;
+            else if (sendBy) params.sendBy = sendBy;
+            if (status) params.status = status;
+            if (fromDate) params.from = fromDate.toString();
+            if (toDate) params.to = toDate.toString();
+            const response: any = await getSentMailById(params);
+            setTotalRecords(Number(response?.totalCount ?? 0));
+        } finally {
+            setCountLoading(false);
+        }
+    };
+
     const itemsWithIndex = useMemo(() => data.map((item, index) => ({ ...item, __rowIndex: index })), [data]);
     const columns = [
         { id: "index", name: "#", widthRatio: 6, minWidth: 64 },
@@ -989,11 +1008,18 @@ export default function ItineraryReportMailsPage() {
                                 }}
                             </StickyTable>
                         )}
-                        <PaginationButtonGroup
+                        <CompactPagination
                             page={page}
-                            total={totalPages}
+                            limit={limit}
+                            itemCount={data.length}
+                            totalCount={totalRecords}
+                            countLoading={countLoading}
                             onPageChange={setPage}
-                            align="center"
+                            onLimitChange={(nextLimit) => {
+                                setPage(1);
+                                setLimit(nextLimit);
+                            }}
+                            onRequestTotalCount={viewTotalCount}
                         />
                     </div>
                 </TableCard.Root>

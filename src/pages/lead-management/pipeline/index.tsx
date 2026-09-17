@@ -1,20 +1,15 @@
 import { DefaultLayout } from "@/layouts/DefaultLayout";
-import { StickyTable, Table, TableCard } from "@/components/application/table/table";
 import { Button } from "@/components/base/buttons/button";
-import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { CloseButton } from "@/components/base/buttons/close-button";
-import { Select } from "@/components/base/select/select";
-import { PaginationButtonGroup } from "@/components/application/pagination/pagination";
 import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
-import { Badge } from "@/components/base/badges/badges";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
+import { Input } from "@/components/base/input/input";
 import { useStoreSnackbar } from "@/store/snackbar";
 import { getPipeline, getPipelineDelete } from "@/utils/services/pipelineService";
 import { getCampaign } from "@/utils/services/campaignService";
-import { Plus, Trash01, Eye, Edit01 } from "@untitledui/icons";
+import { CampaignFormModal } from "@/pages/lead-management/campaign/campaign-form-modal";
+import { ArrowUp, ChevronRight, DotsVertical, Plus, SearchMd } from "@untitledui/icons";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router";
-
 
 type PipelineItem = {
     id: string;
@@ -26,56 +21,56 @@ type PipelineItem = {
 type CampaignItem = {
     id: string;
     title?: string;
-    pipeline?: { id: string; title?: string };
+    pipeline?: { id: string; title?: string } | string;
     additionalSetting?: { priority?: string };
     pause?: boolean;
 };
 
-const getPriorityColor = (priority: string | undefined) => {
-    switch (priority?.toLowerCase()) {
-        case "highest": return "error";
-        case "high": return "warning";
-        case "medium": return "gray";
-        case "low": return "success";
-        case "lowest": return "blue";
-        default: return "gray";
-    }
-};
+const ACCENT_COLORS = [
+    "#EC4899",
+    "#F59E0B",
+    "#8B5CF6",
+    "#D946EF",
+    "#EF4444",
+    "#10B981",
+    "#3B82F6",
+    "#F97316",
+];
 
 const asArray = (value: any) => (Array.isArray(value) ? value : []);
 const getId = (value: any) => String(value?.id ?? value?._id ?? value ?? "").trim();
 
 export default function PipelineIndexPage() {
     const navigate = useNavigate();
-    const availableWidth = useAvailableTableWidth();
 
     const [items, setItems] = useState<PipelineItem[]>([]);
     const [campaignData, setCampaignData] = useState<CampaignItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [campaignLoading, setCampaignLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
-    const [totalRecords, setTotalRecords] = useState(0);
-    const [page, setPage] = useState(1);
-    const [limit, setLimit] = useState(10);
+    const [search, setSearch] = useState("");
 
     const [deleteTarget, setDeleteTarget] = useState<{ id: string; title?: string } | null>(null);
+    const [campaignEditTarget, setCampaignEditTarget] = useState<{ id: string } | null>(null);
+    const [reloadKey, setReloadKey] = useState(0);
     const deletingRef = useRef(false);
-
-    const totalPages = Math.max(1, Math.ceil((totalRecords || 0) / limit));
-    const indexById = useMemo(() => new Map(items.map((item, index) => [item.id, (page - 1) * limit + index + 1])), [items, limit, page]);
 
     useEffect(() => {
         const run = async () => {
             setLoading(true);
             setLoadError(null);
             try {
-                const res = await getPipeline({ totalCount: "true", page: String(page), limit: String(limit) });
+                const res = await getPipeline({ totalCount: "true", limit: "all" });
                 const resolved = (res as any)?.data ?? res;
                 const list = Array.isArray(resolved?.data) ? resolved.data : Array.isArray(resolved) ? resolved : asArray(resolved?.items);
-                const normalized = asArray(list).map((it: any) => { const id = getId(it); if (!id) return null; return { ...it, id } as PipelineItem; }).filter(Boolean) as PipelineItem[];
-                const count = Number((res as any)?.totalCount ?? (res as any)?.total ?? resolved?.totalCount ?? normalized.length) || normalized.length;
+                const normalized = asArray(list)
+                    .map((it: any) => {
+                        const id = getId(it);
+                        if (!id) return null;
+                        return { ...it, id } as PipelineItem;
+                    })
+                    .filter(Boolean) as PipelineItem[];
                 setItems(normalized);
-                setTotalRecords(count);
             } catch (e: any) {
                 setLoadError(e?.message || "Failed to load pipelines");
                 setItems([]);
@@ -84,7 +79,7 @@ export default function PipelineIndexPage() {
             }
         };
         run();
-    }, [page, limit]);
+    }, []);
 
     useEffect(() => {
         const run = async () => {
@@ -93,7 +88,11 @@ export default function PipelineIndexPage() {
                 const res = await getCampaign({ populate: "pipeline", select: "title,additionalSetting,managingCampaign,pipeline", select_pipeline: "title", limit: "all" });
                 const resolved = (res as any)?.data ?? res;
                 const list = Array.isArray(resolved?.data) ? resolved.data : Array.isArray(resolved) ? resolved : asArray(resolved?.items);
-                setCampaignData(asArray(list).map((it: any) => ({ id: getId(it), title: it?.title || "", pipeline: it?.pipeline, additionalSetting: it?.additionalSetting, pause: it?.pause })).filter((x: any) => x.id));
+                setCampaignData(
+                    asArray(list)
+                        .map((it: any) => ({ id: getId(it), title: it?.title || "", pipeline: it?.pipeline, additionalSetting: it?.additionalSetting, pause: it?.pause }))
+                        .filter((x: any) => x.id)
+                );
             } catch {
                 setCampaignData([]);
             } finally {
@@ -101,7 +100,24 @@ export default function PipelineIndexPage() {
             }
         };
         run();
-    }, []);
+    }, [reloadKey]);
+
+    const getCampaignsForPipeline = (pipelineId: string) =>
+        campaignData.filter((c) => {
+            if (!c.pipeline) return false;
+            if (typeof c.pipeline === "string") return c.pipeline === pipelineId;
+            return (c.pipeline as any).id === pipelineId || (c.pipeline as any)._id === pipelineId;
+        });
+
+    const query = search.trim().toLowerCase();
+    const visiblePipelines = useMemo(() => {
+        if (!query) return items;
+        return items.filter((p) => {
+            if (String(p.title || "").toLowerCase().includes(query)) return true;
+            return getCampaignsForPipeline(p.id).some((c) => String(c.title || "").toLowerCase().includes(query));
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [items, campaignData, query]);
 
     const handleDelete = async () => {
         if (!deleteTarget?.id || deletingRef.current) return;
@@ -109,8 +125,7 @@ export default function PipelineIndexPage() {
         try {
             await getPipelineDelete(deleteTarget.id);
             useStoreSnackbar.getState().showSnackbar({ title: "Deleted", description: "Pipeline deleted successfully", color: "success" });
-            setItems(prev => prev.filter(it => it.id !== deleteTarget.id));
-            setTotalRecords(prev => Math.max(0, prev - 1));
+            setItems((prev) => prev.filter((it) => it.id !== deleteTarget.id));
             setDeleteTarget(null);
         } catch (e: any) {
             useStoreSnackbar.getState().showSnackbar({ title: "Error", description: e?.message || "Failed to delete pipeline", color: "danger" });
@@ -119,109 +134,109 @@ export default function PipelineIndexPage() {
         }
     };
 
-    const columns = [
-        { id: "index", name: "#", isRowHeader: true, widthRatio: 6, minWidth: 64 },
-        { id: "title", name: "Pipeline Name", widthRatio: 30, minWidth: 220 },
-        { id: "campaigns", name: "Campaigns", widthRatio: 50, minWidth: 300 },
-        { id: "actions", name: "Actions", widthRatio: 14, minWidth: 120, className: "pr-4 pl-4 whitespace-nowrap" },
-    ] as { id: string; name: string; className?: string; widthRatio?: number; minWidth?: number }[];
-
-    const getCampaignsForPipeline = (pipelineId: string) =>
-        campaignData.filter(c => {
-            if (!c.pipeline) return false;
-            if (typeof c.pipeline === "string") return c.pipeline === pipelineId;
-            return (c.pipeline as any).id === pipelineId || (c.pipeline as any)._id === pipelineId;
-        });
-
     return (
         <DefaultLayout>
-            <div style={{ width: availableWidth }}>
-                <TableCard.Root className="w-full">
-                    <TableCard.Header
-                        title="Pipeline Management"
-                        badge={loading ? "…" : totalRecords}
-                        contentTrailing={
-                            <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center">
-                                <Select
-                                    aria-label="Rows per page"
-                                    className="w-full md:w-40"
-                                    value={String(limit)}
-                                    onChange={undefined}
-                                    onSelectionChange={(key) => { const n = Number(key); if (!Number.isFinite(n) || n <= 0) return; setLimit(n); setPage(1); }}
-                                    items={[{ id: "10", label: "10 / page" }, { id: "25", label: "25 / page" }, { id: "50", label: "50 / page" }]}
+            <div className="flex w-full flex-col gap-6">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <h1 className="text-xl font-semibold text-primary">All Campaigns</h1>
+                        <p className="mt-0.5 text-sm text-tertiary">Campaigns grouped by pipeline</p>
+                    </div>
+                    <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center">
+                        <Input
+                            aria-label="Search"
+                            placeholder="Search Campaign"
+                            icon={SearchMd}
+                            className="md:w-72"
+                            value={search}
+                            onChange={setSearch}
+                        />
+                        <Button size="sm" color="primary" iconLeading={Plus} onClick={() => navigate("/lead-management/settings?tab=pipelines")}>
+                            Create Pipeline
+                        </Button>
+                    </div>
+                </div>
+
+                {loading || campaignLoading ? (
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+                        {Array.from({ length: 4 }).map((_, i) => (
+                            <div key={`skeleton-${i}`} className="h-72 animate-pulse rounded-xl bg-secondary" />
+                        ))}
+                    </div>
+                ) : loadError ? (
+                    <div className="rounded-xl bg-primary p-8 text-sm text-error ring-1 ring-secondary">{loadError}</div>
+                ) : visiblePipelines.length === 0 ? (
+                    <div className="rounded-xl bg-primary p-10 text-center text-sm text-tertiary ring-1 ring-secondary">
+                        {query ? "No pipelines or campaigns match your search" : "No pipelines yet. Create your first pipeline."}
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+                        {visiblePipelines.map((pipeline, index) => {
+                            const pipeCampaigns = getCampaignsForPipeline(pipeline.id);
+                            const accent = ACCENT_COLORS[index % ACCENT_COLORS.length];
+                            return (
+                                <div
+                                    key={pipeline.id}
+                                    className="flex max-h-[560px] flex-col overflow-hidden rounded-xl bg-primary ring-1 ring-secondary"
+                                    style={{ borderLeft: `4px solid ${accent}` }}
                                 >
-                                    {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
-                                </Select>
-                                <Button size="sm" color="primary" iconLeading={Plus} onClick={() => navigate("/lead-management/pipeline/add")}>
-                                    Create Pipeline
-                                </Button>
-                            </div>
-                        }
-                    />
-
-                    {loading ? (
-                        <StickyTable ariaLabel="Pipeline list" columns={columns} items={Array.from({ length: 5 }).map((_, i) => ({ id: `skeleton-${i}` }))} availableWidth={availableWidth} loading={loading}>
-                            {(item) => (
-                                <Table.Row id={item.id} columns={columns}>
-                                    {(column) => (
-                                        <Table.Cell className={`${column?.className || ""} ${column.id === "actions" ? "whitespace-nowrap" : ""}`.trim()}>
-                                            <div className="animate-pulse"><div className="h-4 w-full rounded bg-secondary" /></div>
-                                        </Table.Cell>
-                                    )}
-                                </Table.Row>
-                            )}
-                        </StickyTable>
-                    ) : loadError ? (
-                        <div className="px-4 py-10 text-sm text-error md:px-6">{loadError}</div>
-                    ) : (
-                        <StickyTable ariaLabel="Pipeline list" columns={columns} items={items} availableWidth={availableWidth} loading={loading}>
-                            {(item) => {
-                                const pipeCampaigns = getCampaignsForPipeline(item.id);
-                                return (
-                                    <Table.Row id={item.id} columns={columns}>
-                                        {(column) => (
-                                            <Table.Cell className={`${column?.className || ""} ${column.id === "actions" ? "whitespace-nowrap" : "whitespace-normal break-words"}`.trim()}>
-                                                {column.id === "index" ? (
-                                                    <span className="text-sm text-tertiary">{indexById.get(item.id) ?? "—"}</span>
-                                                ) : column.id === "title" ? (
-                                                    <button type="button" onClick={() => navigate(`/lead-management/pipeline/view/${item.id}`)} className="text-left text-sm font-semibold text-primary hover:underline">
-                                                        {item.title || "—"}
+                                    <div className="flex items-center justify-between gap-2 border-b border-secondary px-4 py-3">
+                                        <button
+                                            type="button"
+                                            title="View pipeline"
+                                            onClick={() => navigate(`/lead-management/pipeline/view/${pipeline.id}`)}
+                                            className="truncate text-left text-sm font-semibold uppercase tracking-wide text-primary hover:underline"
+                                        >
+                                            {pipeline.title || "Untitled Pipeline"}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            aria-label="Open pipeline"
+                                            onClick={() => navigate(`/lead-management/pipeline/view/${pipeline.id}`)}
+                                            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full ring-1 ring-secondary text-secondary hover:bg-secondary hover:text-primary"
+                                        >
+                                            <ChevronRight className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                    <div className="flex-1 space-y-2 overflow-y-auto p-3">
+                                        {pipeCampaigns.length === 0 ? (
+                                            <div className="flex h-full min-h-24 items-center justify-center px-2 py-6 text-center text-xs text-tertiary">
+                                                No campaigns in this pipeline
+                                            </div>
+                                        ) : (
+                                            pipeCampaigns.map((c) => (
+                                                <div
+                                                    key={c.id}
+                                                    className="flex items-center gap-2 rounded-lg bg-secondary px-3 py-2.5"
+                                                >
+                                                    <ArrowUp className="h-4 w-4 shrink-0 text-red-500" />
+                                                    <button
+                                                        type="button"
+                                                        title="View campaign"
+                                                        onClick={() => navigate(`/lead-management/campaign/view/${c.id}`)}
+                                                        className="flex-1 truncate text-left text-sm text-primary hover:underline"
+                                                    >
+                                                        {c.title || "Untitled Campaign"}
+                                                        {c.pause && <span className="ml-1.5 text-[10px] text-tertiary">(paused)</span>}
                                                     </button>
-                                                ) : column.id === "campaigns" ? (
-                                                    <div className="flex flex-wrap gap-1.5 py-1">
-                                                        {(campaignLoading) ? (
-                                                            <div className="h-4 w-20 rounded bg-secondary animate-pulse" />
-                                                        ) : pipeCampaigns.length > 0 ? (
-                                                            pipeCampaigns.slice(0, 5).map(c => (
-                                                                <Badge key={c.id} size="sm" color={getPriorityColor(c.additionalSetting?.priority)}>
-                                                                    {c.title}
-                                                                    {c.pause && <span className="ml-1 text-[10px] opacity-75">⏸</span>}
-                                                                </Badge>
-                                                            ))
-                                                        ) : (
-                                                            <span className="text-sm text-tertiary">No campaigns</span>
-                                                        )}
-                                                        {pipeCampaigns.length > 5 && (
-                                                            <Badge size="sm" color="gray">+{pipeCampaigns.length - 5} more</Badge>
-                                                        )}
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex w-full items-center justify-end gap-1.5">
-                                                        <ButtonUtility tooltip="View" tooltipPlacement="bottom" icon={Eye} onClick={() => navigate(`/lead-management/pipeline/view/${item.id}`)} color="secondary" />
-                                                        <ButtonUtility tooltip="Edit" tooltipPlacement="bottom" icon={Edit01} onClick={() => navigate(`/lead-management/pipeline/edit/${item.id}`)} color="warning" />
-                                                        <ButtonUtility tooltip="Delete" tooltipPlacement="bottom" icon={Trash01} onClick={() => setDeleteTarget({ id: item.id, title: item.title })} color="error" />
-                                                    </div>
-                                                )}
-                                            </Table.Cell>
+                                                    <button
+                                                        type="button"
+                                                        aria-label="Edit campaign"
+                                                        title="Edit campaign"
+                                                        onClick={() => setCampaignEditTarget({ id: c.id })}
+                                                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-tertiary hover:bg-primary hover:text-primary"
+                                                    >
+                                                        <DotsVertical className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            ))
                                         )}
-                                    </Table.Row>
-                                );
-                            }}
-                        </StickyTable>
-                    )}
-
-                    <PaginationButtonGroup page={page} total={totalPages} align="center" onPageChange={(next) => setPage(Math.min(totalPages, Math.max(1, next)))} />
-                </TableCard.Root>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
 
             {/* Delete Confirmation Modal */}
@@ -244,6 +259,13 @@ export default function PipelineIndexPage() {
                     </Modal>
                 )}
             </ModalOverlay>
+
+            <CampaignFormModal
+                isOpen={Boolean(campaignEditTarget)}
+                onClose={() => setCampaignEditTarget(null)}
+                campaign={campaignEditTarget}
+                onSaved={() => setReloadKey((k) => k + 1)}
+            />
         </DefaultLayout>
     );
 }

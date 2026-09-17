@@ -6,6 +6,70 @@ import { cx } from "@/utils/cx";
 import type { PaginationRootProps } from "./pagination-base";
 import { Pagination } from "./pagination-base";
 
+interface CompactPaginationProps {
+    page: number;
+    limit: number;
+    itemCount: number;
+    totalCount: number | null;
+    countLoading?: boolean;
+    pageSizeOptions?: number[];
+    className?: string;
+    onPageChange: (page: number) => void;
+    onLimitChange: (limit: number) => void;
+    onRequestTotalCount?: () => void;
+}
+
+export const CompactPagination = ({
+    page,
+    limit,
+    itemCount,
+    totalCount,
+    countLoading = false,
+    pageSizeOptions = [25, 50, 100],
+    className,
+    onPageChange,
+    onLimitChange,
+    onRequestTotalCount,
+}: CompactPaginationProps) => {
+    const start = itemCount ? (page - 1) * limit + 1 : 0;
+    const end = (page - 1) * limit + itemCount;
+    const lastPage = totalCount === null ? null : Math.max(1, Math.ceil(totalCount / limit));
+    const canGoNext = lastPage === null ? itemCount === limit : page < lastPage;
+
+    return (
+        <nav aria-label="Pagination" className={cx("flex flex-wrap items-center justify-end gap-x-10 gap-y-3 border-t border-secondary bg-primary px-4 py-3 text-sm text-secondary", className)}>
+            <label className="flex items-center gap-2 whitespace-nowrap">
+                <span>Items per page:</span>
+                <select
+                    aria-label="Items per page"
+                    className="min-w-20 border-0 border-b border-secondary bg-primary px-1 py-1 text-primary outline-none focus:border-brand"
+                    value={limit}
+                    onChange={(event) => onLimitChange(Number(event.target.value))}
+                >
+                    {pageSizeOptions.map((size) => <option key={size} value={size}>{size}</option>)}
+                </select>
+            </label>
+
+            <div className="flex items-center gap-1 whitespace-nowrap">
+                <span>{start}–{end}</span>
+                {totalCount === null ? (
+                    <>
+                    {!countLoading && <span>of</span>}
+                    <button type="button" className="underline underline-offset-2 hover:text-brand-secondary disabled:cursor-wait disabled:no-underline" disabled={countLoading || !onRequestTotalCount} onClick={onRequestTotalCount}>
+                        {countLoading ? "Loading total…" : "View total count"}
+                    </button>
+                    </>
+                ) : <span>of {totalCount}</span>}
+            </div>
+
+            <div className="flex items-center gap-3">
+                <button type="button" aria-label="Go to previous page" className="flex size-9 items-center justify-center rounded-md text-quaternary hover:bg-secondary hover:text-primary disabled:cursor-not-allowed disabled:opacity-40" disabled={page <= 1} onClick={() => onPageChange(page - 1)}><ArrowLeft className="size-5" /></button>
+                <button type="button" aria-label="Go to next page" className="flex size-9 items-center justify-center rounded-md text-quaternary hover:bg-secondary hover:text-primary disabled:cursor-not-allowed disabled:opacity-40" disabled={!canGoNext} onClick={() => onPageChange(page + 1)}><ArrowRight className="size-5" /></button>
+            </div>
+        </nav>
+    );
+};
+
 interface PaginationProps extends Partial<Omit<PaginationRootProps, "children">> {
     /** Whether the pagination buttons are rounded. */
     rounded?: boolean;

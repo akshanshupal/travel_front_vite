@@ -151,7 +151,7 @@ const TableHeader = <T extends object>({ columns, children, bordered = true, cla
             }
         >
             {selectionBehavior === "toggle" && (
-                <AriaColumn className={cx("sticky top-0 z-20 bg-secondary py-2 pr-0 pl-4", size === "sm" ? "w-9 md:pl-5" : "w-11 md:pl-6")}>
+                <AriaColumn className={cx("sticky left-0 top-0 z-20 bg-secondary py-2 pr-0 pl-4", size === "sm" ? "w-9 md:pl-5" : "w-11 md:pl-6")}>
                     {selectionMode === "multiple" && (
                         <div className="flex items-start">
                             <Checkbox slot="selection" size={size} />
@@ -223,6 +223,22 @@ interface TableRowProps<T extends object>
 const TableRow = <T extends object>({ columns, children, className, highlightSelectedRow = true, ...props }: TableRowProps<T>) => {
     const { size } = useContext(TableContext);
     const { selectionBehavior } = useTableOptions();
+    const columnList = useMemo(
+        () => (columns ? (Array.isArray(columns) ? (columns as unknown as Array<{ id?: unknown }>) : Array.from(columns as unknown as Iterable<{ id?: unknown }>)) : []),
+        [columns],
+    );
+    const isLastAction = columnList.length > 0 && String(columnList[columnList.length - 1]?.id ?? "").toLowerCase().includes("action");
+    const hasSelectionCell = selectionBehavior === "toggle";
+
+    // Sticky edge cells are applied through row-level CSS (nth-child based on the
+    // optional selection cell) so React Aria's item rendering stays untouched.
+    const stickyCellClasses = cx(
+        // First data column pinned left.
+        `[&>td:nth-child(${hasSelectionCell ? 2 : 1})]:sticky [&>td:nth-child(${hasSelectionCell ? 2 : 1})]:left-0 [&>td:nth-child(${hasSelectionCell ? 2 : 1})]:z-10 [&>td:nth-child(${hasSelectionCell ? 2 : 1})]:bg-primary [&>td:nth-child(${hasSelectionCell ? 2 : 1})]:shadow-[4px_0_8px_-6px_rgba(0,0,0,0.35)]`,
+        // Last column pinned right when it is an Action column.
+        isLastAction &&
+            `[&>td:last-child]:sticky [&>td:last-child]:right-0 [&>td:last-child]:z-10 [&>td:last-child]:bg-primary [&>td:last-child]:shadow-[-4px_0_8px_-6px_rgba(0,0,0,0.35)]`,
+    );
 
     return (
         <AriaRow
@@ -232,6 +248,7 @@ const TableRow = <T extends object>({ columns, children, className, highlightSel
                     "relative outline-focus-ring transition-colors after:pointer-events-none hover:bg-secondary focus-visible:outline-2 focus-visible:-outline-offset-2",
                     size === "sm" ? "h-14" : "h-18",
                     highlightSelectedRow && "selected:bg-secondary",
+                    stickyCellClasses,
 
                     // Row border—using an "after" pseudo-element to avoid the border taking up space.
                     "[&>td]:after:absolute [&>td]:after:inset-x-0 [&>td]:after:bottom-0 [&>td]:after:h-px [&>td]:after:w-full [&>td]:after:bg-border-secondary last:[&>td]:after:hidden [&>td]:focus-visible:after:opacity-0 focus-visible:[&>td]:after:opacity-0",
@@ -241,13 +258,13 @@ const TableRow = <T extends object>({ columns, children, className, highlightSel
             }
         >
             {selectionBehavior === "toggle" && (
-                <AriaCell className={cx("relative py-2 pr-0 pl-4", size === "sm" ? "md:pl-5" : "md:pl-6")}>
+                <AriaCell className={cx("relative py-2 pr-0 pl-4 sticky left-0 z-10 bg-primary", size === "sm" ? "md:pl-5" : "md:pl-6")}>
                     <div className="flex items-end">
                         <Checkbox slot="selection" size={size} />
                     </div>
                 </AriaCell>
             )}
-            <AriaCollection items={columns}>{children}</AriaCollection>
+            {columns ? <AriaCollection items={columns}>{children as (column: unknown) => ReactNode}</AriaCollection> : (children as ReactNode)}
         </AriaRow>
     );
 };
@@ -387,6 +404,7 @@ const StickyTable = <T extends object>({
         return { widths, minTotal: totalMin };
     }, [columns, effectiveWidth, minWidths]);
     const tableWidthStyle = effectiveWidth > 0 ? `${Math.max(effectiveWidth, minTotal)}px` : "100%";
+    const hasActionColumn = columns.some((column, index) => index === columns.length - 1 && column.id.toLowerCase().includes("action"));
     const getColumnClassName = (column: { className?: string }) => column.className || "w-32";
     const getColumnStyle = (column: { id: string; minWidth?: number | string; widthRatio?: number }) => {
         const index = columns.findIndex((col) => col.id === column.id);
@@ -399,6 +417,14 @@ const StickyTable = <T extends object>({
             style.minWidth = typeof column.minWidth === "number" ? `${column.minWidth}px` : column.minWidth;
         }
         return style;
+    };
+
+    const stickyColumnClassName = (index: number) => {
+        const isFirst = index === 0;
+        const isLastAction = hasActionColumn && index === columns.length - 1;
+        if (isFirst) return "sticky left-0 z-20 bg-secondary shadow-[4px_0_8px_-6px_rgba(0,0,0,0.35)]";
+        if (isLastAction) return "sticky right-0 z-20 bg-secondary shadow-[-4px_0_8px_-6px_rgba(0,0,0,0.35)]";
+        return "";
     };
 
     const renderColGroup = () => (
@@ -422,17 +448,20 @@ const StickyTable = <T extends object>({
 
     const renderHeader = () => (
         <TableHeader columns={columns}>
-            {(column) => (
-                <TableHead
-                    id={column.id}
-                    isRowHeader={column.isRowHeader}
-                    data-column={column.id}
-                    className={getColumnClassName(column)}
-                    style={getColumnStyle(column)}
-                >
-                    <span className="text-xs font-semibold text-quaternary whitespace-normal break-words">{column.name}</span>
-                </TableHead>
-            )}
+            {(column) => {
+                const index = columns.findIndex((col) => col.id === column.id);
+                return (
+                    <TableHead
+                        id={column.id}
+                        isRowHeader={column.isRowHeader}
+                        data-column={column.id}
+                        className={cx(getColumnClassName(column), stickyColumnClassName(index))}
+                        style={getColumnStyle(column)}
+                    >
+                        <span className="text-xs font-semibold text-quaternary whitespace-normal break-words">{column.name}</span>
+                    </TableHead>
+                );
+            }}
         </TableHeader>
     );
 
@@ -441,10 +470,10 @@ const StickyTable = <T extends object>({
             {renderColGroup()}
             <thead className="bg-secondary h-11 [&>tr>th]:after:pointer-events-none [&>tr>th]:after:absolute [&>tr>th]:after:inset-x-0 [&>tr>th]:after:bottom-0 [&>tr>th]:after:h-px [&>tr>th]:after:bg-border-secondary">
                 <tr className="h-11">
-                    {columns.map((column) => (
+                    {columns.map((column, index) => (
                         <th
                             key={column.id}
-                            className={`relative bg-secondary p-0 px-6 py-2 text-left outline-hidden focus-visible:z-1 focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-bg-primary focus-visible:ring-inset ${getColumnClassName(column)}`}
+                            className={`relative bg-secondary p-0 px-6 py-2 text-left outline-hidden focus-visible:z-1 focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-bg-primary focus-visible:ring-inset ${getColumnClassName(column)} ${stickyColumnClassName(index)}`}
                             data-column={column.id}
                             style={getColumnStyle(column)}
                         >
@@ -620,6 +649,103 @@ const StickyTable = <T extends object>({
     );
 };
 
+interface FloatingHeaderTableProps extends HTMLAttributes<HTMLDivElement> {
+    /** Distance from the viewport top at which the header pins while the page scrolls. */
+    topOffset?: number;
+}
+
+/**
+ * Native-table wrapper that mirrors the Lead Summary table behaviour:
+ * - horizontal scrolling happens inside the table wrapper only;
+ * - the header pins to the viewport top during page vertical scrolling;
+ * - sticky first / last Action columns are preserved inside the pinned clone.
+ */
+const FloatingHeaderTable = ({ children, className, topOffset = 0, ...props }: FloatingHeaderTableProps) => {
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const floatingScrollRef = useRef<HTMLDivElement | null>(null);
+    const [showFloatingHeader, setShowFloatingHeader] = useState(false);
+    const [floatingHeaderStyle, setFloatingHeaderStyle] = useState<{ left: number; width: number } | null>(null);
+
+    useEffect(() => {
+        const updateFloatingHeader = () => {
+            const container = containerRef.current;
+            if (!container) {
+                setShowFloatingHeader(false);
+                return;
+            }
+            const header = container.querySelector("thead");
+            if (!header) {
+                setShowFloatingHeader(false);
+                return;
+            }
+            const headerRect = header.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            const shouldShow = headerRect.top <= topOffset && containerRect.bottom > headerRect.height + topOffset;
+            setShowFloatingHeader(shouldShow);
+            if (shouldShow) {
+                setFloatingHeaderStyle({ left: containerRect.left, width: containerRect.width });
+            }
+        };
+        updateFloatingHeader();
+        window.addEventListener("scroll", updateFloatingHeader, { passive: true });
+        window.addEventListener("resize", updateFloatingHeader);
+        return () => {
+            window.removeEventListener("scroll", updateFloatingHeader);
+            window.removeEventListener("resize", updateFloatingHeader);
+        };
+    }, [topOffset, children]);
+
+    // Clone the source table (header only) into the floating layer so the pinned
+    // header renders identical markup, including sticky edge columns.
+    useEffect(() => {
+        if (!showFloatingHeader) return;
+        const container = containerRef.current;
+        const layer = floatingScrollRef.current;
+        if (!container || !layer) return;
+        const table = container.querySelector("table");
+        if (!table) return;
+        const clone = table.cloneNode(true) as HTMLTableElement;
+        clone.querySelectorAll("tbody").forEach((body) => body.remove());
+        clone.removeAttribute("aria-label");
+        clone.removeAttribute("id");
+        layer.replaceChildren(clone);
+        layer.scrollLeft = container.scrollLeft;
+    }, [showFloatingHeader, children]);
+
+    // Keep the pinned header horizontally aligned with the table wrapper.
+    useEffect(() => {
+        if (!showFloatingHeader) return;
+        const container = containerRef.current;
+        const floating = floatingScrollRef.current;
+        if (!container || !floating) return;
+        const syncScroll = () => {
+            floating.scrollLeft = container.scrollLeft;
+        };
+        syncScroll();
+        container.addEventListener("scroll", syncScroll, { passive: true });
+        return () => {
+            container.removeEventListener("scroll", syncScroll);
+        };
+    }, [showFloatingHeader]);
+
+    return (
+        <>
+            {showFloatingHeader && floatingHeaderStyle ? (
+                <div
+                    className="pointer-events-none fixed z-40"
+                    style={{ left: floatingHeaderStyle.left, width: floatingHeaderStyle.width, top: topOffset }}
+                    aria-hidden
+                >
+                    <div ref={floatingScrollRef} className="overflow-x-hidden" />
+                </div>
+            ) : null}
+            <div ref={containerRef} className={cx("w-full min-w-full max-w-full overflow-x-auto overflow-y-visible", className)} {...props}>
+                {children}
+            </div>
+        </>
+    );
+};
+
 const TableCard = {
     Root: TableCardRoot,
     Header: TableCardHeader,
@@ -638,4 +764,4 @@ Table.Head = TableHead;
 Table.Header = TableHeader;
 Table.Row = TableRow;
 
-export { Table, TableCard, StickyTable };
+export { Table, TableCard, StickyTable, FloatingHeaderTable };

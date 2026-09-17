@@ -11,7 +11,7 @@ import { Plus, Edit01, Trash01, Eye, SearchLg, RefreshCw01 } from "@untitledui/i
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router";
 import { StickyTable, Table, TableCard } from "@/components/application/table/table";
-import { PaginationCardDefault } from "@/components/application/pagination/pagination";
+import { CompactPagination } from "@/components/application/pagination/pagination";
 import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { useAccess } from "@/hooks/use-access";
@@ -36,7 +36,8 @@ export default function SettingsPackageExclusionsListPage() {
     const canDelete = can("packageexclusion", "delete");
     const [isLoading, setIsLoading] = useState(true);
     const [data, setData] = useState<any[]>([]);
-    const [totalRecords, setTotalRecords] = useState(0);
+    const [totalRecords, setTotalRecords] = useState<number | null>(null);
+    const [countLoading, setCountLoading] = useState(false);
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
     const [filters, setFilters] = useState({ title: "", alias: "", status: "" });
@@ -44,7 +45,6 @@ export default function SettingsPackageExclusionsListPage() {
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState<any>(null);
 
-    const totalPages = Math.max(1, Math.ceil((totalRecords || 0) / limit));
     const getItemId = (item: any) => String(item?.id || item?._id || "");
     const indexById = useMemo(() => new Map(data.map((item, index) => [getItemId(item), (page - 1) * limit + index + 1])), [data, limit, page]);
 
@@ -62,7 +62,6 @@ export default function SettingsPackageExclusionsListPage() {
             const params = {
                 page,
                 limit,
-                totalCount: true,
                 code,
                 ...(debouncedFilters.title ? { title: debouncedFilters.title } : {}),
                 ...(debouncedFilters.alias ? { alias: debouncedFilters.alias } : {}),
@@ -70,8 +69,7 @@ export default function SettingsPackageExclusionsListPage() {
             };
             const response = await getGeneralData(params);
             if (response && !(response as any).error) {
-                setData((response as any).data || []);
-                setTotalRecords((response as any).totalCount || 0);
+                setData(Array.isArray(response) ? response : ((response as any).data || []));
             } else {
                 showSnackbar({ title: "Error", description: (response as any)?.error || "Failed to fetch package exclusions", color: "danger" });
             }
@@ -86,12 +84,33 @@ export default function SettingsPackageExclusionsListPage() {
         fetchData();
     }, [fetchData]);
 
+    useEffect(() => setTotalRecords(null), [debouncedFilters, limit]);
+
+    const requestTotalCount = async () => {
+        setCountLoading(true);
+        try {
+            const response: any = await getGeneralData({
+                code,
+                ...(debouncedFilters.title ? { title: debouncedFilters.title } : {}),
+                ...(debouncedFilters.alias ? { alias: debouncedFilters.alias } : {}),
+                ...(debouncedFilters.status ? { status: debouncedFilters.status } : {}),
+                page: 1,
+                limit: 1,
+                totalCount: true,
+            });
+            setTotalRecords(Number(response?.totalCount ?? 0));
+        } finally {
+            setCountLoading(false);
+        }
+    };
+
     const handleDelete = async () => {
         if (!selectedItem) return;
         try {
             const response = await deleteGeneralDataById(getItemId(selectedItem));
             if (response && !(response as any).error) {
                 showSnackbar({ title: "Success", description: "Package exclusion deleted successfully", color: "success" });
+                setTotalRecords(null);
                 fetchData();
                 setDeleteModalOpen(false);
             } else {
@@ -116,7 +135,7 @@ export default function SettingsPackageExclusionsListPage() {
                 <TableCard.Root className="w-full">
                     <TableCard.Header
                         title="Package Exclusions"
-                        badge={isLoading ? "..." : totalRecords}
+                        badge={isLoading ? "..." : totalRecords ?? "—"}
                         description="Manage package exclusions under settings."
                         contentTrailing={
                             <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center">
@@ -232,7 +251,7 @@ export default function SettingsPackageExclusionsListPage() {
                             )}
                         </StickyTable>
                     </div>
-                    <PaginationCardDefault page={page} total={totalPages} onPageChange={(nextPage) => setPage(Math.min(totalPages, Math.max(1, nextPage)))} />
+                    <CompactPagination page={page} limit={limit} itemCount={data.length} totalCount={totalRecords} countLoading={countLoading} pageSizeOptions={[10, 50, 100]} onPageChange={setPage} onLimitChange={(nextLimit) => { setLimit(nextLimit); setPage(1); setTotalRecords(null); }} onRequestTotalCount={requestTotalCount} />
                 </TableCard.Root>
             </div>
 

@@ -7,6 +7,7 @@ import { TextArea } from "@/components/base/textarea/textarea";
 import { Select } from "@/components/base/select/select";
 import { ComboBox } from "@/components/base/select/combobox";
 import { SelectItem } from "@/components/base/select/select-item";
+import { FloatingHeaderTable } from "@/components/application/table/table";
 import { Tabs } from "@/components/application/tabs/tabs";
 import { Modal, ModalOverlay, Dialog } from "@/components/application/modals/modal";
 import { CloseButton } from "@/components/base/buttons/close-button";
@@ -1218,23 +1219,23 @@ export default function BookingViewPage() {
                                 {servicePaymentsList.length === 0 ? (
                                     <div className="text-sm text-tertiary">No service payments found.</div>
                                 ) : (
-                                    <div className="overflow-x-auto">
+                                    <FloatingHeaderTable>
                                         <table className="w-full border-collapse text-left text-sm">
                                             <thead>
                                                 <tr className="border-b border-secondary text-xs uppercase text-tertiary">
-                                                    <th className="px-3 py-2">#</th>
-                                                    <th className="px-3 py-2">Date</th>
-                                                    <th className="px-3 py-2">Receipt</th>
-                                                    <th className="px-3 py-2">Amount</th>
-                                                    <th className="px-3 py-2">Mode</th>
-                                                    <th className="px-3 py-2">Service</th>
-                                                    <th className="px-3 py-2">Remarks</th>
+                                                    <th className="sticky left-0 z-20 bg-secondary px-3 py-2 shadow-[4px_0_8px_-6px_rgba(0,0,0,0.35)]">#</th>
+                                                    <th className="bg-secondary px-3 py-2">Date</th>
+                                                    <th className="bg-secondary px-3 py-2">Receipt</th>
+                                                    <th className="bg-secondary px-3 py-2">Amount</th>
+                                                    <th className="bg-secondary px-3 py-2">Mode</th>
+                                                    <th className="bg-secondary px-3 py-2">Service</th>
+                                                    <th className="bg-secondary px-3 py-2">Remarks</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {servicePaymentsList.map((payment, idx) => (
                                                     <tr key={getId(payment)} className="border-b border-secondary">
-                                                        <td className="px-3 py-2">{idx + 1}</td>
+                                                        <td className="sticky left-0 z-10 bg-primary px-3 py-2 shadow-[4px_0_8px_-6px_rgba(0,0,0,0.35)]">{idx + 1}</td>
                                                         <td className="px-3 py-2">{formatShortDateTime(payment.paymentDate)}</td>
                                                         <td className="px-3 py-2">{payment.receiptNo || "-"}</td>
                                                         <td className="px-3 py-2">₹{payment.amount}</td>
@@ -1245,7 +1246,7 @@ export default function BookingViewPage() {
                                                 ))}
                                             </tbody>
                                         </table>
-                                    </div>
+                                    </FloatingHeaderTable>
                                 )}
                             </div>
                         </div>

@@ -1,6 +1,6 @@
 import { StrictMode, useEffect } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Route, Routes } from "react-router";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { HomeScreen } from "@/pages/home-screen";
 import { NotFound } from "@/pages/not-found";
 import { RouteProvider } from "@/providers/router-provider";
@@ -118,17 +118,15 @@ import LeadsEditPage from "@/pages/lead-management/leads/edit/[id]";
 import LeadsViewPage from "@/pages/lead-management/leads/view/[id]";
 import EnquiryIndexPage from "@/pages/lead-management/enquiry";
 import CampaignIndexPage from "@/pages/lead-management/campaign/index";
-import CampaignAddPage from "@/pages/lead-management/campaign/add";
-import CampaignEditPage from "@/pages/lead-management/campaign/edit/[id]";
 import CampaignViewPage from "@/pages/lead-management/campaign/view/[id]";
+import CampaignLeadsPage from "@/pages/lead-management/campaign/leads/[id]";
 import PipelineIndexPage from "@/pages/lead-management/pipeline/index";
-import PipelineAddPage from "@/pages/lead-management/pipeline/add";
 import PipelineViewPage from "@/pages/lead-management/pipeline/view/[id]";
-import PipelineEditPage from "@/pages/lead-management/pipeline/edit/[id]";
+import LeadSummaryReport from "@/pages/lead-management/pipeline/lead-summary-report";
 import LeadSettingsPage from "@/pages/lead-management/settings/index";
-import ContactPropertiesPage from "@/pages/lead-management/settings/contact-properties/index";
-import ContactPropertiesAddPage from "@/pages/lead-management/settings/contact-properties/add";
-import ContactPropertiesEditPage from "@/pages/lead-management/settings/contact-properties/edit/[id]";
+import ContactsPage from "@/pages/lead-management/contacts/index";
+import ContactViewPage from "@/pages/lead-management/contacts/view";
+import LeadDashboardPage from "@/pages/lead-management/dashboard";
 import LeadReportsPage from "@/pages/lead-management/reports";
 import DialHomePage from "@/pages/dial";
 import DialLeadsPage from "@/pages/dial/leads";
@@ -343,24 +341,27 @@ createRoot(document.getElementById("root")!).render(
                         <Route path="/itinerary/saved-itinerary" element={<SavedItineraryListPage />} />
                         <Route path="/itinerary/saved-itinerary/edit/:id" element={<EditSavedItineraryPage />} />
                         <Route path="/package-mail/:id" element={<PackageItineraryMailPage />} />
+                        <Route path="/lead-management/dashboard" element={<LeadDashboardPage />} />
                         <Route path="/lead-management/leads" element={<LeadsIndexPage />} />
                         <Route path="/lead-management/leads/add" element={<LeadsAddPage />} />
                         <Route path="/lead-management/leads/edit/:id" element={<LeadsEditPage />} />
                         <Route path="/lead-management/leads/view/:id" element={<LeadsViewPage />} />
                         <Route path="/lead-management/enquiry" element={<EnquiryIndexPage />} />
+                        <Route path="/lead-management/contacts" element={<ContactsPage />} />
+                        <Route path="/lead-management/contacts/view" element={<ContactViewPage />} />
                         <Route path="/lead-management/reports" element={<LeadReportsPage />} />
                         <Route path="/lead-management/campaign" element={<CampaignIndexPage />} />
-                        <Route path="/lead-management/campaign/add" element={<CampaignAddPage />} />
-                        <Route path="/lead-management/campaign/edit/:id" element={<CampaignEditPage />} />
+                        <Route path="/lead-management/campaign/add" element={<Navigate to="/lead-management/campaign" replace />} />
+                        <Route path="/lead-management/campaign/edit/:id" element={<Navigate to="/lead-management/campaign" replace />} />
                         <Route path="/lead-management/campaign/view/:id" element={<CampaignViewPage />} />
+                        <Route path="/lead-management/campaign/leads/:id" element={<CampaignLeadsPage />} />
                         <Route path="/lead-management/pipeline" element={<PipelineIndexPage />} />
-                        <Route path="/lead-management/pipeline/add" element={<PipelineAddPage />} />
+                        <Route path="/lead-management/pipeline/add" element={<Navigate to="/lead-management/settings?tab=pipelines" replace />} />
                         <Route path="/lead-management/pipeline/view/:id" element={<PipelineViewPage />} />
-                        <Route path="/lead-management/pipeline/edit/:id" element={<PipelineEditPage />} />
+                        <Route path="/lead-management/pipeline/view/:id/lead-summary" element={<LeadSummaryReport />} />
+                        <Route path="/lead-management/pipeline/edit/:id" element={<Navigate to="/lead-management/settings?tab=pipelines" replace />} />
                         <Route path="/lead-management/settings" element={<LeadSettingsPage />} />
-                        <Route path="/lead-management/settings/contact-properties" element={<ContactPropertiesPage />} />
-                        <Route path="/lead-management/settings/contact-properties/add" element={<ContactPropertiesAddPage />} />
-                        <Route path="/lead-management/settings/contact-properties/edit/:id" element={<ContactPropertiesEditPage />} />
+                        <Route path="/lead-management/settings/contact-properties" element={<Navigate to="/lead-management/settings?tab=contactProperties" replace />} />
                         <Route path="/photography/client" element={<PhotographyClientPage />} />
                         <Route path="/photography/client/add" element={<PhotographyClientAddPage />} />
                         <Route path="/photography/client/edit/:id" element={<PhotographyClientEditPage />} />

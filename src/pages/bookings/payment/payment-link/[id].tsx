@@ -16,7 +16,7 @@ import { Input } from "@/components/base/input/input";
 import { TextArea } from "@/components/base/textarea/textarea";
 import { Select } from "@/components/base/select/select";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
-import { PaginationButtonGroup } from "@/components/application/pagination/pagination";
+import { CompactPagination } from "@/components/application/pagination/pagination";
 import Tmodal from "@/components/utils/Tmodal";
 import MailConfirmation from "@/components/application/mail-confirmation/mail-confirmation";
 import { useStoreSnackbar } from "@/store/snackbar";
@@ -53,7 +53,8 @@ export default function PaymentLink() {
 
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [totalRecords, setTotalRecords] = useState(0);
+  const [totalCount, setTotalCount] = useState<number | null>(null);
+  const [countLoading, setCountLoading] = useState(false);
   const [data, setData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -137,6 +138,7 @@ export default function PaymentLink() {
             item.id === selectedItem.id ? { ...item, ...response, isDefault: true } : { ...item, isDefault: false }
         )
       );
+      setTotalCount(null);
       
       showSnackbar({
         description: "Default updated successfully",
@@ -154,12 +156,44 @@ export default function PaymentLink() {
   };
 
   useEffect(() => {
+    setTotalCount(null);
+  }, [limit, debouncedFilters, id]);
+
+  const handleRequestTotalCount = async () => {
+    if (!id) return;
+    setCountLoading(true);
+    try {
+      const params: Record<string, any> = {
+        page: 1,
+        limit: 1,
+        totalCount: true,
+        assignmentId: id,
+        populate: "assignmentId",
+        select_assignmentId: "packageId",
+      };
+      if (debouncedFilters.status) params.status = debouncedFilters.status;
+      if (debouncedFilters.createdAt) params.createdAt = debouncedFilters.createdAt;
+      if (debouncedFilters.isDefault) params.isDefault = debouncedFilters.isDefault;
+      const response: any = await getPackageVoucher(params);
+      if (response?.error) throw new Error(response.error);
+      setTotalCount(response?.totalCount || 0);
+    } catch (error: any) {
+      showSnackbar({
+        description: error.message || "Failed to fetch total count",
+        title: "Error",
+        color: "danger",
+      });
+    } finally {
+      setCountLoading(false);
+    }
+  };
+
+  useEffect(() => {
     const fetchData = async () => {
       if (!id) return;
       setIsLoading(true);
 
       const params: any = {
-        totalCount: true,
         page: page,
         limit: limit,
         assignmentId: id,
@@ -173,8 +207,7 @@ export default function PaymentLink() {
 
       try {
         const response: any = await getPackageVoucher(params);
-        setData(response?.data || []);
-        setTotalRecords(response?.totalCount || 0);
+        setData(Array.isArray(response) ? response : (response?.data || []));
       } catch (error: any) {
         showSnackbar({
           description: error.message,
@@ -235,7 +268,7 @@ export default function PaymentLink() {
         });
 
         setData((prev) => prev.filter((item) => item.id !== selectedId));
-        setTotalRecords((prev) => prev - 1);
+        setTotalCount(null);
         setSelectedId(null);
       }
     } catch (error: any) {
@@ -392,28 +425,7 @@ export default function PaymentLink() {
           <TableCard.Root>
             <TableCard.Header
                 title="Package Voucher List"
-                badge={isLoading ? "..." : totalRecords}
-                contentTrailing={
-                    <div className="flex flex-col gap-2 md:flex-row md:items-center">
-                        <Select
-                            aria-label="Rows per page"
-                            className="w-full md:w-32"
-                            selectedKey={String(limit)}
-                            onSelectionChange={(key) => {
-                                setLimit(Number(key));
-                                setPage(1);
-                            }}
-                            items={[
-                                { id: "10", label: "10 / page" },
-                                { id: "25", label: "25 / page" },
-                                { id: "50", label: "50 / page" },
-                                { id: "100", label: "100 / page" },
-                            ]}
-                        >
-                            {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
-                        </Select>
-                    </div>
-                }
+                badge={isLoading ? "..." : totalCount ?? data.length}
             />
 
             <div className="grid grid-cols-1 gap-3 border-b border-secondary bg-primary px-4 py-4 md:grid-cols-4 md:px-6">
@@ -535,12 +547,19 @@ export default function PaymentLink() {
                 </StickyTable>
             </div>
 
-            <PaginationButtonGroup
+            <CompactPagination
                 page={page}
-                total={Math.ceil(totalRecords / limit)}
-                onPageChange={(p) => setPage(p)}
-                align="center"
-                className="py-4"
+                limit={limit}
+                itemCount={data.length}
+                totalCount={totalCount}
+                countLoading={countLoading}
+                pageSizeOptions={[10, 25, 50, 100]}
+                onPageChange={setPage}
+                onLimitChange={(nextLimit) => {
+                    setLimit(nextLimit);
+                    setPage(1);
+                }}
+                onRequestTotalCount={handleRequestTotalCount}
             />
           </TableCard.Root>
 

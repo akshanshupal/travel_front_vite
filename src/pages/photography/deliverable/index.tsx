@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { DefaultLayout } from "@/layouts/DefaultLayout";
 import { Button } from "@/components/base/buttons/button";
-import { TableCard } from "@/components/application/table/table";
+import { FloatingHeaderTable, TableCard } from "@/components/application/table/table";
 import { Input } from "@/components/base/input/input";
 import { useStoreSnackbar } from "@/store/snackbar";
 import {
@@ -30,7 +30,7 @@ export default function PhotographyDeliverablePage() {
     const fetchDeliverables = async () => {
         setLoading(true);
         try {
-            const response: any = await getPhotographyDeliverables({ limit: "100", totalCount: "true" });
+            const response: any = await getPhotographyDeliverables({ limit: "100" });
             const resolved = response?.data ?? response;
             const list = Array.isArray(resolved?.data) ? resolved.data : Array.isArray(resolved) ? resolved : [];
             setDeliverables(list);
@@ -129,7 +129,7 @@ export default function PhotographyDeliverablePage() {
                     title="Photography - Deliverables"
                     badge={loading ? "..." : deliverables.length}
                 />
-                <div className="overflow-x-auto bg-primary px-4 py-5 md:px-6">
+                <div className="bg-primary px-4 py-5 md:px-6">
                     <div className="mb-4 grid grid-cols-1 gap-2 rounded-lg border border-secondary p-3 md:grid-cols-[1fr_auto]">
                         <Input label="Add Deliverable Title" value={newTitle} onChange={setNewTitle} />
                         <div className="flex items-end">
@@ -138,69 +138,71 @@ export default function PhotographyDeliverablePage() {
                             </Button>
                         </div>
                     </div>
-                    <table className="w-full border-collapse text-left text-sm">
-                        <thead>
-                            <tr className="border-b border-secondary text-tertiary">
-                                <th className="px-2 py-2">Title</th>
-                                <th className="px-2 py-2 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {deliverables.map((deliverable) => (
-                                <tr key={deliverable.id} className="border-b border-secondary">
-                                    <td className="px-2 py-2">
-                                        {editingId === deliverable.id ? (
-                                            <Input label="" value={editingTitle} onChange={setEditingTitle} />
-                                        ) : (
-                                            deliverable.title
-                                        )}
-                                    </td>
-                                    <td className="px-2 py-2">
-                                        <div className="flex justify-end gap-2">
+                    <FloatingHeaderTable>
+                        <table className="w-full border-collapse text-left text-sm">
+                            <thead>
+                                <tr className="border-b border-secondary text-tertiary">
+                                    <th className="sticky left-0 z-20 bg-secondary px-2 py-2 shadow-[4px_0_8px_-6px_rgba(0,0,0,0.35)]">Title</th>
+                                    <th className="sticky right-0 z-20 border-l border-secondary bg-secondary px-2 py-2 text-right shadow-[-4px_0_8px_-6px_rgba(0,0,0,0.35)]">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {deliverables.map((deliverable) => (
+                                    <tr key={deliverable.id} className="border-b border-secondary">
+                                        <td className="sticky left-0 z-10 bg-primary px-2 py-2 shadow-[4px_0_8px_-6px_rgba(0,0,0,0.35)]">
                                             {editingId === deliverable.id ? (
-                                                <>
-                                                    <Button
-                                                        size="sm"
-                                                        color="secondary"
-                                                        onClick={() => {
-                                                            setEditingId("");
-                                                            setEditingTitle("");
-                                                        }}
-                                                    >
-                                                        Cancel
-                                                    </Button>
-                                                    <Button size="sm" color="primary" onClick={handleUpdate} isDisabled={updating}>
-                                                        {updating ? "Saving..." : "Save"}
-                                                    </Button>
-                                                </>
+                                                <Input label="" value={editingTitle} onChange={setEditingTitle} />
                                             ) : (
-                                                <>
-                                                    <Button size="sm" color="secondary" onClick={() => startEdit(deliverable)}>
-                                                        Edit
-                                                    </Button>
-                                                    <Button
-                                                        size="sm"
-                                                        color="secondary-destructive"
-                                                        onClick={() => handleDelete(deliverable.id)}
-                                                        isDisabled={deletingId === deliverable.id}
-                                                    >
-                                                        {deletingId === deliverable.id ? "Deleting..." : "Delete"}
-                                                    </Button>
-                                                </>
+                                                deliverable.title
                                             )}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                            {!loading && deliverables.length === 0 && (
-                                <tr>
-                                    <td colSpan={2} className="px-2 py-4 text-tertiary">
-                                        No deliverables found.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                                        </td>
+                                        <td className="sticky right-0 z-10 border-l border-secondary bg-primary px-2 py-2 shadow-[-4px_0_8px_-6px_rgba(0,0,0,0.35)]">
+                                            <div className="flex justify-end gap-2">
+                                                {editingId === deliverable.id ? (
+                                                    <>
+                                                        <Button
+                                                            size="sm"
+                                                            color="secondary"
+                                                            onClick={() => {
+                                                                setEditingId("");
+                                                                setEditingTitle("");
+                                                            }}
+                                                        >
+                                                            Cancel
+                                                        </Button>
+                                                        <Button size="sm" color="primary" onClick={handleUpdate} isDisabled={updating}>
+                                                            {updating ? "Saving..." : "Save"}
+                                                        </Button>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Button size="sm" color="secondary" onClick={() => startEdit(deliverable)}>
+                                                            Edit
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            color="secondary-destructive"
+                                                            onClick={() => handleDelete(deliverable.id)}
+                                                            isDisabled={deletingId === deliverable.id}
+                                                        >
+                                                            {deletingId === deliverable.id ? "Deleting..." : "Delete"}
+                                                        </Button>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {!loading && deliverables.length === 0 && (
+                                    <tr>
+                                        <td colSpan={2} className="px-2 py-4 text-tertiary">
+                                            No deliverables found.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </FloatingHeaderTable>
                 </div>
             </TableCard.Root>
         </DefaultLayout>

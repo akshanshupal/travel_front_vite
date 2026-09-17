@@ -1,5 +1,5 @@
 import { DefaultLayout } from "@/layouts/DefaultLayout";
-import { PaginationButtonGroup } from "@/components/application/pagination/pagination";
+import { CompactPagination } from "@/components/application/pagination/pagination";
 import { StickyTable, Table, TableCard } from "@/components/application/table/table";
 import { Badge, BadgeWithButton } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
@@ -67,7 +67,8 @@ export default function SettingsUserListPage() {
 
     const [loading, setLoading] = useState(false);
     const [items, setItems] = useState<any[]>([]);
-    const [totalRecords, setTotalRecords] = useState(0);
+    const [totalRecords, setTotalRecords] = useState<number | null>(null);
+    const [countLoading, setCountLoading] = useState(false);
 
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState<any>(null);
@@ -87,7 +88,6 @@ export default function SettingsUserListPage() {
     const [tempFilters, setTempFilters] = useState(filters);
 
     const isFilterActive = Boolean(filters.userDetails || filters.username || filters.type || filters.status);
-    const totalPages = Math.max(1, Math.ceil((totalRecords || 0) / limit));
 
     const getItemId = (item: any) => String(item?.id || item?._id || "");
 
@@ -128,7 +128,6 @@ export default function SettingsUserListPage() {
             setLoading(true);
             try {
                 const params: any = {
-                    totalCount: true,
                     page,
                     limit,
                     select: "name,email,mobile,username,type,status,profileImg",
@@ -142,7 +141,6 @@ export default function SettingsUserListPage() {
                 if (response?.error) throw new Error(response.error);
                 const data = response?.data ?? response;
                 setItems(Array.isArray(data) ? data : []);
-                setTotalRecords(Number(response?.totalCount || 0));
             } catch (e: any) {
                 showSnackbar({ title: "Error", description: e?.message || "Failed to load users", color: "danger" });
             } finally {
@@ -151,6 +149,22 @@ export default function SettingsUserListPage() {
         };
         run();
     }, [debouncedFilters, limit, page, showSnackbar]);
+
+    useEffect(() => setTotalRecords(null), [debouncedFilters, limit]);
+
+    const requestTotalCount = async () => {
+        setCountLoading(true);
+        try {
+            const params: any = { ...debouncedFilters, page: 1, limit: 1, totalCount: true };
+            Object.keys(params).forEach((key) => {
+                if (params[key] === "") delete params[key];
+            });
+            const response: any = await getUser(params);
+            setTotalRecords(Number(response?.totalCount ?? 0));
+        } finally {
+            setCountLoading(false);
+        }
+    };
 
     const handleOpenFilters = () => {
         setTempFilters(filters);
@@ -241,7 +255,7 @@ export default function SettingsUserListPage() {
             if (response?.error) throw new Error(response.error);
             showSnackbar({ title: "Success", description: "User deleted successfully", color: "success" });
             setItems((prev) => prev.filter((item) => getItemId(item) !== id));
-            setTotalRecords((prev) => Math.max(0, prev - 1));
+            setTotalRecords(null);
         } catch (e: any) {
             showSnackbar({ title: "Error", description: e?.message || "Failed to delete user", color: "danger" });
         } finally {
@@ -258,7 +272,7 @@ export default function SettingsUserListPage() {
                 <TableCard.Root className="w-full">
                     <TableCard.Header
                         title="User"
-                        badge={loading ? "…" : totalRecords}
+                        badge={loading ? "…" : totalRecords ?? "—"}
                         contentTrailing={
                             <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center md:justify-end">
                                 <Select
@@ -485,18 +499,25 @@ export default function SettingsUserListPage() {
                         </StickyTable>
                     </div>
 
-                    <PaginationButtonGroup
+                    <CompactPagination
                         page={page}
-                        total={totalPages}
-                        onPageChange={(nextPage: number) =>
-                            setSearchParams((prev) => {
-                                const next = new URLSearchParams(prev);
-                                next.set("page", String(nextPage));
-                                return next;
-                            })
-                        }
-                        align="center"
-                        className="py-4"
+                        limit={limit}
+                        itemCount={items.length}
+                        totalCount={totalRecords}
+                        countLoading={countLoading}
+                        pageSizeOptions={[10, 25, 50]}
+                        onPageChange={(nextPage) => setSearchParams((prev) => {
+                            const next = new URLSearchParams(prev);
+                            next.set("page", String(nextPage));
+                            return next;
+                        })}
+                        onLimitChange={(nextLimit) => setSearchParams((prev) => {
+                            const next = new URLSearchParams(prev);
+                            next.set("limit", String(nextLimit));
+                            next.set("page", "1");
+                            return next;
+                        })}
+                        onRequestTotalCount={requestTotalCount}
                     />
                 </TableCard.Root>
             </div>

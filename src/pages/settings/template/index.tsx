@@ -11,7 +11,7 @@ import { Plus, Edit01, Trash01, Eye, SearchLg, RefreshCw01 } from "@untitledui/i
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router";
 import { StickyTable, Table, TableCard } from "@/components/application/table/table";
-import { PaginationCardDefault } from "@/components/application/pagination/pagination";
+import { CompactPagination } from "@/components/application/pagination/pagination";
 import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { useAccess } from "@/hooks/use-access";
@@ -27,7 +27,8 @@ export default function TemplateListPage() {
     const canDelete = can("template", "delete");
     const [isLoading, setIsLoading] = useState(true);
     const [data, setData] = useState<any[]>([]);
-    const [totalRecords, setTotalRecords] = useState(0);
+    const [totalRecords, setTotalRecords] = useState<number | null>(null);
+    const [countLoading, setCountLoading] = useState(false);
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
     const [filters, setFilters] = useState({ title: "", status: "" });
@@ -35,7 +36,6 @@ export default function TemplateListPage() {
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
 
-    const totalPages = Math.max(1, Math.ceil((totalRecords || 0) / limit));
     const getItemId = (item: any) => String(item?.id || item?._id || "");
     const indexById = useMemo(
         () => new Map(data.map((item, index) => [getItemId(item), (page - 1) * limit + index + 1])),
@@ -56,14 +56,12 @@ export default function TemplateListPage() {
             const params = {
                 page,
                 limit,
-                totalCount: true,
                 ...(debouncedFilters.title ? { title: debouncedFilters.title } : {}),
                 ...(debouncedFilters.status ? { status: debouncedFilters.status } : {}),
             };
             const response = await getMailTemplate(params);
             if (response && !response.error) {
-                setData(response.data || []);
-                setTotalRecords(response.totalCount || 0);
+                setData(Array.isArray(response) ? response : (response.data || []));
             } else {
                 showSnackbar({ title: "Error", description: response.error || "Failed to fetch templates", color: "danger" });
             }
@@ -79,12 +77,31 @@ export default function TemplateListPage() {
         fetchData();
     }, [fetchData]);
 
+    useEffect(() => setTotalRecords(null), [debouncedFilters, limit]);
+
+    const requestTotalCount = async () => {
+        setCountLoading(true);
+        try {
+            const response = await getMailTemplate({
+                ...(debouncedFilters.title ? { title: debouncedFilters.title } : {}),
+                ...(debouncedFilters.status ? { status: debouncedFilters.status } : {}),
+                page: 1,
+                limit: 1,
+                totalCount: true,
+            });
+            setTotalRecords(Number(response?.totalCount ?? 0));
+        } finally {
+            setCountLoading(false);
+        }
+    };
+
     const handleDelete = async () => {
         if (!selectedTemplate) return;
         try {
             const response = await deleteMailTemplate(selectedTemplate.id);
             if (response && !response.error) {
                 showSnackbar({ title: "Success", description: "Template deleted successfully", color: "success" });
+                setTotalRecords(null);
                 fetchData();
                 setDeleteModalOpen(false);
             } else {
@@ -109,7 +126,7 @@ export default function TemplateListPage() {
                 <TableCard.Root className="w-full">
                     <TableCard.Header
                         title="Mail Templates"
-                        badge={isLoading ? "..." : totalRecords}
+                        badge={isLoading ? "..." : totalRecords ?? "—"}
                         description="Manage your email templates here."
                         contentTrailing={
                             <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center">
@@ -238,10 +255,20 @@ export default function TemplateListPage() {
                             )}
                         </StickyTable>
                     </div>
-                    <PaginationCardDefault
+                    <CompactPagination
                         page={page}
-                        total={totalPages}
-                        onPageChange={(nextPage) => setPage(Math.min(totalPages, Math.max(1, nextPage)))}
+                        limit={limit}
+                        itemCount={data.length}
+                        totalCount={totalRecords}
+                        countLoading={countLoading}
+                        pageSizeOptions={[10, 50, 100]}
+                        onPageChange={setPage}
+                        onLimitChange={(nextLimit) => {
+                            setLimit(nextLimit);
+                            setPage(1);
+                            setTotalRecords(null);
+                        }}
+                        onRequestTotalCount={requestTotalCount}
                     />
                 </TableCard.Root>
             </div>

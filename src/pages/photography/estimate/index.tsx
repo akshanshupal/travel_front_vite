@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { DefaultLayout } from "@/layouts/DefaultLayout";
-import { PaginationButtonGroup } from "@/components/application/pagination/pagination";
+import { CompactPagination } from "@/components/application/pagination/pagination";
 import { StickyTable, Table, TableCard } from "@/components/application/table/table";
 import { BadgeWithButton } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
@@ -40,7 +40,7 @@ export default function PhotographyEstimatePage() {
         setLoading(true);
         setLoadError(null);
         try {
-            const response: any = await getPhotographyEstimates({ limit: "all", totalCount: "true" });
+            const response: any = await getPhotographyEstimates({ limit: "all" });
             const resolved = response?.data ?? response;
             const list = Array.isArray(resolved?.data) ? resolved.data : Array.isArray(resolved) ? resolved : [];
             setAllEstimates(list);
@@ -349,11 +349,17 @@ export default function PhotographyEstimatePage() {
                         </StickyTable>
                     )}
 
-                    <PaginationButtonGroup
+                    <CompactPagination
                         page={page}
-                        total={totalPages}
-                        align="center"
+                        limit={limit}
+                        itemCount={pagedEstimates.length}
+                        totalCount={filteredEstimates.length}
+                        pageSizeOptions={[10, 25, 50]}
                         onPageChange={(nextPage) => setPage(Math.min(totalPages, Math.max(1, nextPage)))}
+                        onLimitChange={(nextLimit) => {
+                            setLimit(nextLimit);
+                            setPage(1);
+                        }}
                     />
                 </TableCard.Root>
             </div>

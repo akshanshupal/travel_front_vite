@@ -1,5 +1,5 @@
 import { DefaultLayout } from "@/layouts/DefaultLayout";
-import { PaginationButtonGroup } from "@/components/application/pagination/pagination";
+import { CompactPagination } from "@/components/application/pagination/pagination";
 import { StickyTable, Table, TableCard } from "@/components/application/table/table";
 import { Badge, BadgeWithButton } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
@@ -52,8 +52,8 @@ const parseListSearch = (search: string): { page: number; limit: number; filters
     };
 };
 
-const listRequestCache = new Map<string, { at: number; items: ItineraryListItem[]; totalRecords: number }>();
-const listRequestInFlight = new Map<string, Promise<{ items: ItineraryListItem[]; totalRecords: number }>>();
+const listRequestCache = new Map<string, { at: number; items: ItineraryListItem[] }>();
+const listRequestInFlight = new Map<string, Promise<{ items: ItineraryListItem[] }>>();
 
 const areFiltersEqual = (a: ListFilters, b: ListFilters) =>
     a.title === b.title && a.status === b.status && a.createPackage === b.createPackage && a.area === b.area;
@@ -70,7 +70,8 @@ export default function ItineraryListPage() {
     const [loadError, setLoadError] = useState<string | null>(null);
     const [page, setPage] = useState(initial.page);
     const [limit, setLimit] = useState(initial.limit);
-    const [totalRecords, setTotalRecords] = useState(0);
+    const [totalRecords, setTotalRecords] = useState<number | null>(null);
+    const [countLoading, setCountLoading] = useState(false);
     const [filters, setFilters] = useState<ListFilters>(initial.filters);
     const [debouncedFilters, setDebouncedFilters] = useState<ListFilters>(initial.filters);
     const [tempFilters, setTempFilters] = useState<ListFilters>(initial.filters);
@@ -172,7 +173,6 @@ export default function ItineraryListPage() {
             const cached = listRequestCache.get(requestKey);
             if (cached && Date.now() - cached.at < 5_000) {
                 setItems(cached.items);
-                setTotalRecords(cached.totalRecords);
                 setLoading(false);
                 setLoadError(null);
                 return;
@@ -182,7 +182,6 @@ export default function ItineraryListPage() {
             setLoadError(null);
             try {
                 const params: Record<string, string> = {
-                    totalCount: "true",
                     page: String(page),
                     limit: String(limit),
                     populate: "area",
@@ -212,15 +211,7 @@ export default function ItineraryListPage() {
                             }))
                             .filter((item: any) => Boolean(item?.id));
 
-                        const countRaw =
-                            res?.totalCount ??
-                            res?.data?.totalCount ??
-                            res?.data?.data?.totalCount ??
-                            res?.total ??
-                            res?.count ??
-                            (Array.isArray(list) ? list.length : 0);
-
-                        return { items: normalized, totalRecords: Number(countRaw) || 0 };
+                        return { items: normalized };
                     })();
                     listRequestInFlight.set(requestKey, inFlight);
                 }
@@ -229,10 +220,8 @@ export default function ItineraryListPage() {
                 listRequestCache.set(requestKey, { at: Date.now(), ...result });
 
                 setItems(result.items);
-                setTotalRecords(result.totalRecords);
             } catch (e: any) {
                 setItems([]);
-                setTotalRecords(0);
                 setLoadError(e?.error?.message || e?.message || "Failed to load itineraries");
                 lastRequestKeyRef.current = null;
             } finally {
@@ -244,7 +233,23 @@ export default function ItineraryListPage() {
         run();
     }, [authToken, debouncedFilters, limit, navigate, page, refreshNonce]);
 
-    const totalPages = Math.max(1, Math.ceil((totalRecords || 0) / limit));
+    useEffect(() => setTotalRecords(null), [debouncedFilters, refreshNonce]);
+
+    const viewTotalCount = async () => {
+        if (countLoading || totalRecords !== null) return;
+        setCountLoading(true);
+        try {
+            const params: Record<string, string> = { page: "1", limit: "1", totalCount: "true", populate: "area", select_area: "title,alias,featureImg" };
+            if (debouncedFilters.status) params.status = debouncedFilters.status;
+            if (debouncedFilters.title) params.title = debouncedFilters.title;
+            if (debouncedFilters.createPackage) params.createPackage = debouncedFilters.createPackage;
+            if (debouncedFilters.area) params.area = debouncedFilters.area;
+            const res: any = await itineraryService.list(params);
+            setTotalRecords(Number(res?.totalCount ?? res?.data?.totalCount ?? res?.data?.data?.totalCount ?? res?.total ?? res?.count ?? 0));
+        } finally {
+            setCountLoading(false);
+        }
+    };
 
     const indexById = useMemo(() => new Map(items.map((item, index) => [item.id, (page - 1) * limit + index + 1])), [items, limit, page]);
 
@@ -290,7 +295,7 @@ export default function ItineraryListPage() {
     const handleDelete = async (id: string) => {
         await itineraryService.deleteById(id);
         setItems((prev) => prev.filter((it) => it.id !== id));
-        setTotalRecords((prev) => Math.max(0, prev - 1));
+        setTotalRecords(null);
     };
 
     const handleDuplicate = async (id: string, title: string, copyHotels: boolean) => {
@@ -627,11 +632,18 @@ export default function ItineraryListPage() {
                         </StickyTable>
                     </div>
 
-                    <PaginationButtonGroup
+                    <CompactPagination
                         page={page}
-                        total={totalPages}
-                        align="center"
-                        onPageChange={(nextPage) => setPage(Math.min(totalPages, Math.max(1, nextPage)))}
+                        limit={limit}
+                        itemCount={items.length}
+                        totalCount={totalRecords}
+                        countLoading={countLoading}
+                        onPageChange={setPage}
+                        onLimitChange={(nextLimit) => {
+                            setPage(1);
+                            setLimit(nextLimit);
+                        }}
+                        onRequestTotalCount={viewTotalCount}
                     />
                 </TableCard.Root>
             </div>

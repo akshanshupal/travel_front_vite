@@ -5,7 +5,7 @@ import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { CloseButton } from "@/components/base/buttons/close-button";
 import { Input } from "@/components/base/input/input";
 import { Select } from "@/components/base/select/select";
-import { PaginationButtonGroup } from "@/components/application/pagination/pagination";
+import { CompactPagination } from "@/components/application/pagination/pagination";
 import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { fetchWithToken } from "@/utils/fetchApi";
 import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
@@ -65,7 +65,8 @@ export default function ItinerarySiteListPage() {
     const [areas, setAreas] = useState<{ id: string; label: string }[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
-    const [totalRecords, setTotalRecords] = useState(0);
+    const [totalRecords, setTotalRecords] = useState<number | null>(null);
+    const [countLoading, setCountLoading] = useState(false);
     const availableWidth = useAvailableTableWidth();
 
     const [deleteTarget, setDeleteTarget] = useState<{ id: string; title?: string } | null>(null);
@@ -76,7 +77,6 @@ export default function ItinerarySiteListPage() {
     const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
     const [refreshTick, setRefreshTick] = useState(0);
 
-    const totalPages = Math.max(1, Math.ceil((totalRecords || 0) / limit));
     const indexById = useMemo(() => new Map(items.map((item, index) => [item.id, (page - 1) * limit + index + 1])), [items, limit, page]);
     const isFilterActive = Boolean(filters.title || filters.status || filters.area);
 
@@ -134,7 +134,6 @@ export default function ItinerarySiteListPage() {
             setLoadError(null);
             try {
                 const res = await fetchWithToken("/api/site", {
-                    totalCount: "true",
                     page: String(page),
                     limit: String(limit),
                     ...(debouncedFilters.title ? { title: debouncedFilters.title } : {}),
@@ -157,19 +156,9 @@ export default function ItinerarySiteListPage() {
                         return { ...it, id } as SiteItem;
                     })
                     .filter(Boolean) as SiteItem[];
-                const countRaw =
-                    (res as any)?.totalCount ??
-                    (res as any)?.total ??
-                    (res as any)?.count ??
-                    resolved?.totalCount ??
-                    resolved?.total ??
-                    resolved?.count ??
-                    normalized.length;
                 setItems(normalized);
-                setTotalRecords(Number(countRaw) || 0);
             } catch (e: any) {
                 setItems([]);
-                setTotalRecords(0);
                 setLoadError(e?.error?.message || e?.message || "Failed to load sites");
             } finally {
                 setLoading(false);
@@ -177,6 +166,25 @@ export default function ItinerarySiteListPage() {
         };
         run();
     }, [debouncedFilters.status, debouncedFilters.title, debouncedFilters.area, limit, page, refreshTick]);
+
+    useEffect(() => setTotalRecords(null), [debouncedFilters, refreshTick]);
+
+    const viewTotalCount = async () => {
+        if (countLoading || totalRecords !== null) return;
+        setCountLoading(true);
+        try {
+            const res: any = await fetchWithToken("/api/site", {
+                page: "1", limit: "1", totalCount: "true", populate: "area",
+                ...(debouncedFilters.title ? { title: debouncedFilters.title } : {}),
+                ...(debouncedFilters.status ? { status: debouncedFilters.status } : {}),
+                ...(debouncedFilters.area ? { area: debouncedFilters.area } : {}),
+            });
+            const resolved = res?.data ?? res;
+            setTotalRecords(Number(res?.totalCount ?? res?.total ?? res?.count ?? resolved?.totalCount ?? resolved?.total ?? resolved?.count ?? 0));
+        } finally {
+            setCountLoading(false);
+        }
+    };
 
     const handleOpenFilters = () => {
         setTempFilters(filters);
@@ -211,7 +219,7 @@ export default function ItinerarySiteListPage() {
         try {
             await fetchWithToken(`/api/site/${deleteTarget.id}`, {}, { method: "DELETE" });
             setItems((prev) => prev.filter((it) => it.id !== deleteTarget.id));
-            setTotalRecords((prev) => Math.max(0, prev - 1));
+            setTotalRecords(null);
             setDeleteTarget(null);
         } finally {
             deletingRef.current = false;
@@ -517,12 +525,7 @@ export default function ItinerarySiteListPage() {
                         </StickyTable>
                     )}
 
-                    <PaginationButtonGroup
-                        page={page}
-                        total={totalPages}
-                        align="center"
-                        onPageChange={(nextPage) => setPage(Math.min(totalPages, Math.max(1, nextPage)))}
-                    />
+                    <CompactPagination page={page} limit={limit} itemCount={items.length} totalCount={totalRecords} countLoading={countLoading} onPageChange={setPage} onLimitChange={(nextLimit) => { setPage(1); setLimit(nextLimit); }} onRequestTotalCount={viewTotalCount} />
                 </TableCard.Root>
             </div>
 

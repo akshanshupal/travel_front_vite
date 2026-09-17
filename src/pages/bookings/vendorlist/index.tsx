@@ -1,5 +1,5 @@
 import { DefaultLayout } from "@/layouts/DefaultLayout";
-import { PaginationButtonGroup } from "@/components/application/pagination/pagination";
+import { CompactPagination } from "@/components/application/pagination/pagination";
 import { StickyTable, Table, TableCard } from "@/components/application/table/table";
 import { Badge, BadgeWithButton } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
@@ -36,7 +36,8 @@ export default function VendorListPage() {
     const [loading, setLoading] = useState(false);
     const [items, setItems] = useState<any[]>([]);
     const [bookingTypes, setBookingTypes] = useState<any[]>([]);
-    const [totalRecords, setTotalRecords] = useState(0);
+    const [totalCount, setTotalCount] = useState<number | null>(null);
+    const [countLoading, setCountLoading] = useState(false);
 
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState<any>(null);
@@ -107,7 +108,6 @@ export default function VendorListPage() {
         setLoading(true);
         try {
             const params: Record<string, any> = {
-                totalCount: true,
                 page,
                 limit,
                 select: "title,status,mobile,vendorLocation,bookingsType",
@@ -120,8 +120,7 @@ export default function VendorListPage() {
             if (response.error) {
                 throw new Error(response.error);
             }
-            setItems(response.data || []);
-            setTotalRecords(response.totalCount || 0);
+            setItems(Array.isArray(response) ? response : (response.data || []));
         } catch (error: any) {
             showSnackbar({
                 title: "Error",
@@ -136,6 +135,33 @@ export default function VendorListPage() {
     useEffect(() => {
         fetchData();
     }, [page, limit, debouncedFilters]);
+
+    useEffect(() => {
+        setTotalCount(null);
+    }, [limit, debouncedFilters]);
+
+    const handleRequestTotalCount = async () => {
+        setCountLoading(true);
+        try {
+            const params: Record<string, any> = {
+                page: 1,
+                limit: 1,
+                totalCount: true,
+                select: "title,status,mobile,vendorLocation,bookingsType",
+                ...debouncedFilters,
+            };
+            Object.keys(params).forEach((key) => {
+                if (params[key] === "" || params[key] === undefined || params[key] === null) delete params[key];
+            });
+            const response = await getVendor(params);
+            if (response.error) throw new Error(response.error);
+            setTotalCount(response.totalCount || 0);
+        } catch (error: any) {
+            showSnackbar({ title: "Error", description: error.message || "Failed to fetch total count", color: "danger" });
+        } finally {
+            setCountLoading(false);
+        }
+    };
 
     useEffect(() => {
         const run = async () => {
@@ -229,6 +255,7 @@ export default function VendorListPage() {
                 color: "success",
             });
             setDeleteModalOpen(false);
+            setTotalCount(null);
             fetchData();
         } catch (error: any) {
             showSnackbar({
@@ -245,23 +272,9 @@ export default function VendorListPage() {
                 <TableCard.Root>
                     <TableCard.Header
                         title="Vendor List"
-                        badge={loading ? "..." : totalRecords}
+                        badge={loading ? "..." : totalCount ?? items.length}
                         contentTrailing={
                             <div className="flex flex-col gap-2 md:flex-row md:items-center">
-                                <Select
-                                    aria-label="Rows per page"
-                                    className="w-full md:w-32"
-                                    value={String(limit)}
-                                    onChange={undefined}
-                                    onSelectionChange={(key) => handleLimitChange(String(key))}
-                                    items={[
-                                        { id: "10", label: "10 / page" },
-                                        { id: "25", label: "25 / page" },
-                                        { id: "50", label: "50 / page" },
-                                    ]}
-                                >
-                                    {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
-                                </Select>
                                 <Button
                                     size="sm"
                                     color="primary"
@@ -456,12 +469,16 @@ export default function VendorListPage() {
                         )}
                     </StickyTable>
 
-                    <PaginationButtonGroup
+                    <CompactPagination
                         page={page}
-                        total={Math.ceil(totalRecords / limit)}
+                        limit={limit}
+                        itemCount={items.length}
+                        totalCount={totalCount}
+                        countLoading={countLoading}
+                        pageSizeOptions={[10, 25, 50]}
                         onPageChange={handlePageChange}
-                        align="center"
-                        className="py-4"
+                        onLimitChange={(nextLimit) => handleLimitChange(String(nextLimit))}
+                        onRequestTotalCount={handleRequestTotalCount}
                     />
                 </TableCard.Root>
             </div>

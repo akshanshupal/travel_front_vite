@@ -1,5 +1,5 @@
 import { DefaultLayout } from "@/layouts/DefaultLayout";
-import { PaginationButtonGroup } from "@/components/application/pagination/pagination";
+import { CompactPagination } from "@/components/application/pagination/pagination";
 import { StickyTable, Table, TableCard } from "@/components/application/table/table";
 import { Badge, BadgeWithButton } from "@/components/base/badges/badges";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
@@ -88,7 +88,6 @@ export default function AssignmentPage() {
 
     const [loading, setLoading] = useState(false);
     const [items, setItems] = useState<any[]>([]);
-    const [totalRecords, setTotalRecords] = useState(0);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState<any>(null);
     const [finishModalOpen, setFinishModalOpen] = useState(false);
@@ -110,6 +109,8 @@ export default function AssignmentPage() {
 
     const [page, setPage] = useState(initial.page);
     const [limit, setLimit] = useState(initial.limit);
+    const [totalCount, setTotalCount] = useState<number | null>(null);
+    const [countLoading, setCountLoading] = useState(false);
     const [filters, setFilters] = useState({
         packageId: initial.packageId,
         agentName: initial.agentName,
@@ -204,7 +205,6 @@ export default function AssignmentPage() {
             setLoading(true);
             try {
                 const params: Record<string, any> = {
-                    totalCount: true,
                     page,
                     limit,
                     populate: "agentName",
@@ -221,8 +221,8 @@ export default function AssignmentPage() {
                 if (response.error) {
                     throw new Error(response.error);
                 }
-                setItems(response.data || []);
-                setTotalRecords(response.totalCount || 0);
+                const data = Array.isArray(response) ? response : (response.data || []);
+                setItems(data);
             } catch (error: any) {
                 showSnackbar({
                     title: "Error",
@@ -235,6 +235,38 @@ export default function AssignmentPage() {
         };
         fetchData();
     }, [page, limit, debouncedFilters]);
+
+    useEffect(() => {
+        setTotalCount(null);
+    }, [limit, debouncedFilters]);
+
+    const handleRequestTotalCount = async () => {
+        setCountLoading(true);
+        try {
+            const params: Record<string, any> = {
+                page: 1,
+                limit: 1,
+                totalCount: true,
+                populate: "agentName",
+                select: "createdAt,id,clientName,mobile,email,title,status,bookingDate,packageId,agentName,tourDate,dateNotDecided,travelLocation,packageCost,finalPackageCost,paymentReceived,verify,bookingStatus,paymentStatus,finished,callDone,emailSent,whatsappSent,agentCallRecordingChecked",
+                ...debouncedFilters,
+                sortField: debouncedFilters.sortField || "createdAt",
+                sortOrder: debouncedFilters.sortOrder || "ASC",
+                tzOffsetMinutes: new Date().getTimezoneOffset(),
+            };
+            Object.keys(params).forEach((key) => {
+                if (params[key] === "" || params[key] === undefined || params[key] === null) delete params[key];
+            });
+            const response = await getAssignment(params);
+            if (response.error) throw new Error(response.error);
+            setTotalCount(response.totalCount || 0);
+        } catch (error: any) {
+            showSnackbar({ title: "Error", description: error.message || "Failed to fetch total count", color: "danger" });
+        } finally {
+            setCountLoading(false);
+        }
+    };
+
     const normalizeBoolean = (value: unknown) => {
         if (value === true || value === "true" || value === 1 || value === "1") return true;
         if (value === false || value === "false" || value === 0 || value === "0") return false;
@@ -248,7 +280,7 @@ export default function AssignmentPage() {
             const response = await getAssignmentDelete(itemId);
             if ((response as any)?.error) throw new Error((response as any).error);
             setItems((prev) => prev.filter((row) => getId(row) !== itemId));
-            setTotalRecords((prev) => Math.max(0, prev - 1));
+            setTotalCount(null);
             setDeleteModalOpen(false);
             setDeleteTarget(null);
         } catch (error: any) {
@@ -272,6 +304,7 @@ export default function AssignmentPage() {
             const response = await finishedAssignment(itemId, { ...finishTarget, finished: true });
             if ((response as any)?.error) throw new Error((response as any).error);
             setItems((prev) => prev.map((row) => (getId(row) === itemId ? { ...row, finished: true } : row)));
+            setTotalCount(null);
             setFinishModalOpen(false);
             setFinishTarget(null);
         } catch (error: any) {
@@ -305,6 +338,7 @@ export default function AssignmentPage() {
             setItems((prev) =>
                 prev.map((row) => (getId(row) === itemId ? { ...row, ...(response as any)?.data } : row)),
             );
+            setTotalCount(null);
             setAdjustmentModalOpen(false);
             setAdjustmentTarget(null);
             setAdjustmentAmount("");
@@ -359,7 +393,7 @@ export default function AssignmentPage() {
                 <TableCard.Root className="w-full">
                     <TableCard.Header
                         title="Assignment List"
-                        badge={loading ? "..." : totalRecords}
+                        badge={loading ? "..." : totalCount ?? items.length}
                         contentTrailing={
                             <div className="flex flex-col gap-2 md:flex-row md:items-center">
                                 <Select
@@ -387,25 +421,7 @@ export default function AssignmentPage() {
                                 >
                                     {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
                                 </Select>
-                                <Select
-                                    aria-label="Rows per page"
-                                    className="w-full md:w-32"
-                                    selectedKey={String(limit)}
-                                    onChange={undefined}
-                                    onSelectionChange={(key) => {
-                                        const next = Number(key);
-                                        if (!Number.isFinite(next) || next <= 0) return;
-                                        setLimit(next);
-                                        setPage(1);
-                                    }}
-                                    items={[
-                                        { id: "10", label: "10 / page" },
-                                        { id: "25", label: "25 / page" },
-                                        { id: "50", label: "50 / page" },
-                                    ]}
-                                >
-                                    {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
-                                </Select>
+
                             </div>
                         }
                     />
@@ -858,6 +874,7 @@ export default function AssignmentPage() {
                                                                                             getId(row) === itemId ? { ...row, verify: true } : row,
                                                                                         ),
                                                                                     );
+                                                                                    setTotalCount(null);
                                                                                 } catch (error: any) {
                                                                                     showSnackbar({
                                                                                         title: "Error",
@@ -883,6 +900,7 @@ export default function AssignmentPage() {
                                                                                             getId(row) === itemId ? { ...row, bookingStatus: updatedStatus } : row,
                                                                                         ),
                                                                                     );
+                                                                                    setTotalCount(null);
                                                                                 } catch (error: any) {
                                                                                     showSnackbar({
                                                                                         title: "Error",
@@ -909,6 +927,7 @@ export default function AssignmentPage() {
                                                                                                 getId(row) === itemId ? { ...row, paymentStatus: updatedStatus } : row,
                                                                                             ),
                                                                                         );
+                                                                                        setTotalCount(null);
                                                                                     } catch (error: any) {
                                                                                         showSnackbar({
                                                                                             title: "Error",
@@ -965,12 +984,19 @@ export default function AssignmentPage() {
                         )}
                     </StickyTable>
 
-                    <PaginationButtonGroup
+                    <CompactPagination
                         page={page}
-                        total={Math.ceil(totalRecords / limit)}
+                        limit={limit}
+                        itemCount={items.length}
+                        totalCount={totalCount}
+                        countLoading={countLoading}
+                        pageSizeOptions={[10, 25, 50]}
                         onPageChange={setPage}
-                        align="center"
-                        className="py-4"
+                        onLimitChange={(nextLimit) => {
+                            setLimit(nextLimit);
+                            setPage(1);
+                        }}
+                        onRequestTotalCount={handleRequestTotalCount}
                     />
                 </TableCard.Root>
             </div>

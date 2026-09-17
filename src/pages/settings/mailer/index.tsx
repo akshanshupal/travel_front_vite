@@ -1,5 +1,5 @@
 import { DefaultLayout } from "@/layouts/DefaultLayout";
-import { PaginationButtonGroup } from "@/components/application/pagination/pagination";
+import { CompactPagination } from "@/components/application/pagination/pagination";
 import { StickyTable, Table, TableCard } from "@/components/application/table/table";
 import { Badge, BadgeWithButton } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
@@ -56,7 +56,8 @@ export default function SettingsMailerListPage() {
 
     const [loading, setLoading] = useState(false);
     const [items, setItems] = useState<any[]>([]);
-    const [totalRecords, setTotalRecords] = useState(0);
+    const [totalRecords, setTotalRecords] = useState<number | null>(null);
+    const [countLoading, setCountLoading] = useState(false);
 
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState<any>(null);
@@ -79,7 +80,6 @@ export default function SettingsMailerListPage() {
     const isFilterActive = Boolean(
         filters.title || filters.company || filters.host || filters.email || filters.password || filters.emailFunction || filters.status,
     );
-    const totalPages = Math.max(1, Math.ceil((totalRecords || 0) / limit));
     const getItemId = (item: any) => String(item?.id || item?._id || "");
 
     const indexById = useMemo(
@@ -143,7 +143,6 @@ export default function SettingsMailerListPage() {
             setLoading(true);
             try {
                 const params: Record<string, any> = {
-                    totalCount: true,
                     page,
                     limit,
                     select: "title,host,email,status,emailFunction,company",
@@ -154,8 +153,7 @@ export default function SettingsMailerListPage() {
                 });
                 const response: any = await getMailer(params);
                 if (response?.error) throw new Error(response.error);
-                setItems(response?.data || []);
-                setTotalRecords(response?.totalCount || 0);
+                setItems(Array.isArray(response) ? response : (response?.data || []));
             } catch (error: any) {
                 showSnackbar({
                     title: "Error",
@@ -169,6 +167,27 @@ export default function SettingsMailerListPage() {
         fetchData();
     }, [debouncedFilters, limit, page, showSnackbar]);
 
+    useEffect(() => setTotalRecords(null), [debouncedFilters, limit]);
+
+    const requestTotalCount = async () => {
+        setCountLoading(true);
+        try {
+            const params: Record<string, any> = {
+                ...debouncedFilters,
+                page: 1,
+                limit: 1,
+                totalCount: true,
+            };
+            Object.keys(params).forEach((key) => {
+                if (params[key] === "" || params[key] === undefined || params[key] === null) delete params[key];
+            });
+            const response: any = await getMailer(params);
+            setTotalRecords(Number(response?.totalCount ?? 0));
+        } finally {
+            setCountLoading(false);
+        }
+    };
+
     const handleDelete = async () => {
         if (!deleteTarget) return;
         const id = getItemId(deleteTarget);
@@ -178,7 +197,7 @@ export default function SettingsMailerListPage() {
             if (response?.error) throw new Error(response.error);
             showSnackbar({ title: "Success", description: "Mailer deleted successfully", color: "success" });
             setItems((prev) => prev.filter((item) => getItemId(item) !== id));
-            setTotalRecords((prev) => Math.max(0, prev - 1));
+            setTotalRecords(null);
         } catch (error: any) {
             showSnackbar({ title: "Delete Failed", description: error?.message || "Failed to delete mailer", color: "danger" });
             throw error;
@@ -191,7 +210,7 @@ export default function SettingsMailerListPage() {
                 <TableCard.Root className="w-full">
                     <TableCard.Header
                         title="Mailer List"
-                        badge={loading ? "..." : totalRecords}
+                        badge={loading ? "..." : totalRecords ?? "—"}
                         contentTrailing={
                             <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center">
                                 <Select
@@ -431,10 +450,13 @@ export default function SettingsMailerListPage() {
                         )}
                     </StickyTable>
 
-                    <PaginationButtonGroup
+                    <CompactPagination
                         page={page}
-                        total={totalPages}
-                        align="center"
+                        limit={limit}
+                        itemCount={items.length}
+                        totalCount={totalRecords}
+                        countLoading={countLoading}
+                        pageSizeOptions={[10, 25, 50]}
                         onPageChange={(nextPage) =>
                             setSearchParams((prev) => {
                                 const nextParams = new URLSearchParams(prev);
@@ -442,7 +464,15 @@ export default function SettingsMailerListPage() {
                                 return nextParams;
                             })
                         }
-                        className="py-4"
+                        onLimitChange={(nextLimit) =>
+                            setSearchParams((prev) => {
+                                const nextParams = new URLSearchParams(prev);
+                                nextParams.set("limit", String(nextLimit));
+                                nextParams.set("page", "1");
+                                return nextParams;
+                            })
+                        }
+                        onRequestTotalCount={requestTotalCount}
                     />
                 </TableCard.Root>
             </div>

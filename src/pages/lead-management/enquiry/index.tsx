@@ -1,6 +1,6 @@
 import { DefaultLayout } from "@/layouts/DefaultLayout";
 import { StickyTable, Table, TableCard } from "@/components/application/table/table";
-import { PaginationButtonGroup } from "@/components/application/pagination/pagination";
+import { CompactPagination } from "@/components/application/pagination/pagination";
 import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { convertEnquiryToLead, getEnquiries } from "@/utils/services/enquiryService";
 import { useStoreSnackbar } from "@/store/snackbar";
@@ -53,13 +53,13 @@ export default function EnquiryIndexPage() {
     const [items, setItems] = useState<EnquiryItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
-    const [totalRecords, setTotalRecords] = useState(0);
+    const [totalRecords, setTotalRecords] = useState<number | null>(null);
+    const [countLoading, setCountLoading] = useState(false);
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
     const [viewing, setViewing] = useState<EnquiryItem | null>(null);
     const transferringRef = useRef(new Set<string>());
 
-    const totalPages = Math.max(1, Math.ceil((totalRecords || 0) / limit));
     const indexById = useMemo(() => new Map(items.map((item, index) => [item.id, (page - 1) * limit + index + 1])), [items, limit, page]);
 
     useEffect(() => {
@@ -67,7 +67,7 @@ export default function EnquiryIndexPage() {
             setLoading(true);
             setLoadError(null);
             try {
-                const res = await getEnquiries({ totalCount: "true", page: String(page), limit: String(limit) });
+                const res = await getEnquiries({ page: String(page), limit: String(limit) });
                 const resolved = (res as any)?.data ?? res;
                 const list = Array.isArray(resolved?.data) ? resolved.data : Array.isArray(resolved) ? resolved : asArray(resolved?.items);
                 const normalized = asArray(list)
@@ -77,19 +77,27 @@ export default function EnquiryIndexPage() {
                         return { ...it, id } as EnquiryItem;
                     })
                     .filter(Boolean) as EnquiryItem[];
-                const count = Number((res as any)?.totalCount ?? resolved?.totalCount ?? normalized.length) || normalized.length;
                 setItems(normalized);
-                setTotalRecords(count);
             } catch (e: any) {
                 setLoadError(e?.message || "Failed to load enquiries");
                 setItems([]);
-                setTotalRecords(0);
             } finally {
                 setLoading(false);
             }
         };
         run();
     }, [page, limit]);
+
+    useEffect(() => setTotalRecords(null), [limit]);
+
+    const requestTotalCount = async () => {
+        setCountLoading(true);
+        try {
+            const response: any = await getEnquiries({ page: "1", limit: "1", totalCount: "true" });
+            const resolved = response?.data ?? response;
+            setTotalRecords(Number(response?.totalCount ?? resolved?.totalCount ?? 0));
+        } finally { setCountLoading(false); }
+    };
 
     const columns = [
         { id: "index", name: "#", isRowHeader: true, widthRatio: 6, minWidth: 64 },
@@ -114,6 +122,7 @@ export default function EnquiryIndexPage() {
             const resolved = (response as any)?.data ?? response;
             const leadId = getId(resolved?.lead ?? resolved?.convertedLead ?? resolved);
             setItems((prev) => prev.map((it) => (it.id === id ? { ...it, transferredToLead: true } : it)));
+            setTotalRecords(null);
             if (viewing?.id === id) setViewing({ ...viewing, transferredToLead: true });
             useStoreSnackbar.getState().showSnackbar({ title: "Transferred", description: "Enquiry converted to lead", color: "success" });
             if (leadId) navigate(`/lead-management/leads/view/${leadId}`);
@@ -210,26 +219,7 @@ export default function EnquiryIndexPage() {
                         </StickyTable>
                     )}
 
-                    <div className="flex flex-col gap-3 border-t border-secondary px-4 py-4 md:flex-row md:items-center md:justify-between md:px-6">
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs text-tertiary">Rows</span>
-                            <select
-                                className="rounded-md border border-secondary bg-primary px-2 py-1 text-xs"
-                                value={limit}
-                                onChange={(e) => {
-                                    setLimit(Number(e.target.value) || 10);
-                                    setPage(1);
-                                }}
-                            >
-                                {[10, 25, 50, 100].map((n) => (
-                                    <option key={n} value={n}>
-                                        {n}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <PaginationButtonGroup page={page} total={totalPages} align="center" onPageChange={(next) => setPage(Math.min(totalPages, Math.max(1, next)))} />
-                    </div>
+                    <CompactPagination page={page} limit={limit} itemCount={items.length} totalCount={totalRecords} countLoading={countLoading} pageSizeOptions={[10, 25, 50, 100]} onPageChange={setPage} onLimitChange={value => { setLimit(value); setPage(1); }} onRequestTotalCount={requestTotalCount} />
                 </TableCard.Root>
             </div>
 

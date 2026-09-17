@@ -316,18 +316,18 @@ const ProfitReportsGraph = () => {
                     filters.chartType === "table" ? (
                         <div className="max-h-[400px] overflow-auto">
                             <table className="min-w-full text-sm">
-                                <thead className="bg-secondary">
+                                <thead>
                                     <tr>
-                                        <th className="px-4 py-2 text-left font-medium text-primary">Agent Name</th>
-                                        <th className="px-4 py-2 text-left font-medium text-primary">Total Profit</th>
-                                        <th className="px-4 py-2 text-left font-medium text-primary">Total Cr Amount</th>
-                                        <th className="px-4 py-2 text-left font-medium text-primary">Total Dr Amount</th>
+                                        <th className="sticky left-0 top-0 z-20 bg-secondary px-4 py-2 text-left font-medium text-primary shadow-[4px_0_8px_-6px_rgba(0,0,0,0.35)]">Agent Name</th>
+                                        <th className="sticky top-0 z-20 bg-secondary px-4 py-2 text-left font-medium text-primary">Total Profit</th>
+                                        <th className="sticky top-0 z-20 bg-secondary px-4 py-2 text-left font-medium text-primary">Total Cr Amount</th>
+                                        <th className="sticky top-0 z-20 bg-secondary px-4 py-2 text-left font-medium text-primary">Total Dr Amount</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {graphData.labels.map((label, index) => (
                                         <tr key={label + index} className="border-b border-secondary">
-                                            <td className="px-4 py-2 text-tertiary">{label}</td>
+                                            <td className="sticky left-0 z-10 bg-primary px-4 py-2 text-tertiary shadow-[4px_0_8px_-6px_rgba(0,0,0,0.35)]">{label}</td>
                                             <td className="px-4 py-2 text-tertiary">{graphData.datasets[0]?.data?.[index] ?? 0}</td>
                                             <td className="px-4 py-2 text-tertiary">{graphData.datasets[1]?.data?.[index] ?? 0}</td>
                                             <td className="px-4 py-2 text-tertiary">{graphData.datasets[2]?.data?.[index] ?? 0}</td>
@@ -605,18 +605,18 @@ const FinishedPackageWiseGraph = () => {
                     filters.chartType === "table" ? (
                         <div className="max-h-[400px] overflow-auto">
                             <table className="min-w-full text-sm">
-                                <thead className="bg-secondary">
+                                <thead>
                                     <tr>
-                                        <th className="px-4 py-2 text-left font-medium text-primary">Agent Name</th>
-                                        <th className="px-4 py-2 text-left font-medium text-primary">Total Itineraries</th>
-                                        <th className="px-4 py-2 text-left font-medium text-primary">Finished Package</th>
-                                        <th className="px-4 py-2 text-left font-medium text-primary">Pending Package</th>
+                                        <th className="sticky left-0 top-0 z-20 bg-secondary px-4 py-2 text-left font-medium text-primary shadow-[4px_0_8px_-6px_rgba(0,0,0,0.35)]">Agent Name</th>
+                                        <th className="sticky top-0 z-20 bg-secondary px-4 py-2 text-left font-medium text-primary">Total Itineraries</th>
+                                        <th className="sticky top-0 z-20 bg-secondary px-4 py-2 text-left font-medium text-primary">Finished Package</th>
+                                        <th className="sticky top-0 z-20 bg-secondary px-4 py-2 text-left font-medium text-primary">Pending Package</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {graphData.labels.map((label, index) => (
                                         <tr key={label + index} className="border-b border-secondary">
-                                            <td className="px-4 py-2 text-tertiary">{label}</td>
+                                            <td className="sticky left-0 z-10 bg-primary px-4 py-2 text-tertiary shadow-[4px_0_8px_-6px_rgba(0,0,0,0.35)]">{label}</td>
                                             <td className="px-4 py-2 text-tertiary">{graphData.datasets[0]?.data?.[index] ?? 0}</td>
                                             <td className="px-4 py-2 text-tertiary">{graphData.datasets[1]?.data?.[index] ?? 0}</td>
                                             <td className="px-4 py-2 text-tertiary">{graphData.datasets[2]?.data?.[index] ?? 0}</td>

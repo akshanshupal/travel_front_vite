@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { DefaultLayout } from "@/layouts/DefaultLayout";
-import { PaginationButtonGroup } from "@/components/application/pagination/pagination";
+import { CompactPagination } from "@/components/application/pagination/pagination";
 import { StickyTable, Table, TableCard } from "@/components/application/table/table";
 import { BadgeWithButton } from "@/components/base/badges/badges";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
@@ -25,7 +25,7 @@ export default function PhotographyBookingPage() {
     const [loadError, setLoadError] = useState<string | null>(null);
     const [allBookings, setAllBookings] = useState<any[]>([]);
     const [page, setPage] = useState(1);
-    const [limit] = useState(10);
+    const [limit, setLimit] = useState(10);
     const [refreshTick, setRefreshTick] = useState(0);
     const [search, setSearch] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -42,7 +42,7 @@ export default function PhotographyBookingPage() {
         setLoading(true);
         setLoadError(null);
         try {
-            const response: any = await getPhotographyBookings({ limit: "all", totalCount: "true" });
+            const response: any = await getPhotographyBookings({ limit: "all" });
             const resolved = response?.data ?? response;
             const list = Array.isArray(resolved?.data) ? resolved.data : Array.isArray(resolved) ? resolved : [];
             setAllBookings(list);
@@ -188,11 +188,17 @@ export default function PhotographyBookingPage() {
                             )}
                         </StickyTable>
                     )}
-                    <PaginationButtonGroup
+                    <CompactPagination
                         page={page}
-                        total={totalPages}
-                        align="center"
+                        limit={limit}
+                        itemCount={pagedBookings.length}
+                        totalCount={filteredBookings.length}
+                        pageSizeOptions={[10, 25, 50]}
                         onPageChange={(nextPage) => setPage(Math.min(totalPages, Math.max(1, nextPage)))}
+                        onLimitChange={(nextLimit) => {
+                            setLimit(nextLimit);
+                            setPage(1);
+                        }}
                     />
                 </TableCard.Root>
             </div>

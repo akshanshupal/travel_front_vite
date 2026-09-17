@@ -6,7 +6,7 @@ import { CloseButton } from "@/components/base/buttons/close-button";
 import { Input } from "@/components/base/input/input";
 import { Label } from "@/components/base/input/label";
 import { Select } from "@/components/base/select/select";
-import { PaginationButtonGroup } from "@/components/application/pagination/pagination";
+import { CompactPagination } from "@/components/application/pagination/pagination";
 import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Badge } from "@/components/base/badges/badges";
@@ -14,6 +14,7 @@ import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { useStoreSnackbar } from "@/store/snackbar";
 import { getCampaign, getCampaignDelete } from "@/utils/services/campaignService";
 import { getSalesEx } from "@/utils/services/salesService";
+import { CampaignFormModal } from "@/pages/lead-management/campaign/campaign-form-modal";
 import { Edit01, FilterLines, Plus, RefreshCw01, Trash01, Eye } from "@untitledui/icons";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
@@ -64,13 +65,16 @@ export default function CampaignIndexPage() {
     const [items, setItems] = useState<CampaignItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
-    const [totalRecords, setTotalRecords] = useState(0);
+    const [totalRecords, setTotalRecords] = useState<number | null>(null);
+    const [countLoading, setCountLoading] = useState(false);
     const [salesList, setSalesList] = useState<SelectItem[]>([]);
 
     const [deleteTarget, setDeleteTarget] = useState<{ id: string; title?: string } | null>(null);
+    const [campaignModalOpen, setCampaignModalOpen] = useState(false);
+    const [campaignEditTarget, setCampaignEditTarget] = useState<{ id: string } | null>(null);
+    const [refreshKey, setRefreshKey] = useState(0);
     const deletingRef = useRef(false);
 
-    const totalPages = Math.max(1, Math.ceil((totalRecords || 0) / limit));
     const indexById = useMemo(() => new Map(items.map((item, index) => [item.id, (page - 1) * limit + index + 1])), [items, limit, page]);
     const isFilterActive = Boolean(filters.title || filters.status || filters.managingCampaign);
 
@@ -110,7 +114,6 @@ export default function CampaignIndexPage() {
             setLoadError(null);
             try {
                 const res = await getCampaign({
-                    totalCount: "true",
                     page: String(page),
                     limit: String(limit),
                     populate: "pipeline",
@@ -122,19 +125,36 @@ export default function CampaignIndexPage() {
                 const resolved = (res as any)?.data ?? res;
                 const list = Array.isArray(resolved?.data) ? resolved.data : Array.isArray(resolved) ? resolved : asArray(resolved?.items);
                 const normalized = asArray(list).map((it: any) => { const id = getId(it); if (!id) return null; return { ...it, id } as CampaignItem; }).filter(Boolean) as CampaignItem[];
-                const countRaw = (res as any)?.totalCount ?? (res as any)?.total ?? resolved?.totalCount ?? resolved?.total;
                 setItems(normalized);
-                setTotalRecords(Number(countRaw ?? normalized.length) || normalized.length);
             } catch (e: any) {
                 setLoadError(e?.message || "Failed to load campaigns");
                 setItems([]);
-                setTotalRecords(0);
             } finally {
                 setLoading(false);
             }
         };
         run();
-    }, [debouncedFilters.title, debouncedFilters.status, debouncedFilters.managingCampaign, limit, page]);
+    }, [debouncedFilters.title, debouncedFilters.status, debouncedFilters.managingCampaign, limit, page, refreshKey]);
+
+    useEffect(() => setTotalRecords(null), [debouncedFilters, limit]);
+
+    const requestTotalCount = async () => {
+        setCountLoading(true);
+        try {
+            const response: any = await getCampaign({
+                ...(debouncedFilters.title ? { title: debouncedFilters.title } : {}),
+                ...(debouncedFilters.status ? { status: debouncedFilters.status } : {}),
+                ...(debouncedFilters.managingCampaign ? { managingCampaign: debouncedFilters.managingCampaign } : {}),
+                page: "1",
+                limit: "1",
+                totalCount: "true",
+            });
+            const resolved = response?.data ?? response;
+            setTotalRecords(Number(response?.totalCount ?? response?.total ?? resolved?.totalCount ?? resolved?.total ?? 0));
+        } finally {
+            setCountLoading(false);
+        }
+    };
 
     const handleDelete = async () => {
         if (!deleteTarget?.id || deletingRef.current) return;
@@ -143,7 +163,7 @@ export default function CampaignIndexPage() {
             await getCampaignDelete(deleteTarget.id);
             useStoreSnackbar.getState().showSnackbar({ title: "Deleted", description: "Campaign deleted successfully", color: "success" });
             setItems(prev => prev.filter(it => it.id !== deleteTarget.id));
-            setTotalRecords(prev => Math.max(0, prev - 1));
+            setTotalRecords(null);
             setDeleteTarget(null);
         } catch (e: any) {
             useStoreSnackbar.getState().showSnackbar({ title: "Error", description: e?.message || "Failed to delete campaign", color: "danger" });
@@ -181,7 +201,7 @@ export default function CampaignIndexPage() {
                 <TableCard.Root className="w-full">
                     <TableCard.Header
                         title="Campaign Management"
-                        badge={loading ? "…" : totalRecords}
+                        badge={loading ? "…" : totalRecords ?? "—"}
                         contentTrailing={
                             <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center">
                                 <Select
@@ -194,7 +214,7 @@ export default function CampaignIndexPage() {
                                 >
                                     {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
                                 </Select>
-                                <Button size="sm" color="primary" iconLeading={Plus} onClick={() => navigate("/lead-management/campaign/add")}>
+                                <Button size="sm" color="primary" iconLeading={Plus} onClick={() => setCampaignModalOpen(true)}>
                                     Add Campaign
                                 </Button>
                             </div>
@@ -316,7 +336,7 @@ export default function CampaignIndexPage() {
                         </StickyTable>
                     )}
 
-                    <PaginationButtonGroup page={page} total={totalPages} align="center" onPageChange={(next) => setPage(Math.min(totalPages, Math.max(1, next)))} />
+                    <CompactPagination page={page} limit={limit} itemCount={items.length} totalCount={totalRecords} countLoading={countLoading} onPageChange={setPage} onLimitChange={value => { setLimit(value); setPage(1); }} onRequestTotalCount={requestTotalCount} />
                 </TableCard.Root>
             </div>
 
@@ -339,6 +359,19 @@ export default function CampaignIndexPage() {
                     </Modal>
                 )}
             </ModalOverlay>
+
+            <CampaignFormModal
+                isOpen={campaignModalOpen}
+                onClose={() => setCampaignModalOpen(false)}
+                onSaved={() => { setTotalRecords(null); setRefreshKey((k) => k + 1); }}
+            />
+
+            <CampaignFormModal
+                isOpen={Boolean(campaignEditTarget)}
+                onClose={() => setCampaignEditTarget(null)}
+                campaign={campaignEditTarget}
+                onSaved={() => { setTotalRecords(null); setRefreshKey((k) => k + 1); }}
+            />
         </DefaultLayout>
     );
 }

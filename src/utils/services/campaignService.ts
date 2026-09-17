@@ -53,3 +53,30 @@ export const updateCampaignPauseFunction = async (data: { status: boolean; campa
     }
     return response;
 };
+
+export const copyCampaign = async (id: string, data: Record<string, any> = {}) => {
+    const response = await fetchWithToken(`/api/campaign/${id}/copy`, data, { method: 'POST' });
+    if ((response as any).error) {
+        console.error('Error copying campaign:', (response as any).error);
+        throw new Error((response as any).error?.message || 'Failed to copy campaign');
+    }
+    return response;
+};
+
+export const getCampaignLogs = async (params: Record<string, any> = {}) => {
+    const response = await fetchWithToken('/api/campaign-logs', params);
+    if ((response as any).error) {
+        console.error('Error fetching campaign logs:', (response as any).error);
+        throw new Error((response as any).error?.message || 'Failed to fetch campaign logs');
+    }
+    return response;
+};
+
+export const getCampaignDashboard = async (id: string) => {
+    const response = await fetchWithToken(`/api/campaign/${id}/dashboard`, {});
+    if ((response as any).error) {
+        console.error('Error fetching campaign dashboard:', (response as any).error);
+        throw new Error((response as any).error?.message || 'Failed to fetch campaign dashboard');
+    }
+    return response;
+};
