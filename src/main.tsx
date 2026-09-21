@@ -119,6 +119,7 @@ import LeadsViewPage from "@/pages/lead-management/leads/view/[id]";
 import EnquiryIndexPage from "@/pages/lead-management/enquiry";
 import CampaignIndexPage from "@/pages/lead-management/campaign/index";
 import CampaignViewPage from "@/pages/lead-management/campaign/view/[id]";
+import CampaignEngagementFormPage from "@/pages/lead-management/campaign/engagement-form/[id]";
 import CampaignLeadsPage from "@/pages/lead-management/campaign/leads/[id]";
 import PipelineIndexPage from "@/pages/lead-management/pipeline/index";
 import PipelineViewPage from "@/pages/lead-management/pipeline/view/[id]";
@@ -354,6 +355,7 @@ createRoot(document.getElementById("root")!).render(
                         <Route path="/lead-management/campaign/add" element={<Navigate to="/lead-management/campaign" replace />} />
                         <Route path="/lead-management/campaign/edit/:id" element={<Navigate to="/lead-management/campaign" replace />} />
                         <Route path="/lead-management/campaign/view/:id" element={<CampaignViewPage />} />
+                        <Route path="/lead-management/campaign/view/:id/engagement-form" element={<CampaignEngagementFormPage />} />
                         <Route path="/lead-management/campaign/leads/:id" element={<CampaignLeadsPage />} />
                         <Route path="/lead-management/pipeline" element={<PipelineIndexPage />} />
                         <Route path="/lead-management/pipeline/add" element={<Navigate to="/lead-management/settings?tab=pipelines" replace />} />

@@ -35,8 +35,26 @@ const asArray = (value: any) => Array.isArray(value) ? value : [];
 const dateLabel = (value?: string) => value ? new Date(value).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
 const number = (value: any) => Number(value || 0).toLocaleString();
 
+const Donut = ({ values, colors, label }: { values: number[]; colors: string[]; label: string }) => {
+    const total = values.reduce((sum, value) => sum + value, 0);
+    const first = total ? (values[0] / total) * 100 : 0;
+    return (
+        <div className="flex items-center justify-center gap-4 px-5 pb-6 pt-2">
+            <div
+                aria-label={`${label}: ${number(values[0] || 0)}`}
+                className="relative size-28 shrink-0 rounded-full"
+                style={{ background: `conic-gradient(${colors[0]} 0 ${first}%, ${colors[1]} ${first}% 100%)` }}
+                role="img"
+            >
+                <div className="absolute inset-3 rounded-full bg-primary" />
+            </div>
+            <span className="max-w-28 text-xs font-medium uppercase text-secondary">{label}</span>
+        </div>
+    );
+};
+
 const StatCard = ({ title, values, children }: { title: string; values: Array<[string, number]>; children?: React.ReactNode }) => (
-    <section className="rounded-xl bg-primary ring-1 ring-secondary">
+    <section className="rounded-xl bg-primary shadow-sm ring-1 ring-secondary">
         <div className="border-b border-secondary px-4 py-4"><h2 className="text-sm font-semibold uppercase text-primary">{title}</h2></div>
         <div className="grid grid-cols-2 gap-4 p-5 md:grid-cols-4">
             {values.map(([label, value]) => <div key={label} className="text-center"><p className="text-xs uppercase text-tertiary">{label}</p><p className="mt-2 text-2xl font-medium text-primary">{number(value)}</p></div>)}
@@ -110,14 +128,28 @@ export default function CampaignViewPage() {
     return <DefaultLayout>
         <div className="mb-4 flex flex-col gap-3 border-b border-secondary pb-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-3"><Button color="tertiary" iconLeading={ArrowLeft} onClick={() => navigate("/lead-management/campaign")} /> <h1 className="text-xl font-semibold text-primary">{data?.title || "Campaign"}</h1></div>
-            <div className="flex flex-wrap items-center gap-2 text-sm"><span className="text-tertiary">Priority:</span><span className="flex items-center gap-1 font-medium text-primary"><ArrowUp className="size-4 text-red-500" /> {priority}</span><Button color="secondary" onClick={() => navigate(`/lead-management/campaign/leads/${id}`)}>Lead Summary</Button><Button color="secondary" onClick={() => { setLogsOpen(true); loadLogs(); }}>Lead History</Button><Dropdown.Root><Button color="secondary" iconTrailing={ChevronDown}>Action</Button><Dropdown.Popover><Dropdown.Menu><Dropdown.Item onAction={() => runAction("copy")}>Copy Campaign</Dropdown.Item><Dropdown.Item onAction={() => setEditModalOpen(true)}>Campaign Settings</Dropdown.Item><Dropdown.Item onAction={() => runAction("pause")}>{data?.pause ? "Un-pause campaign" : "Pause campaign"}</Dropdown.Item><Dropdown.Item onAction={() => runAction("delete")}>Delete Campaign</Dropdown.Item></Dropdown.Menu></Dropdown.Popover></Dropdown.Root></div>
+            <div className="flex flex-wrap items-center gap-2 text-sm"><span className="text-tertiary">Priority:</span><span className="flex items-center gap-1 font-medium text-primary"><ArrowUp className="size-4 text-red-500" /> {priority}</span><Button color="secondary" onClick={() => navigate(`/lead-management/campaign/leads/${id}`)}>Lead Summary</Button><Button color="secondary" onClick={() => { setLogsOpen(true); loadLogs(); }}>Call Logs</Button><Dropdown.Root><Button color="secondary" iconTrailing={ChevronDown}>Action</Button><Dropdown.Popover><Dropdown.Menu>
+                <Dropdown.Item onAction={() => showSnackbar({ title: "Info", description: "Dispositions management will be available soon.", color: "default" })}>Dispositions</Dropdown.Item>
+                <Dropdown.Item onAction={() => navigate("/lead-management/leads?upload=1")}>Upload Excel Sheet</Dropdown.Item>
+                <Dropdown.Item onAction={() => navigate("/lead-management/leads/add")}>Add Lead</Dropdown.Item>
+                <Dropdown.Item onAction={() => navigate(`/lead-management/campaign/view/${id}/engagement-form`)}>Engagement Form</Dropdown.Item>
+                <Dropdown.Item onAction={() => navigate("/dial/tasks")}>Tasks</Dropdown.Item>
+                <Dropdown.Item onAction={() => runAction("pause")}>{data?.pause ? "Un-pause campaign" : "Pause campaign"}</Dropdown.Item>
+                <Dropdown.Item onAction={() => setEditModalOpen(true)}>Campaign Settings</Dropdown.Item>
+            </Dropdown.Menu></Dropdown.Popover></Dropdown.Root></div>
         </div>
 
         {loading ? <div className="grid animate-pulse gap-5 xl:grid-cols-3">{[1, 2, 3].map(i => <div key={i} className="h-72 rounded-xl bg-secondary" />)}</div> : <>
             <div className="grid gap-5 xl:grid-cols-3">
-                <StatCard title="Leads Statistics" values={[["Total", stats.total || 0], ["Uncontacted", stats.uncontacted || 0], ["In-Progress", stats.inProgress || 0], ["Closed", stats.closed || 0]]} />
-                <StatCard title="In-Progress Leads" values={[["Total", stats.inProgress || 0], ["No Follow-up", stats.noFollowUp || 0], ["Follow-up", stats.followUp || 0]]}><div className="px-5 pb-8 text-center text-sm text-tertiary">{stats.inProgress ? "Follow-up activity is available in Call Logs." : "No data available."}</div></StatCard>
-                <StatCard title="Closed Leads" values={[["Total", stats.closed || 0], ["Converted", stats.converted || 0], ["Lost", stats.lost || 0], ["Closed by System", stats.closedBySystem || 0]]}><div className="px-5 pb-8 text-center text-sm text-tertiary">{stats.closed ? "Closed lead data is available." : "No data available."}</div></StatCard>
+                <StatCard title="Leads Statistics" values={[["Total", stats.total || 0], ["Uncontacted", stats.uncontacted || 0], ["In-Progress", stats.inProgress || 0], ["Closed", stats.closed || 0]]}>
+                    <Donut values={[stats.uncontacted || 0, stats.closed || 0]} colors={["#16a34a", "#ef1111"]} label="Closed" />
+                </StatCard>
+                <StatCard title="In-Progress Leads" values={[["Total", stats.inProgress || 0], ["No Follow-up", stats.noFollowUp || 0], ["Follow-up", stats.followUp || 0]]}>
+                    <Donut values={[stats.followUp || 0, stats.noFollowUp || 0]} colors={["#ff8585", "#f3f4f6"]} label="Follow-up" />
+                </StatCard>
+                <StatCard title="Closed Leads" values={[["Total", stats.closed || 0], ["Converted", stats.converted || 0], ["Lost", stats.lost || 0], ["Closed by System", stats.closedBySystem || 0]]}>
+                    <Donut values={[stats.lost || 0, stats.converted || 0]} colors={["#929292", "#d3a9d1"]} label="Lost" />
+                </StatCard>
             </div>
 
             <section className="mt-5 rounded-xl bg-primary ring-1 ring-secondary">

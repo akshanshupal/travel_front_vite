@@ -5,6 +5,7 @@ import { LoadingIndicator } from "@/components/application/loading-indicator/loa
 import { CustomBreadscrumbs } from "@/components/application/breadcrumbs/custom-breadcrumbs";
 import { getPackageVoucherById } from "@/utils/services/packageVoucherService";
 import { getAssignmentById } from "@/utils/services/assignmentService";
+import { getpayment } from "@/utils/services/paymentService";
 import { useStoreSnackbar } from "@/store/snackbar";
 import { DefaultLayout } from "@/layouts/DefaultLayout";
 import { FaWhatsapp, FaCopy } from "react-icons/fa6";
@@ -21,6 +22,8 @@ export default function PaymentLinkView() {
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [bookingCards, setBookingCards] = useState<any[]>([]);
+  const [assignment, setAssignment] = useState<any>(null);
+  const [payments, setPayments] = useState<any[]>([]);
   const [isWhatsappModalOpen, setIsWhatsappModalOpen] = useState(false);
   const [whatsappPhone, setWhatsappPhone] = useState("");
   const [whatsappPhoneError, setWhatsappPhoneError] = useState("");
@@ -184,10 +187,17 @@ export default function PaymentLinkView() {
       if (!id) return;
       setIsLoading(true);
       try {
-        let response = await getPackageVoucherById(id);
+        const response = await getPackageVoucherById(id);
         setData(response || null);
-        if (response?.innerHtml) {
-          setBookingCards(parseBookingCardsFromHtml(response.innerHtml));
+        if (response?.innerHtml) setBookingCards(parseBookingCardsFromHtml(response.innerHtml));
+        const assignmentId = getAssignmentId(response?.assignmentId);
+        if (assignmentId) {
+          const [assignmentResponse, paymentResponse]: any[] = await Promise.all([
+            getAssignmentById(assignmentId),
+            getpayment({ assignment: assignmentId, paymentType: "Cr", limit: 100 }),
+          ]);
+          setAssignment(assignmentResponse?.data ?? assignmentResponse);
+          setPayments(Array.isArray(paymentResponse) ? paymentResponse : (paymentResponse?.data || []));
         }
       } catch (error: any) {
         showSnackbar({
@@ -203,6 +213,21 @@ export default function PaymentLinkView() {
     fetchData();
   }, [id, showSnackbar]);
 
+  const toAmount = (value: any) => {
+    const amount = Number(String(value ?? "").replace(/,/g, "").replace(/%/g, ""));
+    return Number.isFinite(amount) ? amount : 0;
+  };
+
+  const usesSeparatedPackageCost = assignment?.landPackageAmount !== undefined && assignment?.landPackageAmount !== null;
+  const packageCost = usesSeparatedPackageCost
+    ? toAmount(assignment?.landPackageAmount) + toAmount(assignment?.transportPackageAmount)
+    : toAmount(assignment?.packageCost);
+  const packageCostWithGst = usesSeparatedPackageCost
+    ? packageCost + toAmount(assignment?.landPackageGstAmount) + toAmount(assignment?.transportPackageGstAmount)
+    : packageCost + (packageCost * toAmount(assignment?.taxes) / 100);
+  const paymentReceived = payments.reduce((total, payment) => total + toAmount(payment?.amount), 0);
+  const amountDue = Math.max(0, packageCostWithGst - paymentReceived);
+
   const replaceClientName = (content: string) => {
     const replacedContent = content?.replace(
       /\[\{CLIENT_NAME\}\]|\{CLIENT_NAME\}/g,
@@ -212,6 +237,23 @@ export default function PaymentLinkView() {
     if (!replacedContent || typeof DOMParser === "undefined") return replacedContent;
 
     const document = new DOMParser().parseFromString(replacedContent, "text/html");
+    const formatAmount = (amount: number) => `₹ ${amount.toLocaleString("en-IN")}`;
+    const updateSummaryValue = (label: string, amount: number) => {
+      const labels = Array.from(document.querySelectorAll("th, td, div"))
+        .filter((node) => node.children.length === 0 && String(node.textContent || "").trim().toLowerCase() === label.toLowerCase());
+      labels.forEach((labelNode) => {
+        const row = labelNode.closest("tr");
+        const rowCells = row ? Array.from(row.querySelectorAll(":scope > th, :scope > td")) : [];
+        const valueNode = rowCells[rowCells.length - 1] || labelNode.parentElement?.lastElementChild;
+        if (valueNode && valueNode !== labelNode) valueNode.textContent = formatAmount(amount);
+      });
+    };
+    if (assignment) {
+      updateSummaryValue("Package Cost", packageCost);
+      updateSummaryValue("Package Cost with GST", packageCostWithGst);
+      updateSummaryValue("Payment Received", paymentReceived);
+      updateSummaryValue("Amount Due", amountDue);
+    }
     const headings = Array.from(document.querySelectorAll("h1, h2, h3, h4, h5, h6, th, div, p"));
 
     headings

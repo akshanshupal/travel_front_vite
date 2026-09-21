@@ -25,6 +25,20 @@ export default function GeneratedPymId() {
   const [dragOverBookingId, setDragOverBookingId] = useState<string>("");
   const { showSnackbar } = useStoreSnackbar();
 
+  const toAmount = (value: any) => {
+    const amount = Number(String(value ?? "").replace(/,/g, "").replace(/%/g, ""));
+    return Number.isFinite(amount) ? amount : 0;
+  };
+  const usesSeparatedPackageCost = assignmentData?.landPackageAmount !== undefined && assignmentData?.landPackageAmount !== null;
+  const packageCost = usesSeparatedPackageCost
+    ? toAmount(assignmentData.landPackageAmount) + toAmount(assignmentData.transportPackageAmount)
+    : toAmount(assignmentData.packageCost);
+  const packageCostWithGst = usesSeparatedPackageCost
+    ? packageCost + toAmount(assignmentData.landPackageGstAmount) + toAmount(assignmentData.transportPackageGstAmount)
+    : packageCost + (packageCost * toAmount(assignmentData.taxes) / 100);
+  const paymentReceived = paymentData.reduce((total, item) => total + toAmount(item.amount), 0);
+  const amountDue = Math.max(0, packageCostWithGst - paymentReceived);
+
   const formatDate = (value?: string) => {
     if (!value) return "-";
     const date = new Date(value);
@@ -412,13 +426,13 @@ export default function GeneratedPymId() {
                                     <div className="flex items-center justify-between gap-3">
                                         <div className="text-sm font-semibold text-gray-700">Package Cost</div>
                                         <div className="text-sm font-semibold text-gray-900">
-                                            ₹ {Number(assignmentData.packageCost || 0).toLocaleString("en-IN")}
+                                            ₹ {packageCost.toLocaleString("en-IN")}
                                         </div>
                                     </div>
                                     <div className="flex items-center justify-between gap-3">
                                         <div className="text-sm font-semibold text-gray-700">Package Cost with GST</div>
                                         <div className="text-sm font-semibold text-gray-900">
-                                            ₹ {Number(assignmentData.packageCost + (assignmentData.packageCost * parseFloat(assignmentData.taxes || 0) / 100) || 0).toLocaleString("en-IN")}
+                                            ₹ {packageCostWithGst.toLocaleString("en-IN")}
                                         </div>
                                     </div>
                                 </div>
@@ -456,13 +470,13 @@ export default function GeneratedPymId() {
                                     <div className="flex items-center justify-between gap-3">
                                         <div className="text-sm font-semibold text-gray-900">Payment Received</div>
                                         <div className="text-sm font-semibold text-gray-900">
-                                            ₹ {Number(paymentData.reduce((total, item) => total + parseFloat(item.amount || 0), 0) || 0).toLocaleString("en-IN")}
+                                            ₹ {paymentReceived.toLocaleString("en-IN")}
                                         </div>
                                     </div>
                                     <div className="flex items-center justify-between gap-3 rounded-lg bg-red-50 border border-red-100 p-3">
                                         <div className="text-sm font-bold text-red-700">Amount Due</div>
                                         <div className="text-sm font-bold text-red-700 whitespace-nowrap">
-                                            ₹ {Number((assignmentData.packageCost + (assignmentData.packageCost * parseFloat(assignmentData.taxes || 0) / 100) - paymentData.reduce((total, item) => total + parseFloat(item.amount || 0), 0)) || 0).toLocaleString("en-IN")}
+                                            ₹ {amountDue.toLocaleString("en-IN")}
                                         </div>
                                     </div>
                                 </div>
@@ -474,12 +488,12 @@ export default function GeneratedPymId() {
                                 <tbody className="divide-y divide-gray-200">
                                     <tr className="bg-gray-50/60">
                                         <th colSpan={2} className="px-3 py-2 md:px-4 md:py-3 font-semibold text-gray-700">Package Cost</th>
-                                        <th className="px-3 py-2 md:px-4 md:py-3 font-semibold text-right">₹ {Number(assignmentData.packageCost || 0).toLocaleString("en-IN")}</th>
+                                        <th className="px-3 py-2 md:px-4 md:py-3 font-semibold text-right">₹ {packageCost.toLocaleString("en-IN")}</th>
                                     </tr>
                                     <tr className="bg-gray-50/60">
                                         <th colSpan={2} className="px-3 py-2 md:px-4 md:py-3 font-semibold text-gray-700">Package Cost with GST</th>
                                         <th className="px-3 py-2 md:px-4 md:py-3 font-semibold text-right">
-                                            ₹ {Number(assignmentData.packageCost + (assignmentData.packageCost * parseFloat(assignmentData.taxes || 0) / 100) || 0).toLocaleString("en-IN")}
+                                            ₹ {packageCostWithGst.toLocaleString("en-IN")}
                                         </th>
                                     </tr>
                                     <tr>
@@ -516,13 +530,13 @@ export default function GeneratedPymId() {
                                     <tr>
                                         <td colSpan={2} className="px-3 py-2 md:px-4 md:py-3">Payment Received</td>
                                         <td className="px-3 py-2 md:px-4 md:py-3 text-right">
-                                            ₹ {Number(paymentData.reduce((total, item) => total + parseFloat(item.amount || 0), 0) || 0).toLocaleString("en-IN")}
+                                            ₹ {paymentReceived.toLocaleString("en-IN")}
                                         </td>
                                     </tr>
                                     <tr className="bg-red-50 text-red-700 text-base border-t border-red-100">
                                         <td colSpan={2} className="px-3 py-2 md:px-4 md:py-3 font-bold">Amount Due</td>
                                         <td className="px-3 py-2 md:px-4 md:py-3 font-bold text-right">
-                                            ₹ {Number((assignmentData.packageCost + (assignmentData.packageCost * parseFloat(assignmentData.taxes || 0) / 100) - paymentData.reduce((total, item) => total + parseFloat(item.amount || 0), 0)) || 0).toLocaleString("en-IN")}
+                                            ₹ {amountDue.toLocaleString("en-IN")}
                                         </td>
                                     </tr>
                                 </tfoot>
