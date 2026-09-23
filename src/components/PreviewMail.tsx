@@ -219,7 +219,7 @@ export default function PreviewMail({ previewData }: PreviewMailProps) {
                                             )}
                                         </div>
                                     </div>
-                                    {previewData?.templateId?.paymentType?.length > 0 && (
+                                    {/* {previewData?.templateId?.paymentType?.length > 0 && (
                                         <div className="rounded-2xl bg-white/5 border border-white/10 p-4 sm:p-5">
                                             <div className="text-[10px] uppercase tracking-[0.3em] text-white/60 font-semibold">
                                                 Payment Options
@@ -237,7 +237,7 @@ export default function PreviewMail({ previewData }: PreviewMailProps) {
                                                 ))}
                                             </div>
                                         </div>
-                                    )}
+                                    )} */}
 
                                     {previewData?.clientArea?.headerContent && (
                                         <div className="rounded-2xl bg-white/5 border border-white/10 p-4 sm:p-5">
@@ -577,20 +577,25 @@ export default function PreviewMail({ previewData }: PreviewMailProps) {
 
                                         <div className="mt-4 pt-4 border-t border-white/10 text-xs text-white/85 space-y-2">
                                             <div>Selected Payment Mode: Online</div>
-                                            <div>
-                                                <h1 className="bg-blue-900 mt-5 p-3 font-semibold text-xl text-white text-center">
-                                                    PAYMENT OPTIONS
-                                                </h1>
-                                                <div className="flex justify-around align-center mt-5">
-                                                    {previewData.templateId?.paymentType?.map((item: any, index: number) => (
-                                                        <div key={index}>
-                                                            <a href={item.url}>
-                                                                <img src={item.paymentImage} alt="bank image" width={30} height={30} />
+                                            {previewData?.templateId?.paymentType?.length > 0 && (
+                                                <div className="rounded-2xl bg-white/5 border border-white/10 p-4 sm:p-5">
+                                                    <div className="text-[10px] uppercase tracking-[0.3em] text-white/60 font-semibold">
+                                                        Payment Options
+                                                    </div>
+                                                    <div className="mt-4 flex flex-wrap gap-3">
+                                                        {previewData.templateId.paymentType.map((item: any, index: number) => (
+                                                            <a
+                                                                key={index}
+                                                                href={item.url}
+                                                                className="inline-flex items-center gap-2 rounded-xl bg-white/10 border border-white/10 px-2.5 py-1.5 sm:px-3 sm:py-2 hover:bg-white/15 transition-colors"
+                                                            >
+                                                                <img src={item.paymentImage} alt="bank" width={22} height={22} />
+                                                                <span className="text-[11px] sm:text-xs font-semibold text-white/90">Pay</span>
                                                             </a>
-                                                        </div>
-                                                    ))}
+                                                        ))}
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            )}
 
                                             <div className="flex flex-wrap items-center gap-2">
                                                 <span>For Term & Conditions please visit</span>
