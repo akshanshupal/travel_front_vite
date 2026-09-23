@@ -1,98 +1,41 @@
-import { CompactPagination } from "@/components/application/pagination/pagination";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
-import { FloatingHeaderTable } from "@/components/application/table/table";
-import { getDialQueue, type DialQueueItem } from "@/utils/services/dialService";
+import { getDialCampaigns } from "@/utils/services/dialService";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { DialShell, EmptyPanel } from "../shared";
+import { DialShell } from "../shared";
+
+const stages = [
+    { key: "all", title: "All Leads", description: "All leads at one place" },
+    { key: "uncontacted", title: "Uncontacted", description: "Leads, Which have not been called so far" },
+    { key: "in-progress", title: "In-Progress", description: "Leads that are in progress and not yet closed" },
+    { key: "follow-up", title: "Follow-up", description: "Leads, Which are scheduled to be call later" },
+    { key: "not-connected", title: "Not Connected", description: "Leads, Which were not connected in previous attempt" },
+];
 
 export default function DialLeadsPage() {
     const navigate = useNavigate();
+    const [campaignTitle, setCampaignTitle] = useState("");
     const [query, setQuery] = useState("");
-    const [page, setPage] = useState(1);
-    const [limit, setLimit] = useState(25);
-    const [totalCount, setTotalCount] = useState<number | null>(null);
-    const [countLoading, setCountLoading] = useState(false);
-    const [items, setItems] = useState<DialQueueItem[]>([]);
-    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        setLoading(true);
-        getDialQueue({ page, limit, search: query })
-            .then((response) => setItems(response?.data || []))
-            .catch(() => setItems([]))
-            .finally(() => setLoading(false));
-    }, [query, page, limit]);
+        getDialCampaigns()
+            .then((response) => {
+                const list = Array.isArray(response) ? response : response?.data || [];
+                setCampaignTitle(String(list[0]?.title || ""));
+            })
+            .catch(() => setCampaignTitle(""));
+    }, []);
 
-    useEffect(() => setTotalCount(null), [query, limit]);
+    const openStage = (key: string) => navigate(`/dial/leads/queue?stage=${key}${query ? `&search=${encodeURIComponent(query)}` : ""}`);
 
-    const requestTotalCount = async () => {
-        setCountLoading(true);
-        try {
-            const response = await getDialQueue({ search: query, page: 1, limit: 1, totalCount: true });
-            setTotalCount(Number(response?.totalCount ?? 0));
-        } finally {
-            setCountLoading(false);
-        }
-    };
-
-    const search = (value: string) => {
-        setQuery(value);
-        setPage(1);
-    };
-
-    return (
-        <DialShell title="Dial leads" description="Review the calling queue and open a lead to record the next disposition.">
-            <div className="flex gap-3">
-                <Input aria-label="Search leads" placeholder="Search name, phone, or email" value={query} onChange={search} />
-            </div>
-            <FloatingHeaderTable className="rounded-xl border border-secondary bg-primary">
-                <table className="w-full text-left text-sm">
-                    <thead className="border-b border-secondary text-xs uppercase text-tertiary">
-                        <tr>
-                            <th className="sticky left-0 z-20 bg-secondary px-6 py-3 shadow-[4px_0_8px_-6px_rgba(0,0,0,0.35)]">Lead</th>
-                            <th className="bg-secondary px-6 py-3">Campaign</th>
-                            <th className="bg-secondary px-6 py-3">Stage</th>
-                            <th className="bg-secondary px-6 py-3">Attempts</th>
-                            <th className="sticky right-0 z-20 border-l border-secondary bg-secondary px-6 py-3 shadow-[-4px_0_8px_-6px_rgba(0,0,0,0.35)]" />
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {items.map((item) => (
-                            <tr key={String(item.lead?.id)} className="border-b border-secondary last:border-0">
-                                <td className="sticky left-0 z-10 bg-primary px-6 py-4 shadow-[4px_0_8px_-6px_rgba(0,0,0,0.35)]">
-                                    <p className="font-medium text-primary">{item.lead?.title || item.lead?.name || "Untitled lead"}</p>
-                                    <p className="text-tertiary">{item.lead?.mobile || item.lead?.email || "No contact"}</p>
-                                </td>
-                                <td className="px-6 py-4 text-tertiary">{item.campaign?.title || "—"}</td>
-                                <td className="px-6 py-4 text-tertiary">{item.stage?.name || item.lead?.leadStatus || "—"}</td>
-                                <td className="px-6 py-4 text-tertiary">{item.callAttemptCount ?? 0}</td>
-                                <td className="sticky right-0 z-10 border-l border-secondary bg-primary px-6 py-4 text-right shadow-[-4px_0_8px_-6px_rgba(0,0,0,0.35)]">
-                                    <Button color="secondary" size="sm" onClick={() => navigate(`/dial/leads/view/${item.lead?.id}`)}>
-                                        Open
-                                    </Button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-                {!loading && !items.length && <EmptyPanel title="No dial leads available" description="The dial queue is empty for the current search." />}
-                {loading && <p className="p-8 text-center text-sm text-tertiary">Loading queue…</p>}
-                <CompactPagination
-                    page={page}
-                    limit={limit}
-                    itemCount={items.length}
-                    totalCount={totalCount}
-                    countLoading={countLoading}
-                    onPageChange={setPage}
-                    onLimitChange={(nextLimit) => {
-                        setLimit(nextLimit);
-                        setPage(1);
-                    }}
-                    onRequestTotalCount={requestTotalCount}
-                />
-            </FloatingHeaderTable>
-        </DialShell>
-    );
+    return <DialShell
+        title={campaignTitle || "My Leads"}
+        description="Leads from your assigned campaigns, grouped by stage."
+        action={<Input aria-label="Search By Contact Number" placeholder="Search By Contact Number" value={query} onChange={setQuery} />}
+    >
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+            {stages.map((stage) => <div key={stage.key} className="flex min-h-56 flex-col justify-between rounded-xl border border-[#e8e2eb] bg-white p-5 shadow-sm"><div><h2 className="font-semibold text-[#6f36c2]">{stage.title}</h2><p className="mt-4 text-xs leading-5 text-[#817987]">{stage.description}</p></div><div className="mt-6 flex gap-2 border-t border-[#eee9f0] pt-4"><Button size="sm" color="secondary" className="flex-1" onClick={() => openStage(stage.key)}>VIEW</Button><Button size="sm" color="tertiary" className="flex-1" onClick={() => openStage(stage.key)}>START CALLING</Button></div></div>)}
+        </div>
+    </DialShell>;
 }

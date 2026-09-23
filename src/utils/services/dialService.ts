@@ -4,6 +4,10 @@ const request = (url: string, data: Record<string, unknown> = {}, options?: Requ
 
 export const getDialQueueSummary = (params: Record<string, unknown> = {}) => request("/api/dial/queue/summary", params);
 export const getDialQueue = (params: Record<string, unknown> = {}) => request("/api/dial/queue", params);
+export const reserveNextDialLead = (params: Record<string, unknown> = {}) => request("/api/dial/queue/reserve", params, { method: "POST" });
+export const releaseDialReservation = (data: Record<string, unknown>) => request("/api/dial/queue/release", data, { method: "POST" });
+export const updateDialCallState = (data: Record<string, unknown>) => request("/api/dial/call-logs/state", data, { method: "POST" });
+export const finalizeDialCall = (data: Record<string, unknown>) => request("/api/dial/call-logs/finalize", data, { method: "POST" });
 export const createDialCallLog = (data: Record<string, unknown>) => request("/api/dial/call-logs", data, { method: "POST" });
 export const getDialCallLogs = (params: Record<string, unknown> = {}) => request("/api/dial/call-logs", params);
 export const getDialTasks = (params: Record<string, unknown> = {}) => request("/api/dial/tasks", params);

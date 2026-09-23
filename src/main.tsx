@@ -139,6 +139,8 @@ import DialReportsPage from "@/pages/dial/reports";
 import DialCallLogsPage from "@/pages/dial/call-logs";
 import DialCampaignsPage from "@/pages/dial/campaigns";
 import DialWalkInLeadsPage from "@/pages/dial/walk-in-leads";
+import DialWhatsappPage from "@/pages/dial/whatsapp";
+import DialLeadsQueuePage from "@/pages/dial/leads/queue";
 import PhotographyClientPage from "@/pages/photography/client";
 import PhotographyClientAddPage from "@/pages/photography/client/add";
 import PhotographyClientEditPage from "@/pages/photography/client/edit/[id]";
@@ -277,6 +279,7 @@ createRoot(document.getElementById("root")!).render(
                         <Route path="/docs" element={<PlaceholderPage />} />
                         <Route path="/dial/home" element={<DialHomePage />} />
                         <Route path="/dial/leads" element={<DialLeadsPage />} />
+                        <Route path="/dial/leads/queue" element={<DialLeadsQueuePage />} />
                         <Route path="/dial/leads/view/:id" element={<DialLeadViewPage />} />
                         <Route path="/dial/tasks" element={<DialTasksPage />} />
                         <Route path="/dial/tasks/assign-to-me" element={<AssignToMePage />} />
@@ -285,6 +288,7 @@ createRoot(document.getElementById("root")!).render(
                         <Route path="/dial/call-logs" element={<DialCallLogsPage />} />
                         <Route path="/dial/campaigns" element={<DialCampaignsPage />} />
                         <Route path="/dial/walk-in-leads" element={<DialWalkInLeadsPage />} />
+                        <Route path="/dial/whatsapp" element={<DialWhatsappPage />} />
                         <Route path="/bookings/assignment" element={<AssignmentPage />} />
                         <Route path="/bookings/assignment/add" element={<AssignmentAddPage />} />
                         <Route path="/bookings/assignment/view/:id" element={<AssignmentViewPage />} />
