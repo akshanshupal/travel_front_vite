@@ -3,11 +3,11 @@ import { FeaturedIcon } from "@/components/foundations/featured-icon/featured-ic
 
 export const AuthLayout = ({ children }: PropsWithChildren) => {
     return (
-        <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-gray-50 dark:bg-[#0B0D12]">
+        <div className="relative flex min-h-dvh w-full items-center justify-center overflow-hidden bg-background text-foreground">
             {/* Animated SVG Background */}
-            <div className="absolute inset-0 z-0 flex items-center justify-center opacity-60 dark:opacity-20">
+            <div className="absolute inset-0 z-0 flex items-center justify-center opacity-30 dark:opacity-10 motion-reduce:hidden">
                 <svg
-                    className="h-[150%] w-[150%] max-w-none animate-[spin_60s_linear_infinite] opacity-50 blur-[100px]"
+                    className="h-[150%] w-[150%] max-w-none animate-[spin_90s_linear_infinite] opacity-40 blur-[100px] motion-reduce:animate-none"
                     viewBox="0 0 1000 1000"
                     xmlns="http://www.w3.org/2000/svg"
                     preserveAspectRatio="none"
@@ -20,21 +20,21 @@ export const AuthLayout = ({ children }: PropsWithChildren) => {
                         </linearGradient>
                     </defs>
                     <circle cx="500" cy="500" r="400" fill="url(#grad1)" />
-                    <circle cx="200" cy="300" r="300" fill="#3b82f6" opacity="0.3" className="animate-[bounce_20s_infinite]" />
-                    <circle cx="800" cy="700" r="300" fill="#ec4899" opacity="0.3" className="animate-[pulse_15s_infinite]" />
+                    <circle cx="200" cy="300" r="300" fill="#3b82f6" opacity="0.2" className="animate-[bounce_30s_infinite] motion-reduce:animate-none" />
+                    <circle cx="800" cy="700" r="300" fill="#ec4899" opacity="0.2" className="animate-[pulse_24s_infinite] motion-reduce:animate-none" />
                 </svg>
             </div>
 
             {/* Content Container */}
             <div className="relative z-10 w-full max-w-md px-4 sm:px-6">
-                <div className="animate-in fade-in zoom-in-95 duration-500 rounded-2xl border border-gray-200/50 bg-white/80 p-8 shadow-2xl backdrop-blur-xl dark:border-gray-800/50 dark:bg-[#111318]/80 sm:p-10">
+                <div className="animate-in fade-in zoom-in-95 duration-500 rounded-2xl border border-secondary/50 bg-card/80 p-8 shadow-2xl backdrop-blur-xl sm:p-10">
                     <div className="mb-8 flex flex-col items-center gap-4 text-center">
                         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 dark:bg-brand-500/10 shadow-sm">
                             <FeaturedIcon color="brand" />
                         </div>
                         <div>
-                            <h1 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Welcome Back</h1>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">Sign in to your TripZipper admin account</p>
+                            <h1 className="mb-2 text-2xl font-bold tracking-tight text-foreground">Welcome Back</h1>
+                            <p className="text-sm text-muted-foreground">Sign in to your TripZipper admin account</p>
                         </div>
                     </div>
                     {children}

@@ -20,7 +20,6 @@ import type { DateValue } from "react-aria-components";
 import { parseDate } from "@internationalized/date";
 import { ModalOverlay, Modal, Dialog } from "@/components/application/modals/modal";
 import MailConfirmation from "@/components/application/mail-confirmation/mail-confirmation";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Label } from "@/components/base/input/label";
 import { Button } from "@/components/base/buttons/button";
@@ -86,7 +85,6 @@ export default function SavedItineraryListPage() {
     const [debouncedFilters, setDebouncedFilters] = useState<ListFilters>(initial.filters);
 
     const [salesExecutives, setSalesExecutives] = useState<any[]>([]);
-    const availableWidth = useAvailableTableWidth();
     
     // Mail Modal State
     const [isOpen, setIsOpen] = useState(false);
@@ -389,7 +387,7 @@ export default function SavedItineraryListPage() {
 
     return (
         <DefaultLayout>
-            <div style={{ width: availableWidth }}>
+            <div>
                 <TableCard.Root>
                     <TableCard.Header
                         title="Quotations"
@@ -557,7 +555,7 @@ export default function SavedItineraryListPage() {
                                 ariaLabel="Saved itinerary list"
                                 columns={columns}
                                 items={Array.from({ length: 10 }).map((_, i) => ({ id: `skeleton-${i}` }))}
-                                availableWidth={availableWidth}
+                               
                                 loading={isLoading}
                             >
                                 {(item) => (
@@ -577,7 +575,7 @@ export default function SavedItineraryListPage() {
                                 ariaLabel="Saved itinerary list"
                                 columns={columns}
                                 items={[{ id: "empty" }]}
-                                availableWidth={availableWidth}
+                               
                                 loading={isLoading}
                             >
                                 {() => (
@@ -593,7 +591,7 @@ export default function SavedItineraryListPage() {
                                 ariaLabel="Saved itinerary list"
                                 columns={columns}
                                 items={itemsWithIndex}
-                                availableWidth={availableWidth}
+                               
                                 loading={isLoading}
                             >
                                 {(item) => (

@@ -1262,7 +1262,7 @@ export default function BookingViewPage() {
                 <Modal>
                     <Dialog>
                         {({ close }) => (
-                            <div className="relative w-xl min-w-[300px] rounded-xl bg-primary p-5 ring-1 ring-secondary">
+                            <div className="relative w-full max-w-xl min-w-0 rounded-xl bg-primary p-5 ring-1 ring-secondary">
                                 <CloseButton onPress={close} className="absolute right-4 top-4" size="sm" />
                                 <div className="space-y-4">
                                     <div>
@@ -1622,7 +1622,7 @@ export default function BookingViewPage() {
                 <Modal>
                     <Dialog>
                         {({ close }) => (
-                            <div className="relative w-xl min-w-[300px] rounded-xl bg-primary p-5 ring-1 ring-secondary">
+                            <div className="relative w-full max-w-xl min-w-0 rounded-xl bg-primary p-5 ring-1 ring-secondary">
                                 <CloseButton onPress={close} className="absolute right-4 top-4" size="sm" />
                                 <div className="space-y-4">
                                     <div className="text-lg font-semibold text-primary">Additional Details</div>
@@ -1738,7 +1738,7 @@ export default function BookingViewPage() {
                 <Modal>
                     <Dialog>
                         {({ close }) => (
-                            <div className="relative w-xl min-w-[300px] rounded-xl bg-primary p-5 ring-1 ring-secondary">
+                            <div className="relative w-full max-w-xl min-w-0 rounded-xl bg-primary p-5 ring-1 ring-secondary">
                                 <CloseButton onPress={close} className="absolute right-4 top-4" size="sm" />
                                 <div className="space-y-4">
                                     <div className="text-lg font-semibold text-primary">Update Booking Status</div>

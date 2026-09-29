@@ -16,7 +16,6 @@ import { fetchWithToken } from "@/utils/fetchApi";
 import { useNavigate } from "react-router";
 import { useLocation } from "react-router";
 import { useStoreLogin } from "@/store/login";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Label } from "@/components/base/input/label";
 type ItineraryListItem = {
@@ -63,7 +62,6 @@ export default function ItineraryListPage() {
     const { pathname, search } = useLocation();
     const authToken = useStoreLogin((s) => s.authToken);
     const currentUser = useStoreLogin((s) => s.user) as any;
-    const availableWidth = useAvailableTableWidth();
     const initial = parseListSearch(search);
     const [items, setItems] = useState<ItineraryListItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -324,7 +322,7 @@ export default function ItineraryListPage() {
 
     return (
         <DefaultLayout>
-            <div className="w-full" style={{ width: availableWidth }}>
+            <div className="w-full">
 
                 <TableCard.Root className="w-full">
                     <TableCard.Header
@@ -498,7 +496,7 @@ export default function ItineraryListPage() {
                             columns={columns}
                             items={displayItems}
                             containerRef={tableContainerRef}
-                            availableWidth={availableWidth}
+                           
                             loading={loading}
                         >
                             {(item) =>

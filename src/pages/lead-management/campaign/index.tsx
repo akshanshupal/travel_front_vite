@@ -10,7 +10,6 @@ import { CompactPagination } from "@/components/application/pagination/paginatio
 import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Badge } from "@/components/base/badges/badges";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { useStoreSnackbar } from "@/store/snackbar";
 import { getCampaign, getCampaignDelete } from "@/utils/services/campaignService";
 import { getSalesEx } from "@/utils/services/salesService";
@@ -54,7 +53,6 @@ export default function CampaignIndexPage() {
     const navigate = useNavigate();
     const { pathname, search } = useLocation();
     const initial = parseSearch(search);
-    const availableWidth = useAvailableTableWidth();
 
     const [page, setPage] = useState(initial.page);
     const [limit, setLimit] = useState(initial.limit);
@@ -197,7 +195,7 @@ export default function CampaignIndexPage() {
 
     return (
         <DefaultLayout>
-            <div style={{ width: availableWidth }}>
+            <div>
                 <TableCard.Root className="w-full">
                     <TableCard.Header
                         title="Campaign Management"
@@ -276,7 +274,7 @@ export default function CampaignIndexPage() {
                     </div>
 
                     {loading ? (
-                        <StickyTable ariaLabel="Campaign list" columns={columns} items={Array.from({ length: 5 }).map((_, i) => ({ id: `skeleton-${i}` }))} availableWidth={availableWidth} loading={loading}>
+                        <StickyTable ariaLabel="Campaign list" columns={columns} items={Array.from({ length: 5 }).map((_, i) => ({ id: `skeleton-${i}` }))} loading={loading}>
                             {(item) => (
                                 <Table.Row id={item.id} columns={columns}>
                                     {(column) => (
@@ -290,7 +288,7 @@ export default function CampaignIndexPage() {
                     ) : loadError ? (
                         <div className="px-4 py-10 text-sm text-error md:px-6">{loadError}</div>
                     ) : (
-                        <StickyTable ariaLabel="Campaign list" columns={columns} items={items} availableWidth={availableWidth} loading={loading}>
+                        <StickyTable ariaLabel="Campaign list" columns={columns} items={items} loading={loading}>
                             {(item) => (
                                 <Table.Row id={item.id} columns={columns}>
                                     {(column) => (

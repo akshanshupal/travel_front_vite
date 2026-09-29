@@ -27,7 +27,6 @@ import { useStoreLogin } from "@/store/login";
 import { CheckCircle, ClipboardCheck, CreditCard01, Edit01, Eye, FilterLines, Mail01, RefreshCw01, Trash01, SearchLg } from "@untitledui/icons";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { formatCurrencyInr, formatShortDate } from "@/utils/formatters";
 
@@ -78,7 +77,6 @@ const parseSearch = (search: string) => {
 };
 
 export default function AssignmentPage() {
-    const availableWidth = useAvailableTableWidth();
     const navigate = useNavigate();
     const { pathname, search } = useLocation();
     const { showSnackbar } = useStoreSnackbar();
@@ -389,7 +387,7 @@ export default function AssignmentPage() {
 
     return (
         <DefaultLayout>
-            <div className="w-full" style={{ width: availableWidth }}>
+            <div className="w-full">
                 <TableCard.Root className="w-full">
                     <TableCard.Header
                         title="Assignment List"
@@ -741,7 +739,7 @@ export default function AssignmentPage() {
                         ariaLabel="Assignment list"
                         columns={columns}
                         items={items}
-                        availableWidth={availableWidth}
+                       
                         loading={loading}
                     >
                         {(item) => (

@@ -7,7 +7,6 @@ import { BadgeWithButton } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { Input } from "@/components/base/input/input";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { getPhotographyBookings } from "@/utils/services/photographyBookingService";
 import { Eye, RefreshCw01, SearchLg } from "@untitledui/icons";
 
@@ -20,7 +19,6 @@ const formatDate = (value: string) => {
 
 export default function PhotographyPaymentPage() {
     const navigate = useNavigate();
-    const availableWidth = useAvailableTableWidth();
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [allBookings, setAllBookings] = useState<any[]>([]);
@@ -88,7 +86,7 @@ export default function PhotographyPaymentPage() {
 
     return (
         <DefaultLayout>
-            <div style={{ width: availableWidth }}>
+            <div>
                 <TableCard.Root className="w-full">
                     <TableCard.Header
                         title="Photography - Payments"
@@ -136,7 +134,7 @@ export default function PhotographyPaymentPage() {
                             ariaLabel="Photography bookings for payments"
                             columns={columns}
                             items={Array.from({ length: 5 }).map((_, i) => ({ id: `skeleton-${i}` }))}
-                            availableWidth={availableWidth}
+                           
                             loading={loading}
                         >
                             {(item) => (
@@ -158,7 +156,7 @@ export default function PhotographyPaymentPage() {
                             ariaLabel="Photography bookings for payments"
                             columns={columns}
                             items={pagedBookings}
-                            availableWidth={availableWidth}
+                           
                             loading={loading}
                         >
                             {(item) => (

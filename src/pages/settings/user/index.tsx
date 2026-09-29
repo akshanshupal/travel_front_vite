@@ -11,7 +11,6 @@ import { Select } from "@/components/base/select/select";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { CustomBreadscrumbs } from "@/components/application/breadcrumbs/custom-breadcrumbs";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { useAccess } from "@/hooks/use-access";
 import Tmodal from "@/components/utils/Tmodal";
 import { useStoreSnackbar } from "@/store/snackbar";
@@ -55,7 +54,6 @@ const createPasswordModalState = (): PasswordModalState => ({
 });
 
 export default function SettingsUserListPage() {
-    const availableWidth = useAvailableTableWidth();
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const { showSnackbar } = useStoreSnackbar();
@@ -266,7 +264,7 @@ export default function SettingsUserListPage() {
 
     return (
         <DefaultLayout>
-            <div className="space-y-4" style={{ width: availableWidth }}>
+            <div className="space-y-4">
                 <CustomBreadscrumbs list={breadcrumbsList} />
 
                 <TableCard.Root className="w-full">
@@ -424,7 +422,7 @@ export default function SettingsUserListPage() {
                             ariaLabel="User list"
                             columns={columns}
                             items={items}
-                            availableWidth={availableWidth}
+                           
                             loading={loading}
                             skeletonRows={5}
                             className="min-w-[980px]"

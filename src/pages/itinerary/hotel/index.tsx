@@ -8,7 +8,6 @@ import { Select } from "@/components/base/select/select";
 import { CompactPagination } from "@/components/application/pagination/pagination";
 import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { fetchWithToken } from "@/utils/fetchApi";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Plus, SearchLg, Trash01, Edit01, RefreshCw01, FilterLines } from "@untitledui/icons";
@@ -73,7 +72,6 @@ export default function ItineraryHotelListPage() {
     const [loadError, setLoadError] = useState<string | null>(null);
     const [totalRecords, setTotalRecords] = useState<number | null>(null);
     const [countLoading, setCountLoading] = useState(false);
-    const availableWidth = useAvailableTableWidth();
 
     const [deleteTarget, setDeleteTarget] = useState<{ id: string; name?: string } | null>(null);
     const deletingRef = useRef(false);
@@ -229,7 +227,7 @@ export default function ItineraryHotelListPage() {
 
     return (
         <DefaultLayout>
-            <div style={{ width: availableWidth }}>
+            <div>
                 <TableCard.Root className="w-full">
                     <TableCard.Header
                         title="Hotels"
@@ -390,7 +388,7 @@ export default function ItineraryHotelListPage() {
                             columns={columns}
                             items={Array.from({ length: 5 }).map((_, i) => ({ id: `skeleton-${i}` }))}
                             className="min-w-[820px]"
-                            availableWidth={availableWidth}
+                           
                             loading={loading}
                         >
                             {(item) => (
@@ -413,7 +411,7 @@ export default function ItineraryHotelListPage() {
                             columns={columns}
                             items={items}
                             className="min-w-[820px]"
-                            availableWidth={availableWidth}
+                           
                             loading={loading}
                         >
                             {(item) => (

@@ -20,7 +20,6 @@ import { useStoreSnackbar } from "@/store/snackbar";
 import { CheckCircle, ClipboardCheck, CreditCard01, Edit01, Eye, FilterLines, RefreshCw01, SearchLg, Trash01, X } from "@untitledui/icons";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { Checkbox } from "@/components/base/checkbox/checkbox";
 import { CloseButton } from "@/components/base/buttons/close-button";
@@ -53,7 +52,6 @@ export default function BookingPage() {
 
     const [loading, setLoading] = useState(false);
     const [items, setItems] = useState<any[]>([]);
-    const availableWidth = useAvailableTableWidth();
 
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState<any>(null);
@@ -705,7 +703,7 @@ export default function BookingPage() {
 
     return (
         <DefaultLayout>
-            <div className="space-y-4" style={{ width: availableWidth }}>
+            <div className="space-y-4">
                 <TableCard.Root>
                     <TableCard.Header
                         title="Booking List"
@@ -1171,7 +1169,7 @@ export default function BookingPage() {
                             ariaLabel="Booking list"
                             columns={visibleColumns}
                             items={items}
-                            availableWidth={availableWidth}
+                           
                             loading={loading}
                         >
                             {(item) => (

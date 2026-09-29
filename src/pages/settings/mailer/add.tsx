@@ -7,7 +7,6 @@ import { Select } from "@/components/base/select/select";
 import { Badge } from "@/components/base/badges/badges";
 import CustomEditor from "@/components/utils/CustomEditor";
 import { CustomBreadscrumbs } from "@/components/application/breadcrumbs/custom-breadcrumbs";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { useStoreSnackbar } from "@/store/snackbar";
 import { addMailer } from "@/utils/services/mailerService";
 import { getCompanyConfig } from "@/utils/services/userService";
@@ -35,7 +34,6 @@ type MailerTemplate = {
 };
 
 export default function SettingsMailerAddPage() {
-    const availableWidth = useAvailableTableWidth();
     const navigate = useNavigate();
     const { showSnackbar } = useStoreSnackbar();
     const subjectRef = useRef<HTMLTextAreaElement | null>(null);
@@ -339,7 +337,7 @@ export default function SettingsMailerAddPage() {
 
     return (
         <DefaultLayout>
-            <div className="space-y-4" style={{ width: availableWidth }}>
+            <div className="space-y-4">
                 <CustomBreadscrumbs list={breadcrumbsList} />
                 <TableCard.Root>
                     <TableCard.Header

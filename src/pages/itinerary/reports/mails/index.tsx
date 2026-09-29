@@ -8,7 +8,6 @@ import { CompactPagination } from "@/components/application/pagination/paginatio
 import { DatePicker } from "@/components/application/date-picker/date-picker";
 import { DateRangePicker } from "@/components/application/date-picker/date-range-picker";
 import { DefaultLayout } from "@/layouts/DefaultLayout";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { useStoreSnackbar } from "@/store/snackbar";
 import { useStoreLogin } from "@/store/login";
 import { getSalesEx } from "@/utils/services/salesService";
@@ -685,7 +684,6 @@ const ExecutiveWiseGraph = () => {
 
 export default function ItineraryReportMailsPage() {
     const { showSnackbar } = useStoreSnackbar();
-    const availableWidth = useAvailableTableWidth();
     const user = useStoreLogin((state) => state.user);
     const isAgent = String(user?.type || "").toUpperCase() === "AGENT";
     const agentId = (user as any)?.id || (user as any)?._id || "";
@@ -801,7 +799,7 @@ export default function ItineraryReportMailsPage() {
 
     return (
         <DefaultLayout>
-            <div style={{ width: availableWidth }} className="space-y-4">
+            <div className="space-y-4">
                 <ItinerarySentMails />
 
                 <TableCard.Root>
@@ -928,7 +926,7 @@ export default function ItineraryReportMailsPage() {
                                 ariaLabel="Mails list"
                                 columns={columns}
                                 items={Array.from({ length: 10 }).map((_, i) => ({ id: `skeleton-${i}` }))}
-                                availableWidth={availableWidth}
+                               
                                 loading={isLoading}
                             >
                                 {(item) => (
@@ -948,7 +946,7 @@ export default function ItineraryReportMailsPage() {
                                 ariaLabel="Mails list"
                                 columns={columns}
                                 items={[{ id: "empty" }]}
-                                availableWidth={availableWidth}
+                               
                                 loading={isLoading}
                             >
                                 {() => (
@@ -964,7 +962,7 @@ export default function ItineraryReportMailsPage() {
                                 ariaLabel="Mails list"
                                 columns={columns}
                                 items={itemsWithIndex}
-                                availableWidth={availableWidth}
+                               
                                 loading={isLoading}
                             >
                                 {(item) => {

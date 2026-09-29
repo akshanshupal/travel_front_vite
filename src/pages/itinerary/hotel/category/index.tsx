@@ -8,7 +8,6 @@ import { Select } from "@/components/base/select/select";
 import { CompactPagination } from "@/components/application/pagination/pagination";
 import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { fetchWithToken } from "@/utils/fetchApi";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Plus, Trash01, Edit01, RefreshCw01, FilterLines, SearchLg } from "@untitledui/icons";
@@ -58,7 +57,6 @@ export default function ItineraryHotelCategoryListPage() {
     const [loadError, setLoadError] = useState<string | null>(null);
     const [totalRecords, setTotalRecords] = useState<number | null>(null);
     const [countLoading, setCountLoading] = useState(false);
-    const availableWidth = useAvailableTableWidth();
 
     const [deleteTarget, setDeleteTarget] = useState<{ id: string; title?: string } | null>(null);
     const deletingRef = useRef(false);
@@ -191,7 +189,7 @@ export default function ItineraryHotelCategoryListPage() {
 
     return (
         <DefaultLayout>
-            <div style={{ width: availableWidth }}>
+            <div>
                 <TableCard.Root className="w-full">
                     <TableCard.Header
                         title="Hotel Categories"
@@ -318,7 +316,7 @@ export default function ItineraryHotelCategoryListPage() {
                             ariaLabel="Hotel Category list"
                             columns={columns}
                             items={Array.from({ length: 5 }).map((_, i) => ({ id: `skeleton-${i}` }))}
-                            availableWidth={availableWidth}
+                           
                             loading={loading}
                         >
                             {(item) => (
@@ -342,7 +340,7 @@ export default function ItineraryHotelCategoryListPage() {
                             ariaLabel="Hotel Category list"
                             columns={columns}
                             items={items}
-                            availableWidth={availableWidth}
+                           
                             loading={loading}
                         >
                             {(item) => (

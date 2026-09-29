@@ -13,7 +13,6 @@ import { Eye, Plus, Trash01, Edit01, FilterLines, RefreshCw01, SearchLg } from "
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router";
 import Tmodal from "@/components/utils/Tmodal";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 
 const parseSearch = (search: string) => {
@@ -28,7 +27,6 @@ const parseSearch = (search: string) => {
 };
 
 export default function PaymentStorePage() {
-    const availableWidth = useAvailableTableWidth();
     const navigate = useNavigate();
     const { pathname, search } = useLocation();
     const { showSnackbar } = useStoreSnackbar();
@@ -189,7 +187,7 @@ export default function PaymentStorePage() {
 
     return (
         <DefaultLayout>
-            <div className="space-y-4" style={{ width: availableWidth }}>
+            <div className="space-y-4">
                 <TableCard.Root className="w-full">
                     <TableCard.Header
                         title="Payment Store List"
@@ -334,7 +332,7 @@ export default function PaymentStorePage() {
                         columns={columns}
                         items={items}
                         className="min-w-[820px]"
-                        availableWidth={availableWidth}
+                       
                         loading={loading}
                     >
                         {(item) => (

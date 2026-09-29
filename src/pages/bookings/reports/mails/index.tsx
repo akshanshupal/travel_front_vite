@@ -16,7 +16,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 import { DatePicker } from "@/components/application/date-picker/date-picker";
 import { parseDate } from "@internationalized/date";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 
 const columns = [
     { id: "index", name: "S. No.", isRowHeader: true, widthRatio: 6, minWidth: 64 },
@@ -43,7 +42,6 @@ const emailFunctionTitleMap: Record<string, string> = {
 };
 
 export default function ReportsMailsPage() {
-    const availableWidth = useAvailableTableWidth();
     const [searchParams, setSearchParams] = useSearchParams();
     const { showSnackbar } = useStoreSnackbar();
 
@@ -217,7 +215,7 @@ export default function ReportsMailsPage() {
 
     return (
         <DefaultLayout>
-            <div className="space-y-4" style={{ width: availableWidth }}>
+            <div className="space-y-4">
                 <TableCard.Root>
                     <TableCard.Header
                         title="Mail Reports"
@@ -366,7 +364,7 @@ export default function ReportsMailsPage() {
                         ariaLabel="Mail Reports list"
                         columns={columns}
                         items={items}
-                        availableWidth={availableWidth}
+                       
                         loading={loading}
                     >
                         {(item) => (

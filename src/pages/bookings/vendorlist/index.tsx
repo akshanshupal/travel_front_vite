@@ -15,7 +15,6 @@ import { FilterLines, Plus, Eye, Edit01, Trash01, RefreshCw01, SearchLg } from "
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import Tmodal from "@/components/utils/Tmodal";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 
 const columns = [
     { id: "index", name: "S. No.", isRowHeader: true, widthRatio: 6, minWidth: 64 },
@@ -28,7 +27,6 @@ const columns = [
 ];
 
 export default function VendorListPage() {
-    const availableWidth = useAvailableTableWidth();
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
     const { showSnackbar } = useStoreSnackbar();
@@ -268,7 +266,7 @@ export default function VendorListPage() {
 
     return (
         <DefaultLayout>
-            <div className="space-y-4" style={{ width: availableWidth }}>
+            <div className="space-y-4">
                 <TableCard.Root>
                     <TableCard.Header
                         title="Vendor List"
@@ -406,7 +404,7 @@ export default function VendorListPage() {
                         ariaLabel="Vendor list"
                         columns={columns}
                         items={items}
-                        availableWidth={availableWidth}
+                       
                         loading={loading}
                     >
                         {(item) => (

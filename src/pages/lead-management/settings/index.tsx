@@ -10,7 +10,6 @@ import { Label } from "@/components/base/input/label";
 import { Select } from "@/components/base/select/select";
 import { Toggle } from "@/components/base/toggle/toggle";
 import Tmodal from "@/components/utils/Tmodal";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { useStoreSnackbar } from "@/store/snackbar";
 import { addPipeline, getPipeline, getPipelineDelete, updatePipelineById } from "@/utils/services/pipelineService";
 import { addContactProperty, getContactProperties, updateContactPropertyById, deleteContactProperty } from "@/utils/services/contactPropertiesService";
@@ -1320,7 +1319,6 @@ function PreferencesTab() {
 /* -------------------------------- Main Page -------------------------------- */
 
 export default function LeadSettingsPage() {
-    const availableWidth = useAvailableTableWidth();
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
 
@@ -1340,7 +1338,7 @@ export default function LeadSettingsPage() {
 
     return (
         <DefaultLayout>
-            <div className="space-y-4" style={{ width: availableWidth }}>
+            <div className="space-y-4">
                 <div className="rounded-sm border border-secondary bg-primary p-2">
                     <div className="flex flex-wrap items-center gap-1 text-sm text-tertiary">
                         <button type="button" onClick={() => navigate("/dashboard")} className="rounded-sm px-1 py-0.5 text-primary hover:bg-primary_hover">Home</button>

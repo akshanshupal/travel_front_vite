@@ -3,7 +3,6 @@ import { TableCard } from "@/components/application/table/table";
 import { Button } from "@/components/base/buttons/button";
 import { Badge } from "@/components/base/badges/badges";
 import { CustomBreadscrumbs } from "@/components/application/breadcrumbs/custom-breadcrumbs";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { useStoreSnackbar } from "@/store/snackbar";
 import { getMailerById } from "@/utils/services/mailerService";
 import { ArrowLeft, Edit01 } from "@untitledui/icons";
@@ -11,7 +10,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 
 export default function SettingsMailerViewPage() {
-    const availableWidth = useAvailableTableWidth();
     const navigate = useNavigate();
     const { id } = useParams();
     const { showSnackbar } = useStoreSnackbar();
@@ -48,7 +46,7 @@ export default function SettingsMailerViewPage() {
 
     return (
         <DefaultLayout>
-            <div className="space-y-4" style={{ width: availableWidth }}>
+            <div className="space-y-4">
                 <CustomBreadscrumbs list={breadcrumbsList} />
                 <TableCard.Root>
                     <TableCard.Header

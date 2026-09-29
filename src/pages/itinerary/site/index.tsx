@@ -8,7 +8,6 @@ import { Select } from "@/components/base/select/select";
 import { CompactPagination } from "@/components/application/pagination/pagination";
 import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { fetchWithToken } from "@/utils/fetchApi";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Plus, Trash01, Edit01, RefreshCw01, FilterLines, SearchLg, Copy01 } from "@untitledui/icons";
@@ -67,7 +66,6 @@ export default function ItinerarySiteListPage() {
     const [loadError, setLoadError] = useState<string | null>(null);
     const [totalRecords, setTotalRecords] = useState<number | null>(null);
     const [countLoading, setCountLoading] = useState(false);
-    const availableWidth = useAvailableTableWidth();
 
     const [deleteTarget, setDeleteTarget] = useState<{ id: string; title?: string } | null>(null);
     const deletingRef = useRef(false);
@@ -307,7 +305,7 @@ export default function ItinerarySiteListPage() {
 
     return (
         <DefaultLayout>
-            <div style={{ width: availableWidth }}>
+            <div>
                 
                 <TableCard.Root className="w-full">
                     <TableCard.Header
@@ -453,7 +451,7 @@ export default function ItinerarySiteListPage() {
                             ariaLabel="Site list"
                             columns={columns}
                             items={displayItems}
-                            availableWidth={availableWidth}
+                           
                             loading={loading}
                         >
                             {(item) =>

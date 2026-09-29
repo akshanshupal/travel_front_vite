@@ -6,7 +6,6 @@ import { BadgeWithButton } from "@/components/base/badges/badges";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { Input } from "@/components/base/input/input";
 import { Button } from "@/components/base/buttons/button";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { useNavigate } from "react-router";
 import { getPhotographyBookings } from "@/utils/services/photographyBookingService";
 import { Eye, RefreshCw01, SearchLg } from "@untitledui/icons";
@@ -20,7 +19,6 @@ const formatDate = (value: string) => {
 
 export default function PhotographyBookingPage() {
     const navigate = useNavigate();
-    const availableWidth = useAvailableTableWidth();
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [allBookings, setAllBookings] = useState<any[]>([]);
@@ -88,7 +86,7 @@ export default function PhotographyBookingPage() {
 
     return (
         <DefaultLayout>
-            <div style={{ width: availableWidth }}>
+            <div>
                 <TableCard.Root className="w-full">
                     <TableCard.Header
                         title="Photography - Bookings"
@@ -136,7 +134,7 @@ export default function PhotographyBookingPage() {
                             ariaLabel="Photography bookings"
                             columns={columns}
                             items={Array.from({ length: 5 }).map((_, i) => ({ id: `skeleton-${i}` }))}
-                            availableWidth={availableWidth}
+                           
                             loading={loading}
                         >
                             {(item) => (
@@ -154,7 +152,7 @@ export default function PhotographyBookingPage() {
                     ) : loadError ? (
                         <div className="px-4 py-10 text-sm text-error md:px-6">{loadError}</div>
                     ) : (
-                        <StickyTable ariaLabel="Photography bookings" columns={columns} items={pagedBookings} availableWidth={availableWidth} loading={loading}>
+                        <StickyTable ariaLabel="Photography bookings" columns={columns} items={pagedBookings} loading={loading}>
                             {(item) => (
                                 <Table.Row id={item.id} columns={columns}>
                                     {(column) => (

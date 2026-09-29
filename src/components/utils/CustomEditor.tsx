@@ -6,6 +6,12 @@ interface CustomEditorProps {
   onContentChange: (value: string) => void;
 }
 
+/**
+ * @deprecated Legacy Jodit wrapper. Kept for the mailer/payment-link editors,
+ * which rely on its onBlur commit timing and link-click interception.
+ * New code should use `RichTextEditor` from
+ * `@/components/application/rich-text-editor/rich-text-editor`. Do not add new usage.
+ */
 export default function CustomEditor({ value, onContentChange }: CustomEditorProps) {
   const editor = useRef(null); 
   const [content, setContent] = useState(value || '');

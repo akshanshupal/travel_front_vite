@@ -14,25 +14,29 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router";
 import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { CloseButton } from "@/components/base/buttons/close-button";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
+import { useListQueryState } from "@/hooks/use-list-query-state";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 
-const parseSearch = (search: string) => {
-    const sp = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
-    const page = Math.max(1, Number(sp.get("page") || 1) || 1);
-    const limit = Math.min(100, Math.max(10, Number(sp.get("limit") || 10) || 10));
-    const title = sp.get("title") || "";
-    const status = sp.get("status") || "";
-    return { page, limit, title, status };
-};
-
 export default function BookingTypePage() {
-    const availableWidth = useAvailableTableWidth();
     const navigate = useNavigate();
-    const { pathname, search } = useLocation();
+    const { pathname } = useLocation();
     const { showSnackbar } = useStoreSnackbar();
 
-    const initial = parseSearch(search);
+    // Shared list-page state: page/limit/filters/debounce/URL-sync.
+    // Semantics identical to the previous hand-rolled implementation.
+    const {
+        page,
+        limit,
+        filters,
+        debouncedFilters,
+        tempFilters,
+        setPage,
+        setLimit,
+        setFilters,
+        setTempFilters,
+        setDebouncedFilters,
+        isFilterActive,
+    } = useListQueryState({ defaults: { title: "", status: "" } });
 
     const [loading, setLoading] = useState(false);
     const [items, setItems] = useState<any[]>([]);
@@ -42,17 +46,6 @@ export default function BookingTypePage() {
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState<any>(null);
 
-    const [page, setPage] = useState(initial.page);
-    const [limit, setLimit] = useState(initial.limit);
-    const [filters, setFilters] = useState({
-        title: initial.title,
-        status: initial.status,
-    });
-
-    const [debouncedFilters, setDebouncedFilters] = useState(filters);
-    const [tempFilters, setTempFilters] = useState(filters);
-
-    const isFilterActive = Boolean(filters.title || filters.status);
     const getItemId = (item: any) => String(item?.id || item?._id || "");
     const indexById = useMemo(
         () => new Map(items.map((item, index) => [getItemId(item), (page - 1) * limit + index + 1])),
@@ -95,26 +88,6 @@ export default function BookingTypePage() {
     const handleOpenFilters = () => {
         setTempFilters(filters);
     };
-
-    useEffect(() => {
-        const handler = setTimeout(() => {
-            setDebouncedFilters(filters);
-            setPage(1);
-        }, 500);
-        return () => clearTimeout(handler);
-    }, [filters]);
-
-    useEffect(() => {
-        const sp = new URLSearchParams();
-        if (debouncedFilters.title) sp.set("title", debouncedFilters.title);
-        if (debouncedFilters.status) sp.set("status", debouncedFilters.status);
-        sp.set("page", String(page));
-        sp.set("limit", String(limit));
-        const next = sp.toString();
-        const current = search.startsWith("?") ? search.slice(1) : search;
-        if (next === current) return;
-        navigate(next ? `${pathname}?${next}` : pathname, { replace: true });
-    }, [debouncedFilters, limit, navigate, page, pathname, search]);
 
     const fetchData = async () => {
         setLoading(true);
@@ -201,7 +174,7 @@ export default function BookingTypePage() {
 
     return (
         <DefaultLayout>
-            <div className="space-y-4" style={{ width: availableWidth }}>
+            <div className="space-y-4">
                 <TableCard.Root className="w-full">
                     <TableCard.Header
                         title="Booking Type List"
@@ -313,7 +286,7 @@ export default function BookingTypePage() {
                         columns={columns}
                         items={items}
                         className="min-w-[820px]"
-                        availableWidth={availableWidth}
+                       
                         loading={loading}
                         skeletonRows={5}
                     >

@@ -21,7 +21,6 @@ import Tmodal from "@/components/utils/Tmodal";
 import MailConfirmation from "@/components/application/mail-confirmation/mail-confirmation";
 import { useStoreSnackbar } from "@/store/snackbar";
 import { StickyTable, Table, TableCard } from "@/components/application/table/table";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { Badge } from "@/components/base/badges/badges";
 import { CustomBreadscrumbs } from "@/components/application/breadcrumbs/custom-breadcrumbs";
 
@@ -48,7 +47,6 @@ export default function PaymentLink() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { showSnackbar } = useStoreSnackbar();
-  const availableWidth = useAvailableTableWidth();
   const company = useStoreCompany((state) => state.company);
 
   const [page, setPage] = useState(1);
@@ -400,7 +398,7 @@ export default function PaymentLink() {
 
   return (
     <DefaultLayout>
-        <div className="flex flex-col gap-4" style={{ width: availableWidth }}>
+        <div className="flex flex-col gap-4">
           <CustomBreadscrumbs list={breadcrumbsList} />
 
           <div className="flex gap-4 justify-end">
@@ -474,7 +472,7 @@ export default function PaymentLink() {
             </div>
 
             <div className="w-full max-w-full">
-                <StickyTable ariaLabel="Package Voucher List" columns={columns} items={data} availableWidth={availableWidth}>
+                <StickyTable ariaLabel="Package Voucher List" columns={columns} items={data}>
                     {(item) => (
                         <Table.Row key={item.id}>
                             <Table.Cell data-column="index" className="whitespace-nowrap px-4 py-3">

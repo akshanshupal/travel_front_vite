@@ -24,7 +24,6 @@ import { parseDate } from "@internationalized/date";
 import { Modal, ModalOverlay, Dialog } from "@/components/application/modals/modal";
 import { renderToStaticMarkup } from "react-dom/server";
 import PreviewMail from "@/components/PreviewMail";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Label } from "@/components/base/input/label";
 
@@ -38,7 +37,6 @@ export default function ClientItineraryListPage() {
     const [searchParams, setSearchParams] = useSearchParams();
     const { user } = useStoreLogin();
     const { showSnackbar } = useStoreSnackbar();
-    const availableWidth = useAvailableTableWidth();
 
     const [items, setItems] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -364,7 +362,7 @@ export default function ClientItineraryListPage() {
 
     return (
         <DefaultLayout>
-            <div style={{ width: availableWidth }}>
+            <div>
                 <TableCard.Root className="w-full">
                     <TableCard.Header 
                         title="All Client Itineraries" 
@@ -567,7 +565,7 @@ export default function ClientItineraryListPage() {
                             ariaLabel="Client itinerary list"
                             columns={columns}
                             items={Array.from({ length: 10 }).map((_, i) => ({ id: `skeleton-${i}` }))}
-                            availableWidth={availableWidth}
+                           
                             loading={loading}
                         >
                             {(item) => (
@@ -589,7 +587,7 @@ export default function ClientItineraryListPage() {
                             ariaLabel="Client itinerary list"
                             columns={columns}
                             items={[{ id: "empty" }]}
-                            availableWidth={availableWidth}
+                           
                             loading={loading}
                         >
                             {() => (
@@ -605,7 +603,7 @@ export default function ClientItineraryListPage() {
                             ariaLabel="Client itinerary list"
                             columns={columns}
                             items={items}
-                            availableWidth={availableWidth}
+                           
                             loading={loading}
                         >
                             {(item) => (

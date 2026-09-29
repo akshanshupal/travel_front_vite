@@ -16,7 +16,6 @@ import { Eye, FilterLines, RefreshCw01, SearchLg, Mail01 } from "@untitledui/ico
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { formatCurrencyInr, formatShortDate, calculatePendingAmount } from "@/utils/formatters";
 
 
@@ -39,7 +38,6 @@ export default function PaymentPage() {
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
     const { showSnackbar } = useStoreSnackbar();
-    const availableWidth = useAvailableTableWidth();
 
     const [loading, setLoading] = useState(false);
     const [items, setItems] = useState<any[]>([]);
@@ -249,7 +247,7 @@ export default function PaymentPage() {
     };
     return (
         <DefaultLayout>
-            <div className="w-full" style={{ width: availableWidth }}>
+            <div className="w-full">
                 <TableCard.Root className="w-full">
                     <TableCard.Header
                         title="Payment List"
@@ -529,7 +527,7 @@ export default function PaymentPage() {
                             ariaLabel="Payment list"
                             columns={columns}
                             items={items}
-                            availableWidth={availableWidth}
+                           
                             loading={loading}
                         >
                             {(item) => (

@@ -13,11 +13,9 @@ import { useNavigate } from "react-router";
 import { StickyTable, Table, TableCard } from "@/components/application/table/table";
 import { CompactPagination } from "@/components/application/pagination/pagination";
 import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { useAccess } from "@/hooks/use-access";
 
 export default function TemplateListPage() {
-    const availableWidth = useAvailableTableWidth();
     const navigate = useNavigate();
     const { showSnackbar } = useStoreSnackbar();
     const { can } = useAccess();
@@ -122,7 +120,7 @@ export default function TemplateListPage() {
 
     return (
         <DefaultLayout>
-            <div className="space-y-4" style={{ width: availableWidth }}>
+            <div className="space-y-4">
                 <TableCard.Root className="w-full">
                     <TableCard.Header
                         title="Mail Templates"
@@ -191,7 +189,7 @@ export default function TemplateListPage() {
                             ariaLabel="Templates table"
                             columns={columns}
                             items={data}
-                            availableWidth={availableWidth}
+                           
                             loading={isLoading}
                             skeletonRows={5}
                             className="min-w-[760px]"

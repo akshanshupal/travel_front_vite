@@ -11,7 +11,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { CloseButton } from "@/components/base/buttons/close-button";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 
 const initialPackages = [
     {
@@ -37,7 +36,6 @@ const initialPackages = [
 ];
 
 export default function CabBookingPage() {
-    const availableWidth = useAvailableTableWidth();
     const navigate = useNavigate();
     const { showSnackbar } = useStoreSnackbar();
 
@@ -145,7 +143,7 @@ export default function CabBookingPage() {
 
     return (
         <DefaultLayout>
-            <div className="space-y-4" style={{ width: availableWidth }}>
+            <div className="space-y-4">
                 <TableCard.Root className="w-full">
                     <TableCard.Header
                         title="Cab Booking List"
@@ -285,7 +283,7 @@ export default function CabBookingPage() {
                             </div>
                     </div>
 
-                    <StickyTable ariaLabel="Cab Booking list" columns={columns} items={filteredItems} availableWidth={availableWidth}>
+                    <StickyTable ariaLabel="Cab Booking list" columns={columns} items={filteredItems}>
                         {(item) => (
                             <Table.Row id={item.customerId} columns={columns}>
                                 {(column) => (

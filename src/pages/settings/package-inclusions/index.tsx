@@ -13,7 +13,6 @@ import { useNavigate } from "react-router";
 import { StickyTable, Table, TableCard } from "@/components/application/table/table";
 import { CompactPagination } from "@/components/application/pagination/pagination";
 import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { useAccess } from "@/hooks/use-access";
 
 const code = "PACKAGE_INCLUSIONS";
@@ -26,7 +25,6 @@ const asBool = (value: unknown) => {
 };
 
 export default function SettingsPackageInclusionsListPage() {
-    const availableWidth = useAvailableTableWidth();
     const navigate = useNavigate();
     const { showSnackbar } = useStoreSnackbar();
     const { can } = useAccess();
@@ -131,7 +129,7 @@ export default function SettingsPackageInclusionsListPage() {
 
     return (
         <DefaultLayout>
-            <div className="space-y-4" style={{ width: availableWidth }}>
+            <div className="space-y-4">
                 <TableCard.Root className="w-full">
                     <TableCard.Header
                         title="Package Inclusions"
@@ -206,7 +204,7 @@ export default function SettingsPackageInclusionsListPage() {
                             ariaLabel="Package inclusions table"
                             columns={columns}
                             items={data}
-                            availableWidth={availableWidth}
+                           
                             loading={isLoading}
                             skeletonRows={5}
                             className="min-w-[980px]"

@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { useEffect, useState, type PointerEvent } from "react";
-import { LifeBuoy01, LogOut01, Settings01 } from "@untitledui/icons";
+import { LogOut01, Settings01 } from "@untitledui/icons";
 import { AnimatePresence, motion } from "motion/react";
 import { Button as AriaButton, DialogTrigger as AriaDialogTrigger, Popover as AriaPopover } from "react-aria-components";
 import { Avatar } from "@/components/base/avatar/avatar";
@@ -72,6 +72,22 @@ export const SidebarNavigationSlim = ({
 
     const isSecondarySidebarVisible = isHovering && Boolean(currentItem.items?.length);
 
+    // Touch/tap path: hover alone can't open the secondary flyout on touch
+    // devices, so activating an item with children also toggles the flyout.
+    // Pointer users are unaffected — hover still drives visibility.
+    const activateItem = (item: NavItemType & { icon: FC<{ className?: string }> }) => {
+        if (item.items?.length) {
+            if (isHovering && currentItem.href === item.href) {
+                setIsHovering(false);
+            } else {
+                setCurrentItem(item);
+                setIsHovering(true);
+            }
+        } else {
+            setCurrentItem(item);
+        }
+    };
+
     const MAIN_SIDEBAR_WIDTH = 68;
     const SECONDARY_SIDEBAR_WIDTH = 268;
 
@@ -112,7 +128,7 @@ export const SidebarNavigationSlim = ({
                                 href={item.href}
                                 label={item.label || ""}
                                 icon={item.icon}
-                                onClick={() => setCurrentItem(item)}
+                                onClick={() => activateItem(item)}
                             />
                         </li>
                     ))}
@@ -128,7 +144,7 @@ export const SidebarNavigationSlim = ({
                                         label={item.label || ""}
                                         href={item.href}
                                         icon={item.icon}
-                                        onClick={() => setCurrentItem(item)}
+                                        onClick={() => activateItem(item)}
                                     />
                                 </li>
                             ))}
@@ -268,10 +284,7 @@ export const SidebarNavigationSlim = ({
 
                         <div className="mt-auto flex flex-col gap-5 px-2 py-4">
                             <div className="flex flex-col gap-2">
-                                <NavItemBase current={activeUrl === "/support"} type="link" href="/support" icon={LifeBuoy01}>
-                                    Support
-                                </NavItemBase>
-                                <NavItemBase current={activeUrl === "/settings"} type="link" href="/settings" icon={Settings01}>
+                                <NavItemBase current={activeUrl === "/settings/user"} type="link" href="/settings/user" icon={Settings01}>
                                     Settings
                                 </NavItemBase>
                             </div>

@@ -17,6 +17,12 @@ interface TmodalProps {
     hideCancelButton?: boolean;
 }
 
+/**
+ * @deprecated Legacy facade. Kept for ~25 existing confirm-dialog call sites.
+ * New code should use `ModalOverlay` / `Modal` / `Dialog` from
+ * `@/components/application/modals/modal` directly (this wrapper is built on
+ * them and only adds async-confirm loading state). Do not add new usage.
+ */
 export default function Tmodal({ isOpen, onClose, onConfirm, content, header, footerActions, hideCloseButton, hideCancelButton, size }: TmodalProps) {
     const [isLoading, setIsLoading] = useState(false);
 

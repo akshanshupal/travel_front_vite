@@ -10,7 +10,6 @@ import { CompactPagination } from "@/components/application/pagination/paginatio
 import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { BadgeWithButton, Badge } from "@/components/base/badges/badges";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { useAccess } from "@/hooks/use-access";
 import { useStoreSnackbar } from "@/store/snackbar";
 import { fetchWithToken } from "@/utils/fetchApi";
@@ -64,7 +63,6 @@ export default function PackageListPage() {
     const navigate = useNavigate();
     const { pathname, search } = useLocation();
     const initial = parseSearch(search);
-    const availableWidth = useAvailableTableWidth();
     const { can } = useAccess();
     const canView = can("package", "view");
     const canAdd = can("package", "add");
@@ -295,7 +293,7 @@ export default function PackageListPage() {
 
     return (
         <DefaultLayout>
-            <div style={{ width: availableWidth }}>
+            <div>
                 <TableCard.Root className="w-full">
                     <TableCard.Header
                         title="Packages"
@@ -476,7 +474,7 @@ export default function PackageListPage() {
                             ariaLabel="Package list"
                             columns={columns}
                             items={Array.from({ length: 5 }).map((_, i) => ({ id: `skeleton-${i}` }))}
-                            availableWidth={availableWidth}
+                           
                             loading={loading}
                         >
                             {(item) => (
@@ -494,7 +492,7 @@ export default function PackageListPage() {
                     ) : loadError ? (
                         <div className="px-4 py-10 text-sm text-error md:px-6">{loadError}</div>
                     ) : (
-                        <StickyTable ariaLabel="Package list" columns={columns} items={items} availableWidth={availableWidth} loading={loading}>
+                        <StickyTable ariaLabel="Package list" columns={columns} items={items} loading={loading}>
                             {(item) => (
                                 <Table.Row id={item.id} columns={columns}>
                                     {(column) => (

@@ -8,7 +8,6 @@ import { Select } from "@/components/base/select/select";
 import { CompactPagination } from "@/components/application/pagination/pagination";
 import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { fetchWithToken } from "@/utils/fetchApi";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Plus, Trash01, Edit01, RefreshCw01, FilterLines, SearchLg, Copy01 } from "@untitledui/icons";
@@ -68,7 +67,6 @@ export default function ItineraryAreaListPage() {
     const [duplicateError, setDuplicateError] = useState<{ title?: string; alias?: string }>({});
     const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
     const [refreshTick, setRefreshTick] = useState(0);
-    const availableWidth = useAvailableTableWidth();
 
     const indexById = useMemo(() => new Map(items.map((item, index) => [item.id, (page - 1) * limit + index + 1])), [items, limit, page]);
     const isFilterActive = Boolean(filters.title || filters.status);
@@ -261,7 +259,7 @@ export default function ItineraryAreaListPage() {
 
     return (
         <DefaultLayout>
-            <div style={{ width: availableWidth }}>
+            <div>
                 <TableCard.Root className="w-full">
                     <TableCard.Header
                         title="Areas"
@@ -388,7 +386,7 @@ export default function ItineraryAreaListPage() {
                             ariaLabel="Area list"
                             columns={columns}
                             items={Array.from({ length: 5 }).map((_, i) => ({ id: `skeleton-${i}` }))}
-                            availableWidth={availableWidth}
+                           
                             loading={loading}
                         >
                             {(item) => (
@@ -412,7 +410,7 @@ export default function ItineraryAreaListPage() {
                             ariaLabel="Area list"
                             columns={columns}
                             items={items}
-                            availableWidth={availableWidth}
+                           
                             loading={loading}
                         >
                             {(item) => (

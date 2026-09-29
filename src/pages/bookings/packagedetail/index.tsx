@@ -16,7 +16,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router";
 import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { CloseButton } from "@/components/base/buttons/close-button";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 
 const parseSearch = (search: string) => {
     const sp = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
@@ -28,7 +27,6 @@ const parseSearch = (search: string) => {
 };
 
 export default function PackageDetailPage() {
-    const availableWidth = useAvailableTableWidth();
     const navigate = useNavigate();
     const { pathname, search } = useLocation();
     const { showSnackbar } = useStoreSnackbar();
@@ -193,7 +191,7 @@ export default function PackageDetailPage() {
 
     return (
         <DefaultLayout>
-            <div className="space-y-4" style={{ width: availableWidth }}>
+            <div className="space-y-4">
                 <TableCard.Root className="w-full">
                     <TableCard.Header
                         title="Package List"
@@ -303,7 +301,7 @@ export default function PackageDetailPage() {
                         columns={columns}
                         items={items}
                         className="min-w-[820px]"
-                        availableWidth={availableWidth}
+                       
                         loading={loading}
                         skeletonRows={5}
                     >

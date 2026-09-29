@@ -8,7 +8,6 @@ import { Input } from "@/components/base/input/input";
 import { Label } from "@/components/base/input/label";
 import { Select } from "@/components/base/select/select";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { useAccess } from "@/hooks/use-access";
 import Tmodal from "@/components/utils/Tmodal";
 import { useStoreSnackbar } from "@/store/snackbar";
@@ -44,7 +43,6 @@ const emailFunctionTitleMap: Record<string, string> = emailFunctionOptions.reduc
 );
 
 export default function SettingsMailerListPage() {
-    const availableWidth = useAvailableTableWidth();
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const { showSnackbar } = useStoreSnackbar();
@@ -206,7 +204,7 @@ export default function SettingsMailerListPage() {
 
     return (
         <DefaultLayout>
-            <div className="space-y-4" style={{ width: availableWidth }}>
+            <div className="space-y-4">
                 <TableCard.Root className="w-full">
                     <TableCard.Header
                         title="Mailer List"
@@ -389,7 +387,7 @@ export default function SettingsMailerListPage() {
                         ariaLabel="Mailer list"
                         columns={columns}
                         items={items}
-                        availableWidth={availableWidth}
+                       
                         loading={loading}
                         skeletonRows={5}
                         className="min-w-[820px]"

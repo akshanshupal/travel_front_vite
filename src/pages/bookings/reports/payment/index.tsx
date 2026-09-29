@@ -19,7 +19,6 @@ import { RefreshCw01, FilterLines, X } from "@untitledui/icons";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 import { parseDate, getLocalTimeZone, startOfMonth, today } from "@internationalized/date";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import type { DateValue } from "react-aria-components";
 import type { RangeValue } from "@react-types/shared";
 import { Bar, Line } from "react-chartjs-2";
@@ -818,7 +817,6 @@ const AgentPaymentGraph = () => {
 };
 
 export default function ReportsPaymentPage() {
-    const availableWidth = useAvailableTableWidth();
     const [searchParams, setSearchParams] = useSearchParams();
     const { showSnackbar } = useStoreSnackbar();
     const [activeTab, setActiveTab] = useState("dashboard");
@@ -971,7 +969,7 @@ export default function ReportsPaymentPage() {
 
     return (
         <DefaultLayout>
-            <div className="space-y-4" style={{ width: availableWidth }}>
+            <div className="space-y-4">
                 <CustomBreadscrumbs
                     list={[
                         { label: "Bookings", link: "/bookings/reports/payment" },
@@ -1117,7 +1115,7 @@ export default function ReportsPaymentPage() {
                                 ariaLabel="Payment Reports list"
                                 columns={columns}
                                 items={items}
-                                availableWidth={availableWidth}
+                               
                                 loading={loading}
                             >
                                 {(item) => {

@@ -10,7 +10,6 @@ import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-m
 import { Label } from "@/components/base/input/label";
 import { BadgeWithButton } from "@/components/base/badges/badges";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { getPhotographyClients } from "@/utils/services/photographyClientService";
 import { Edit01, Eye, FilterLines, Plus, RefreshCw01, SearchLg } from "@untitledui/icons";
 
@@ -25,7 +24,6 @@ type PhotographyClient = {
 
 export default function PhotographyClientPage() {
     const navigate = useNavigate();
-    const availableWidth = useAvailableTableWidth();
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [clients, setClients] = useState<PhotographyClient[]>([]);
@@ -130,7 +128,7 @@ export default function PhotographyClientPage() {
 
     return (
         <DefaultLayout>
-            <div style={{ width: availableWidth }}>
+            <div>
                 <TableCard.Root className="w-full">
                     <TableCard.Header
                         title="Photography - Clients"
@@ -273,7 +271,7 @@ export default function PhotographyClientPage() {
                             ariaLabel="Photography clients"
                             columns={columns}
                             items={Array.from({ length: 5 }).map((_, i) => ({ id: `skeleton-${i}` }))}
-                            availableWidth={availableWidth}
+                           
                             loading={loading}
                         >
                             {(item) => (
@@ -291,7 +289,7 @@ export default function PhotographyClientPage() {
                     ) : loadError ? (
                         <div className="px-4 py-10 text-sm text-error md:px-6">{loadError}</div>
                     ) : (
-                        <StickyTable ariaLabel="Photography clients" columns={columns} items={pagedClients} availableWidth={availableWidth} loading={loading}>
+                        <StickyTable ariaLabel="Photography clients" columns={columns} items={pagedClients} loading={loading}>
                             {(item) => (
                                 <Table.Row id={item.id} columns={columns}>
                                     {(column) => (

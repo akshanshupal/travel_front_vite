@@ -1,8 +1,7 @@
 import type { FC, ReactNode } from "react";
-import { Bell01, ChevronDown, LifeBuoy01, Menu04, Moon01, SearchLg, Settings01, Sun, SwitchHorizontal01, X } from "@untitledui/icons";
+import { ChevronDown, Menu04, Moon01, SearchLg, Settings01, Sun, SwitchHorizontal01, X } from "@untitledui/icons";
 import { Button as AriaButton, DialogTrigger, Popover } from "react-aria-components";
 import { Avatar } from "@/components/base/avatar/avatar";
-import { BadgeWithDot } from "@/components/base/badges/badges";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { Input } from "@/components/base/input/input";
 import { UntitledLogo } from "@/components/foundations/logo/untitledui-logo";
@@ -113,7 +112,7 @@ export const HeaderNavigationBase = ({
                             <ChevronDown className="ml-2 size-4 -rotate-90 text-fg-quaternary transition-inherit-all" />
                         </span>
                     </NavItemBase>
-                    <div className="absolute left-full top-0 z-50 ml-2 hidden min-w-56 rounded-lg border border-secondary bg-primary shadow-lg group-hover/child:block before:absolute before:-left-2 before:top-0 before:h-full before:w-2 before:content-['']">
+                    <div className="absolute left-full top-0 z-50 ml-2 hidden min-w-56 rounded-lg border border-secondary bg-primary shadow-lg group-hover/child:block group-focus-within/child:block before:absolute before:-left-2 before:top-0 before:h-full before:w-2 before:content-['']">
                         <ul className="py-2">
                             {child.items.map((grandChild) => (
                                 <li key={grandChild.label} className="px-2 py-0.5">
@@ -167,7 +166,7 @@ export const HeaderNavigationBase = ({
                         </span>
                         <ChevronDown className="ml-2 size-4 text-fg-quaternary transition-inherit-all" />
                     </AriaButton>
-                    <div className="absolute left-0 top-full z-50 mt-2 hidden min-w-56 rounded-lg border border-secondary bg-primary shadow-lg group-hover:block before:absolute before:-top-2 before:left-0 before:h-2 before:w-full before:content-['']">
+                    <div className="absolute left-0 top-full z-50 mt-2 hidden min-w-56 rounded-lg border border-secondary bg-primary shadow-lg group-hover:block group-focus-within:block before:absolute before:-top-2 before:left-0 before:h-2 before:w-full before:content-['']">
                         <ul className="max-h-80 overflow-y-auto py-2">{item.items.map((child) => renderDropdownItem(child))}</ul>
                     </div>
                 </li>
@@ -198,23 +197,8 @@ export const HeaderNavigationBase = ({
 
                     <div className="mt-auto flex flex-col gap-4 px-2 py-4 lg:px-4 lg:py-6">
                         <div className="flex flex-col gap-1">
-                            <NavItemBase type="link" href="#" icon={LifeBuoy01}>
-                                Support
-                            </NavItemBase>
-                            <NavItemBase
-                                type="link"
-                                href="#"
-                                icon={Settings01}
-                                badge={
-                                    <BadgeWithDot color="success" type="modern" size="sm">
-                                        Online
-                                    </BadgeWithDot>
-                                }
-                            >
+                            <NavItemBase type="link" href="/settings/user" icon={Settings01}>
                                 Settings
-                            </NavItemBase>
-                            <NavItemBase type="link" href="https://www.untitledui.com/" icon={Settings01}>
-                                Open in browser
                             </NavItemBase>
                         </div>
 
@@ -250,7 +234,7 @@ export const HeaderNavigationBase = ({
                                 />
                             )}
 
-                            <nav>
+                            <nav className="min-w-0 max-w-full overflow-x-auto scrollbar-hide" aria-label="Primary">
                                 <ul className="flex items-center gap-0.5">
                                     {primaryNavItems.map((item) => renderPrimaryNavItem(item))}
                                 </ul>
@@ -290,19 +274,11 @@ export const HeaderNavigationBase = ({
 
                             <div className="flex gap-0.5">
                                 <NavItemButton
-                                    current={activeUrl === "/settings-01"}
+                                    current={activeUrl === "/settings/user"}
                                     size="md"
                                     icon={Settings01}
                                     label="Settings"
-                                    href="/settings-01"
-                                    tooltipPlacement="bottom"
-                                />
-                                <NavItemButton
-                                    current={activeUrl === "/notifications-01"}
-                                    size="md"
-                                    icon={Bell01}
-                                    label="Notifications"
-                                    href="/notifications-01"
+                                    href="/settings/user"
                                     tooltipPlacement="bottom"
                                 />
                             </div>

@@ -4,7 +4,6 @@ import { SelectItem } from "@/components/base/select/select-item";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { RefreshCw01 } from "@untitledui/icons";
 import { DefaultLayout } from "@/layouts/DefaultLayout";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { useStoreSnackbar } from "@/store/snackbar";
 import { useStoreLogin } from "@/store/login";
 import { agentDurationWiseSavedItineraries, agentWiseSavedItineraries } from "@/utils/services/savedItineraryService";
@@ -620,11 +619,10 @@ const DurationWiseGraph = () => {
 };
 
 export default function ItineraryReportQuotationsPage() {
-    const availableWidth = useAvailableTableWidth();
 
     return (
         <DefaultLayout>
-            <div style={{ width: availableWidth }} className="space-y-4">
+            <div className="space-y-4">
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                     <AgentWiseGraph />
                     <DurationWiseGraph />

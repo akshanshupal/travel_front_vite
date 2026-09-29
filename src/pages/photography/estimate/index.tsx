@@ -9,7 +9,6 @@ import { Input } from "@/components/base/input/input";
 import { Label } from "@/components/base/input/label";
 import { Select } from "@/components/base/select/select";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { useNavigate } from "react-router";
 import { getPhotographyEstimates } from "@/utils/services/photographyEstimateService";
 import { getPhotographyClients } from "@/utils/services/photographyClientService";
@@ -24,7 +23,6 @@ const formatDate = (value: string) => {
 
 export default function PhotographyEstimatePage() {
     const navigate = useNavigate();
-    const availableWidth = useAvailableTableWidth();
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [allEstimates, setAllEstimates] = useState<any[]>([]);
@@ -139,7 +137,7 @@ export default function PhotographyEstimatePage() {
 
     return (
         <DefaultLayout>
-            <div style={{ width: availableWidth }}>
+            <div>
                 <TableCard.Root className="w-full">
                     <TableCard.Header
                         title="Photography - Estimates"
@@ -266,7 +264,7 @@ export default function PhotographyEstimatePage() {
                             ariaLabel="Photography estimates"
                             columns={columns}
                             items={Array.from({ length: 5 }).map((_, i) => ({ id: `skeleton-${i}` }))}
-                            availableWidth={availableWidth}
+                           
                             loading={loading}
                         >
                             {(item) => (
@@ -284,7 +282,7 @@ export default function PhotographyEstimatePage() {
                     ) : loadError ? (
                         <div className="px-4 py-10 text-sm text-error md:px-6">{loadError}</div>
                     ) : (
-                        <StickyTable ariaLabel="Photography estimates" columns={columns} items={pagedEstimates} availableWidth={availableWidth} loading={loading}>
+                        <StickyTable ariaLabel="Photography estimates" columns={columns} items={pagedEstimates} loading={loading}>
                             {(item) => (
                                 <Table.Row id={item.id} columns={columns}>
                                     {(column) => (

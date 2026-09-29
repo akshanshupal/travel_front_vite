@@ -10,7 +10,6 @@ import { Label } from "@/components/base/input/label";
 import { BadgeWithButton } from "@/components/base/badges/badges";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { Button } from "@/components/base/buttons/button";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import {
     loadPhotographyTemplates,
 } from "@/pages/photography/shared/templates";
@@ -18,7 +17,6 @@ import { Edit01, Eye, FilterLines, Plus, RefreshCw01, SearchLg } from "@untitled
 
 export default function PhotographyTemplatePage() {
     const navigate = useNavigate();
-    const availableWidth = useAvailableTableWidth();
     const templates = useMemo(() => loadPhotographyTemplates(), []);
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
@@ -97,7 +95,7 @@ export default function PhotographyTemplatePage() {
 
     return (
         <DefaultLayout>
-            <div style={{ width: availableWidth }}>
+            <div>
                 <TableCard.Root className="w-full">
                     <TableCard.Header
                         title="Photography - Templates"
@@ -207,7 +205,7 @@ export default function PhotographyTemplatePage() {
                         </div>
                     </div>
 
-                    <StickyTable ariaLabel="Photography templates" columns={columns} items={pagedTemplates} availableWidth={availableWidth} loading={false}>
+                    <StickyTable ariaLabel="Photography templates" columns={columns} items={pagedTemplates} loading={false}>
                         {(item) => (
                             <Table.Row id={item.id} columns={columns}>
                                 {(column) => (

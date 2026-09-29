@@ -11,7 +11,6 @@ import { Select } from "@/components/base/select/select";
 import { TextArea } from "@/components/base/textarea/textarea";
 import { Toggle } from "@/components/base/toggle/toggle";
 import Tmodal from "@/components/utils/Tmodal";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { useStoreSnackbar } from "@/store/snackbar";
 import { getAssignmentById } from "@/utils/services/assignmentService";
 import { getPackageBooking } from "@/utils/services/packagebookingService";
@@ -71,7 +70,6 @@ export default function PaymentViewPage() {
     const navigate = useNavigate();
     const params = useParams();
     const id = getId(params.id);
-    const availableWidth = useAvailableTableWidth();
     const { showSnackbar } = useStoreSnackbar();
 
     const [loading, setLoading] = useState(true);
@@ -603,7 +601,7 @@ export default function PaymentViewPage() {
     return (
         <DefaultLayout>
             {breadcrumbs}
-            <div className="space-y-4" style={{ width: availableWidth }}>
+            <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <div className="text-lg font-semibold text-primary">Payment Details</div>
                     <Button

@@ -4,7 +4,6 @@ import { LoadingIndicator } from "@/components/application/loading-indicator/loa
 import { Select } from "@/components/base/select/select";
 import { SelectItem } from "@/components/base/select/select-item";
 import { DefaultLayout } from "@/layouts/DefaultLayout";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { finishedPackageWiseSummary, profitReports } from "@/utils/services/assignmentService";
 import { getLocalTimeZone, startOfMonth, today } from "@internationalized/date";
 import type { RangeValue } from "@react-types/shared";
@@ -639,11 +638,10 @@ const FinishedPackageWiseGraph = () => {
 };
 
 export default function ReportsProfitPage() {
-    const availableWidth = useAvailableTableWidth();
 
     return (
         <DefaultLayout>
-            <div className="space-y-4" style={{ width: availableWidth }}>
+            <div className="space-y-4">
                 <CustomBreadscrumbs list={[{ label: "Bookings", link: "/bookings/reports/profitReports" }, { label: "Reports", link: "/bookings/reports/profitReports" }]} />
                 <div className="space-y-4">
                     <ProfitReportsGraph />

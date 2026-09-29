@@ -6,7 +6,6 @@ import { Button } from "@/components/base/buttons/button";
 import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import { Input } from "@/components/base/input/input";
 import { Select } from "@/components/base/select/select";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { useAccess } from "@/hooks/use-access";
 import { useStoreSnackbar } from "@/store/snackbar";
 import { fetchWithToken } from "@/utils/fetchApi";
@@ -28,7 +27,6 @@ const statusToLabel = (status: any) => {
 };
 
 export default function SettingsRoleListPage() {
-    const availableWidth = useAvailableTableWidth();
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const showSnackbar = useStoreSnackbar((s) => s.showSnackbar);
@@ -114,7 +112,7 @@ export default function SettingsRoleListPage() {
 
     return (
         <DefaultLayout>
-            <div className="space-y-4" style={{ width: availableWidth }}>
+            <div className="space-y-4">
                 <TableCard.Root className="w-full">
                     <TableCard.Header
                         title="Role List"
@@ -202,7 +200,7 @@ export default function SettingsRoleListPage() {
                             ariaLabel="Role list"
                             columns={columns}
                             items={items}
-                            availableWidth={availableWidth}
+                           
                             loading={loading}
                             skeletonRows={5}
                             className="min-w-[760px]"

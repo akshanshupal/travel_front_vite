@@ -10,7 +10,6 @@ import { CompactPagination } from "@/components/application/pagination/paginatio
 import { Dialog, Modal, ModalOverlay } from "@/components/application/modals/modal";
 import { SlideoutMenu } from "@/components/application/slideout-menus/slideout-menu";
 import { Badge } from "@/components/base/badges/badges";
-import { useAvailableTableWidth } from "@/hooks/use-available-table-width";
 import { useStoreSnackbar } from "@/store/snackbar";
 import { addLeads, getLeads, getLeadsDelete } from "@/utils/services/leadsService";
 import { getLeadPreferences } from "@/pages/lead-management/settings";
@@ -192,7 +191,7 @@ function ImportLeadsModal({ isOpen, onClose, onImported }: { isOpen: boolean; on
     return <ModalOverlay isOpen={isOpen} isDismissable={!saving} onOpenChange={(open) => { if (!open && !saving) onClose(); }}>
         <Modal className="w-full max-w-4xl overflow-hidden rounded-2xl">
             <Dialog aria-label="Upload leads" className="max-h-[calc(100dvh-2rem)]">
-                <div className="flex max-h-[calc(100dvh-2rem)] min-h-[36rem] flex-col rounded-2xl bg-primary shadow-xl">
+                <div className="flex max-h-[calc(100dvh-2rem)] min-h-0 sm:min-h-[36rem] flex-col rounded-2xl bg-primary shadow-xl">
                     <header className="flex shrink-0 items-start justify-between border-b border-secondary px-5 py-4 sm:px-8 sm:py-6"><div><h2 className="text-2xl font-semibold text-brand-primary sm:text-3xl">Upload Excel Sheet</h2><p className="mt-1 text-sm text-tertiary sm:text-base">{step === "upload" ? "Upload your lead file to get started" : step === "campaign" ? "Choose where these leads should be added" : "Map your file columns to lead details"}</p></div><CloseButton onPress={onClose} isDisabled={saving} /></header>
                     <div className="min-h-0 flex-1 overflow-y-auto px-5 py-6 sm:px-8">{step === "upload" && <div className="space-y-6"><button type="button" onClick={() => inputRef.current?.click()} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); const dropped = event.dataTransfer.files[0]; if (dropped) void parseFile(dropped); }} className="group flex min-h-64 w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-brand bg-brand-secondary/30 p-8 text-center transition hover:bg-brand-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:min-h-80"><UploadCloud01 className="size-12 text-brand-primary transition-transform group-hover:-translate-y-1" /><p className="mt-4 text-lg font-semibold text-brand-primary">Drag and drop file</p><span className="mt-4 rounded-lg bg-brand-solid px-7 py-3 font-semibold text-white shadow-sm">Browse</span><p className="mt-4 text-sm text-tertiary">Supported formats are .csv, .xls, .xlsx</p><input ref={inputRef} hidden type="file" accept=".csv,.xls,.xlsx" onChange={(event) => { const selected = event.target.files?.[0]; if (selected) void parseFile(selected); }} /></button><div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-secondary">Max leads: 25,000 at a time, file size limit: 3MB.</p><button type="button" onClick={downloadSampleCsv} className="rounded-md px-1 py-1 font-semibold text-brand-secondary hover:underline focus-visible:outline-2 focus-visible:outline-brand">Download Sample file</button></div><div className="rounded-xl bg-secondary/40 px-4 py-3 text-sm text-tertiary">Include a name and primary contact number in your file. Column order does not matter.</div></div>}
                     {step === "campaign" && <div className="space-y-6"><div className="grid gap-4 md:grid-cols-2"><button type="button" onClick={() => setCampaignMode("existing")} className={`min-h-32 rounded-2xl border p-6 text-left transition focus-visible:outline-2 focus-visible:outline-brand ${campaignMode === "existing" ? "border-brand bg-brand-secondary" : "border-secondary hover:bg-primary_hover"}`}><span className="rounded-full bg-brand-solid px-3 py-1 text-xs font-semibold text-white">Suggested</span><h3 className="mt-4 text-lg font-semibold text-primary">Add leads in existing campaign</h3></button><button type="button" onClick={() => setCampaignMode("new")} className={`min-h-32 rounded-2xl border p-6 text-left transition focus-visible:outline-2 focus-visible:outline-brand ${campaignMode === "new" ? "border-brand bg-brand-secondary" : "border-secondary hover:bg-primary_hover"}`}><h3 className="text-lg font-semibold text-primary">Create a new campaign</h3></button></div>{campaignMode === "existing" ? <Select label="Select Campaign" isRequired aria-label="Select Campaign" placeholder="Choose a campaign" selectedKey={campaignId || null} onSelectionChange={(key) => setCampaignId(String(key))} items={campaigns.map((item) => ({ id: item.id, label: item.title }))}>{(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}</Select> : <div className="grid gap-4 md:grid-cols-2"><Input label="Campaign name" isRequired value={newCampaignName} onChange={setNewCampaignName} placeholder="Enter campaign name" /><Select label="Pipeline" isRequired aria-label="Pipeline" placeholder="Choose a pipeline" selectedKey={pipelineId || null} onSelectionChange={(key) => setPipelineId(String(key))} items={pipelines.map((item) => ({ id: item.id, label: item.title }))}>{(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}</Select></div>}</div>}
@@ -208,7 +207,6 @@ export default function LeadsIndexPage() {
     const navigate = useNavigate();
     const { pathname, search } = useLocation();
     const initial = parseSearch(search);
-    const availableWidth = useAvailableTableWidth();
 
     const [page, setPage] = useState(initial.page);
     const [limit, setLimit] = useState(initial.limit);
@@ -447,7 +445,7 @@ export default function LeadsIndexPage() {
 
     return (
         <DefaultLayout>
-            <div style={{ width: availableWidth }}>
+            <div>
                 <TableCard.Root className="w-full">
                     <TableCard.Header
                         title="Leads Management"
@@ -630,7 +628,7 @@ export default function LeadsIndexPage() {
                             ariaLabel="Leads list"
                             columns={columns}
                             items={Array.from({ length: 5 }).map((_, i) => ({ id: `skeleton-${i}` }))}
-                            availableWidth={availableWidth}
+                           
                             loading={loading}
                         >
                             {(item) => (
@@ -648,7 +646,7 @@ export default function LeadsIndexPage() {
                     ) : loadError ? (
                         <div className="px-4 py-10 text-sm text-error md:px-6">{loadError}</div>
                     ) : (
-                        <StickyTable ariaLabel="Leads list" columns={columns} items={items} availableWidth={availableWidth} loading={loading}>
+                        <StickyTable ariaLabel="Leads list" columns={columns} items={items} loading={loading}>
                             {(item) => (
                                 <Table.Row id={item.id} columns={columns}>
                                     {(column) => (
